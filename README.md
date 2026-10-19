@@ -14,7 +14,7 @@ The script checks that git, `gh` and your GitHub login work, that your git name 
 ## Where things go
 
 - `app/` is the main product. It changes only through merged pull requests.
-- `ideas/your_name/` is yours. Put experiments here, on a branch named `idea/your_name`, and leave other people's folders alone.
+- `ideas/your_name/` is yours. Put experiments here and push them to a branch named `idea/your_name`, or straight to `main` when you touch only your own folder. Leave other people's folders alone.
 - `scripts/` holds the first-use check.
 - `docs/` holds the text the project driver pastes into the Claude project settings.
 
@@ -23,6 +23,8 @@ The script checks that git, `gh` and your GitHub login work, that your git name 
 Push your branch, then post this line in #hackathon-finale:
 
 `branch idea/your_name, folder ideas/your_name: what it adds, want it in main`
+
+Write `branch main` if you pushed straight to `main`.
 
 If you use Claude Code with the Slack connector, ask it to post the line for you. The project driver pastes the line into the Claude project, which opens a pull request. The driver replies in the Slack thread when the idea is picked up, so you know it arrived.
 

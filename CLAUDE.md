@@ -5,7 +5,7 @@ Goal is a live, working demo at the final. Working beats clean.
 ## Layout
 
 - `app/` is the main product. It changes only through merged pull requests.
-- `ideas/<name>/` is one person's experiments, on branch `idea/<name>`. Stay in your own folder.
+- `ideas/<name>/` is one person's experiments. Push to branch `idea/<name>`, or straight to `main` if you touch only your own folder. Stay in your own folder.
 - `scripts/first-use.sh` checks that this Mac can work here.
 
 ## First time in this repo

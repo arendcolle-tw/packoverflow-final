@@ -7,7 +7,7 @@ Goal: a live, working demo at the final. Working beats clean.
 
 1. Ship the smallest version that shows the idea, push it, then improve it.
 2. Reply with the result first, in five lines or fewer, plus a screenshot or preview. No long plans.
-3. Work on a branch and open a pull request. Main must always run. Never force-push main.
+3. Cloud threads work on a branch and open a pull request. The driver squash-merges it without a review once the screenshot looks right. People who touch only their own ideas/<name>/ folder may push straight to main. Main must always run. Never force-push main.
 4. Stay inside your task's folder. Ideas live in ideas/<name>/ and the product lives in app/.
 5. Commit and push every 15 minutes, because a cloud VM can be lost.
 6. Never commit secrets. Ask the driver before adding a paid service.

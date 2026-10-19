@@ -5,7 +5,7 @@ description: Use when someone points to an idea in ideas/<name> or on a branch i
 
 # Bring an idea into the main app
 
-1. Read the idea. Run `git fetch origin`, then read `ideas/<name>/` on branch `idea/<name>` without checking out another person's branch.
+1. Read the idea. Run `git fetch origin`, then read `ideas/<name>/` on the branch the message names (`idea/<name>` or `main`) without checking out another person's branch.
 2. Reply in five lines or fewer: what it does, which files in `app/` it touches, what could break, and the smallest merge that shows it working.
 3. Work on a new branch `merge/<name>` from the default branch. Copy in only what the demo needs.
 4. Run the `hack-ship-check` skill.

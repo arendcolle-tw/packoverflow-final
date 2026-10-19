@@ -14,7 +14,7 @@ On a person's Mac, if `.first-use-ok` does not exist, run `bash scripts/first-us
 
 ## Hand an idea to the main thread
 
-When an idea in `ideas/<name>` should go into `app/`, push its branch, then post this line to the hackathon Slack channel with the Slack connector:
+When an idea in `ideas/<name>` should go into `app/`, push its branch, then post this line to #hackathon-finale with the Slack connector:
 
 `branch idea/<name>, folder ideas/<name>: <what it adds>, want it in main`
 

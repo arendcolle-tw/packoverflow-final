@@ -20,7 +20,7 @@ The script checks that git, `gh` and your GitHub login work, that your git name 
 
 ## Hand an idea to the main thread
 
-Push your branch, then post this line in the hackathon Slack channel:
+Push your branch, then post this line in #hackathon-finale:
 
 `branch idea/your_name, folder ideas/your_name: what it adds, want it in main`
 

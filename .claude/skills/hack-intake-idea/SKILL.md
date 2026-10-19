@@ -7,7 +7,7 @@ description: Use when someone points to an idea in ideas/<name> or on a branch i
 
 1. Read the idea. Run `git fetch origin`, then read `ideas/<name>/` on the branch the message names (`idea/<name>` or `main`) without checking out another person's branch.
 2. Reply in five lines or fewer: what it does, which files in `app/` it touches, what could break, and the smallest merge that shows it working.
-3. Work on a new branch `merge/<name>` from the default branch. Copy in only what the demo needs.
+3. Work on a new branch `merge/<name>` from the default branch. In a cloud thread use the branch the thread was assigned instead, since it can push only there. Copy in only what the demo needs.
 4. Run the `hack-ship-check` skill.
-5. Open a pull request. Put a before and after screenshot in the description.
+5. Open a pull request. Put a before and after screenshot in the description, or only an after shot when `app/` has no page yet.
 6. Ask one question only when a person has to choose. Otherwise decide and state the assumption in one line.

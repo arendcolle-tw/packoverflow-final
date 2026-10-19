@@ -15,5 +15,5 @@ Goal: a live, working demo at the final. Working beats clean.
 
 When a message says "branch idea/<name>, folder ideas/<name>", follow the hack-intake-idea skill. Before saying anything is done, follow the hack-ship-check skill.
 
-Think about the product first. Who is this for, what is the moment that impresses, and what does a judge see in the first 30 seconds?
+Think about the product before the code. Name the one risk you are still guessing at (does anyone want this, can a user work it, can we build it, can we run it live) and pick the cheapest test for it. Building is the last test, not the first. Done means the demo moment works in front of a judge in the first 30 seconds, not that the feature shipped.
 ```

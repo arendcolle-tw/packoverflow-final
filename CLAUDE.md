@@ -10,7 +10,7 @@ Goal is a live, working demo at the final. Working beats clean.
 
 ## First time in this repo
 
-If `.first-use-ok` does not exist, run `bash scripts/first-use.sh`, fix every FAIL line and run it again.
+On a person's Mac, if `.first-use-ok` does not exist, run `bash scripts/first-use.sh`, fix every FAIL line and run it again. Cloud threads skip this.
 
 ## Hand an idea to the main thread
 
@@ -18,7 +18,7 @@ When an idea in `ideas/<name>` should go into `app/`, push its branch, then post
 
 `branch idea/<name>, folder ideas/<name>: <what it adds>, want it in main`
 
-The project driver pastes it into the Claude project.
+The project driver pastes it into the Claude project and replies in the Slack thread when it is picked up.
 
 ## Pull requests in cloud threads
 

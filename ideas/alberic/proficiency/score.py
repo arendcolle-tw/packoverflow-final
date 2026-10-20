@@ -33,7 +33,9 @@ def tokens(text: str) -> list[str]:
 
 
 def row_weight(row: dict) -> float:
-    return ROLE_WEIGHT.get(row["human_role"], 0.0) * ACTOR_WEIGHT.get(row["actor"], 0.0)
+    weight = ROLE_WEIGHT.get(row["human_role"], 0.0) * ACTOR_WEIGHT.get(row["actor"], 0.0)
+    # Only saying "yes" to Claude's draft is close to accepted_as_is: half weight.
+    return weight * 0.5 if row.get("draft") == "confirmed" else weight
 
 
 def build_tasks(signals: list[dict], at: datetime) -> list[dict]:

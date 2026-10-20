@@ -2,28 +2,48 @@
 
 Run: uvicorn knowledge_graph.server:app --port 8080
 Env: KG_ADMIN_TOKEN (admin), KG_DATA_DIR (where the SQLite file lives), KG_BUCKET (GCS mirror, on Cloud Run).
+Backtracking (gaps) env: ANTHROPIC_API_KEY, ELEVENLABS_*, KG_PHONE_NUMBERS; see README.
 """
 
 import hmac
+import json
 import os
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Literal
 
 from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
+from knowledge_graph import gaps, pages
 from knowledge_graph.graph import KnowledgeGraph
 from proficiency.score import parse_at
 
 HERE = Path(__file__).resolve().parents[1]
 SEED = HERE / "seed" / "signals-wout.json"
+ARTIFACTS = HERE / "seed" / "artifacts.json"
 # Cloud Run sets K_SERVICE: keep the file in its writable /tmp and mirror it to Cloud Storage.
 ON_CLOUD_RUN = "K_SERVICE" in os.environ
 
 
 class NewMember(BaseModel):
     person: str = Field(min_length=1, max_length=300, pattern=r"\S")
+
+
+class Artifact(BaseModel):
+    id: str = Field(min_length=1, max_length=300)
+    kind: Literal["commit", "ticket", "doc"]
+    author: str | None = Field(None, max_length=300)
+    at: str = Field(max_length=40)
+    title: str = Field(min_length=1, max_length=300)
+    body: str = Field("", max_length=2000)
+    link: str | None = Field(None, max_length=500)
+
+
+class Answer(BaseModel):
+    answer: str = Field(min_length=1, max_length=200, pattern=r"\S")
 
 
 def _make_mirror() -> tuple[object | None, str]:
@@ -44,7 +64,18 @@ def make_graph() -> tuple[KnowledgeGraph, str]:
     return KnowledgeGraph(data_dir / "graph.sqlite", seed_paths=[SEED] if SEED.exists() else [], mirror=mirror), storage
 
 
+def _load_artifacts(graph: KnowledgeGraph) -> None:
+    """Seed artifacts (this repo's commits) fill ids the database does not have, then gaps are found."""
+    if ARTIFACTS.exists():
+        known = {a["id"] for a in graph.artifacts()}
+        fresh = [a for a in json.loads(ARTIFACTS.read_text()) if a["id"] not in known]
+        if fresh:
+            graph.add_artifacts(fresh)
+    gaps.find_gaps(graph)
+
+
 GRAPH, STORAGE = make_graph()
+_load_artifacts(GRAPH)
 app = FastAPI(title="knowledge-graph")
 
 
@@ -78,7 +109,9 @@ def _at(at: str | None) -> datetime | None:
 
 @app.post("/signals")
 def post_signals(rows: list[dict] = Body(..., max_length=1000), person: str = Depends(member)) -> dict:
-    return GRAPH.add_signals(rows, person=person)
+    result = GRAPH.add_signals(rows, person=person)
+    gaps.find_gaps(GRAPH)
+    return result
 
 
 @app.post("/members", dependencies=[Depends(admin)])
@@ -110,3 +143,75 @@ def get_rows() -> list[dict]:
 @app.get("/health")
 def health() -> dict:
     return {"storage": STORAGE, "rows": len(GRAPH.rows())}
+
+
+# Backtracking: gaps, Claude's drafts, and the owner's answer. Drafts never enter /rows.
+
+def _gap(gap_id: str) -> dict:
+    gap = GRAPH.gap(gap_id)
+    if gap is None:
+        raise HTTPException(404, "no such gap")
+    return gap
+
+
+@app.post("/artifacts", dependencies=[Depends(admin)])
+def post_artifacts(artifacts: list[Artifact] = Body(..., max_length=1000)) -> dict:
+    for a in artifacts:
+        _at(a.at)
+    stored = GRAPH.add_artifacts([a.model_dump() for a in artifacts])
+    return {"stored": stored, "open_gaps": len(gaps.find_gaps(GRAPH))}
+
+
+@app.get("/gaps")
+def get_gaps(status: str | None = None) -> list[dict]:
+    """status=open means not answered yet (open, drafted or calling)."""
+    found = gaps.all_gaps(GRAPH)
+    if status == "open":
+        found = [g for g in found if g["status"] in gaps.UNANSWERED]
+    elif status:
+        found = [g for g in found if g["status"] == status]
+    return [gaps.public(g) for g in found]
+
+
+@app.post("/gaps/scan", dependencies=[Depends(admin)])
+def post_scan(claude: int = Query(0, ge=0, le=50)) -> dict:
+    """Find gaps. With claude=N, also ask Claude to draft the N riskiest that still have a template draft."""
+    found = gaps.find_gaps(GRAPH)
+    drafted = 0
+    for gap in [g for g in found if g.get("draft_source") != "claude"][:claude]:
+        drafted += gaps.draft_gap(GRAPH, gap["id"])["draft_source"] == "claude"
+    return {"open": len(found), "claude_drafts": drafted}
+
+
+@app.post("/gaps/{gap_id}/draft", dependencies=[Depends(admin)])
+def post_draft(gap_id: str) -> dict:
+    _gap(gap_id)
+    return gaps.public(gaps.draft_gap(GRAPH, gap_id))
+
+
+@app.post("/gaps/{gap_id}/answer")
+def post_answer(gap_id: str, body: Answer, person: str = Depends(member)) -> dict:
+    gap = _gap(gap_id)
+    if gap["owner"] != person:
+        raise HTTPException(403, "only the owner can answer this gap")
+    if gap["status"] == "answered":
+        raise HTTPException(409, "already answered")
+    return gaps.public(gaps.answer_gap(GRAPH, gap_id, body.answer, "gap_form", f"form-{gap_id}"))
+
+
+def _phone_ready() -> bool:
+    return bool(os.environ.get("ELEVENLABS_PHONE_NUMBER_ID") and os.environ.get("ELEVENLABS_AGENT_ID")
+                and os.environ.get("ELEVENLABS_API_KEY"))
+
+
+@app.get("/gaps/board", response_class=HTMLResponse)
+def get_board() -> str:
+    found = gaps.all_gaps(GRAPH)
+    answered = sorted((g for g in found if g["status"] == "answered"), key=lambda g: g["answered_at"] or "", reverse=True)
+    return pages.board([g for g in found if g["status"] in gaps.UNANSWERED], answered,
+                       phone=_phone_ready(), claude=bool(os.environ.get("ANTHROPIC_API_KEY")))
+
+
+@app.get("/gaps/{gap_id}/talk", response_class=HTMLResponse)
+def get_talk(gap_id: str) -> str:
+    return pages.talk(_gap(gap_id), widget="")

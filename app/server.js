@@ -10,6 +10,7 @@ const VIDEO_URL = process.env.VIDEO_URL || "";
 const SLIDES_DIR = path.join(__dirname, "slides");
 const CONNECTOR = "https://knowledge-mcp-323892475788.us-central1.run.app";
 const graph = require("./graph");
+const GRAPH_BOARD = graph.GRAPH_URL + "/gaps/board";
 
 // Story wording in one place, so the headline and demo role are easy to flip.
 const HEADLINE = "Claude can tell you what. Your colleagues know why.";
@@ -70,6 +71,9 @@ function page() {
   .tag { color: var(--muted); font-size: 1.15rem; max-width: 46ch; margin: 0 0 32px; }
   nav { display: inline-flex; gap: 4px; padding: 4px; }
   nav button { background: none; border: 0; border-radius: 999px; color: var(--muted); font: inherit; font-weight: 600; padding: 8px 20px; cursor: pointer; }
+  nav .navlink { color: var(--muted); font-weight: 600; padding: 8px 20px; text-decoration: none; border-radius: 999px; }
+  nav .navlink:hover { color: var(--text); }
+  nav { flex-wrap: wrap; }
   nav button[aria-selected="true"] { color: var(--navy-950); background: var(--ai); }
   main { max-width: 1100px; margin: 0 auto; padding: 28px 20px 64px; }
   section[hidden] { display: none; }
@@ -127,6 +131,7 @@ function page() {
     <button role="tab" data-tab="ask" aria-selected="true">Ask</button>
     <button role="tab" data-tab="map" aria-selected="false">Map</button>
     <button role="tab" data-tab="review" aria-selected="false">Review your day</button>
+    <a class="navlink" href="${GRAPH_BOARD}" target="_blank" rel="noopener">Gaps board</a>
     <button role="tab" data-tab="demo" aria-selected="false">Connect</button>
     <button role="tab" data-tab="video" aria-selected="false">Video</button>
     <button role="tab" data-tab="slides" aria-selected="false">Slides</button>

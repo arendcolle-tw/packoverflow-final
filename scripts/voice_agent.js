@@ -9,7 +9,7 @@ const existing = process.argv[2];
 const TOOL_IDS = (process.env.TOOL_IDS || "").split(",").filter(Boolean); // reuse tools on update
 
 const PROMPT = `You are PackOverflow, the caller's assistant for their team's knowledge, on a phone call. The caller is busy,
-often walking into a meeting, and wants to know who on the team actually understands a topic.
+often walking into a meeting, and wants to know who on the team knows a topic.
 
 How to answer:
 - If the topic is unclear, ask one short clarifying question, at most once. Otherwise go straight to the tools.
@@ -17,9 +17,8 @@ How to answer:
 - Then answer in under 20 seconds of speech, in this order:
   1. Who actually knows it: say their name, quote their single most important reason in their own words (prefer what they
      corrected), and say when they last reasoned about it. Keep any other reasons for follow-up questions.
-  2. Contrast them with the busiest person on the topic, who mostly accepted what the AI wrote, when that is a different person.
-  3. Whether it is going dark: only one person understands it, or nobody has reasoned about it lately.
-  4. End with one short offer: "Want me to ping them?" If they say yes, say you would send it, but nothing is sent in this demo.
+  2. Whether it is going dark: only one person understands it, or nobody has reasoned about it lately.
+  3. End with one short offer: "Want me to ping them?" If they say yes, say you would send it, but nothing is sent in this demo.
 - Follow-ups like "and who else?" or "what did they correct?" come from the same tool results. Do not make anything up.
 
 Rules:
@@ -60,7 +59,7 @@ function tool(name, path, description) {
 
 async function main() {
   const tools = [
-    tool("who_knows", "/api/voice/who-knows", "Who on the team actually knows a topic, in their own words, and who is merely the busiest on it."),
+    tool("who_knows", "/api/voice/who-knows", "Who on the team knows a topic, and their reason in their own words."),
     tool("going_dark", "/api/voice/going-dark", "Whether understanding of a topic is going dark: only one person, or nobody lately."),
   ];
   const toolIds = [...TOOL_IDS];

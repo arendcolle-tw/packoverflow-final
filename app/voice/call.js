@@ -21,7 +21,6 @@
   function reset() {
     $("callnames").classList.remove("on");
     $("captions").innerHTML = "";
-    $("busyname").textContent = "...";
     $("knowname").textContent = "...";
     $("knowwhy").textContent = "";
     $("knowwhen").textContent = "";
@@ -31,7 +30,6 @@
   // The who_knows tool result, as our own endpoint returned it.
   function showNames(r) {
     if (!r || !r.who_knows) return;
-    $("busyname").textContent = (r.busiest_on_this && r.busiest_on_this.name) || r.who_knows.name;
     $("knowname").textContent = r.who_knows.name;
     const words = (r.who_knows.their_own_words || [])[0] || "";
     $("knowwhy").textContent = words.replace(/^[a-z ]+: /, "");

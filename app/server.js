@@ -59,6 +59,45 @@ const REVIEW_SEED = [
 ];
 
 // The main page: one end-to-end flow. Data in, ask, answer, call. The older tabbed page stays at /full.
+// Tristan's Slack demo recording. Drop it at app/video/demo.mp4 (or set VIDEO_URL); the slot stays hidden until then.
+const DEMO_VIDEO = path.join(__dirname, "video", "demo.mp4");
+
+function demoVideo() {
+  if (fs.existsSync(DEMO_VIDEO)) return `<video class="frame" src="/video/demo.mp4" controls playsinline preload="metadata"></video>`;
+  return VIDEO_URL ? videoBlock() : "";
+}
+
+// The main page: only the call, plus the demo video when there is one. The longer pages stay at /flow and /full, unlinked.
+function callPage() {
+  const video = demoVideo();
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nobikos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/theme.css">
+<style>
+  main { max-width: 900px; margin: 0 auto; padding: 40px 20px 64px; }
+  h1 { font-size: 2.6rem; font-weight: 800; margin: 0 0 24px; }
+  .card { padding: 20px; } .name { font: 800 1.8rem var(--display); margin: 6px 0; }
+  .label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .meta { color: var(--muted); font-size: 0.9rem; }
+  blockquote { margin: 8px 0; padding-left: 14px; border-left: 3px solid var(--amber); font-size: 1.05rem; }
+  .sample { display: inline-block; font-size: 0.8rem; font-weight: 600; color: var(--navy-950); background: var(--amber); border-radius: 999px; padding: 2px 10px; margin-bottom: 8px; }
+  .frame { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 18px; background: #000; margin-top: 28px; }
+${voice.STYLE}
+</style></head>
+<body><main>
+  <h1>Nobikos</h1>
+${voice.SECTION}
+${video}
+</main>
+<script>document.getElementById("call").hidden = false;</script>
+${voice.SCRIPTS}
+</body></html>`;
+}
+
 function simplePage() {
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
@@ -136,7 +175,6 @@ ${voice.SECTION}
     </ul>
   </section>
 
-  <p class="more"><a href="/full">Older page with all tabs</a></p>
 </main>
 <script>
   document.getElementById("call").hidden = false;
@@ -428,6 +466,24 @@ const server = http.createServer((req, res) => {
     });
   }
   if (voice.handle(req, res, urlPath)) return;
+  if (urlPath === "/video/demo.mp4") {
+    fs.stat(DEMO_VIDEO, (err, st) => {
+      if (err) { res.writeHead(404); return res.end("no video yet"); }
+      // Range support, so browsers can seek and Safari plays it.
+      const m = /bytes=(\d*)-(\d*)/.exec(req.headers.range || "");
+      let start = 0, end = st.size - 1;
+      if (m && (m[1] || m[2])) {
+        start = m[1] ? Number(m[1]) : Math.max(0, st.size - Number(m[2]));
+        end = m[1] && m[2] ? Math.min(Number(m[2]), st.size - 1) : st.size - 1;
+        if (start > end) { res.writeHead(416, { "Content-Range": `bytes */${st.size}` }); return res.end(); }
+        res.writeHead(206, { "Content-Type": "video/mp4", "Accept-Ranges": "bytes", "Content-Range": `bytes ${start}-${end}/${st.size}`, "Content-Length": end - start + 1 });
+      } else {
+        res.writeHead(200, { "Content-Type": "video/mp4", "Accept-Ranges": "bytes", "Content-Length": st.size });
+      }
+      fs.createReadStream(DEMO_VIDEO, { start, end }).pipe(res);
+    });
+    return;
+  }
   if (urlPath === "/theme.css") {
     res.writeHead(200, { "Content-Type": TYPES[".css"] });
     return res.end(fs.readFileSync(path.join(__dirname, "theme.css")));
@@ -436,7 +492,7 @@ const server = http.createServer((req, res) => {
     try { return serveSlide(urlPath, res); } catch { res.writeHead(400); return res.end(); }
   }
   res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-  res.end(urlPath === "/full" ? page() : simplePage());
+  res.end(urlPath === "/full" ? page() : urlPath === "/flow" ? simplePage() : callPage());
 });
 
 const port = process.env.PORT || 8080;

@@ -9,7 +9,9 @@ import hashlib
 import json
 import secrets
 import sqlite3
+import sys
 import threading
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -113,6 +115,8 @@ class KnowledgeGraph:
         if fresh:
             with _LOCK:
                 self._write(list(fresh.values()), person=None)
+        self._members_synced = time.time()
+        self._sync_members()
 
     def rows(self) -> list[dict]:
         return list(self._rows.values())
@@ -159,11 +163,34 @@ class KnowledgeGraph:
         with _LOCK:
             self._db.execute("INSERT INTO members (token, person) VALUES (?, ?)", (_hash(token), person))
             self._commit()
+        self._sync_members()
         return token
 
+    def _sync_members(self) -> None:
+        """Union the members table with the mirror's members blob, both ways. An instance that started from an
+        older copy of the database (two revisions overlap during a deploy) then still knows every member."""
+        if not hasattr(self.mirror, "load_members"):
+            return
+        try:
+            remote = self.mirror.load_members()
+            with _LOCK:
+                before = self._db.execute("SELECT count(*) FROM members").fetchone()[0]
+                self._db.executemany("INSERT OR IGNORE INTO members (token, person) VALUES (?, ?)", remote.items())
+                local = dict(self._db.execute("SELECT token, person FROM members"))
+                if len(local) != before:
+                    self._commit()
+            if local.keys() - remote.keys():
+                self.mirror.save_members({**remote, **local})
+        except Exception as error:  # noqa: BLE001
+            print(f"member sync failed: {type(error).__name__}", file=sys.stderr)
+
     def member(self, token: str) -> str | None:
-        """The person a member token belongs to, or None."""
+        """The person a member token belongs to, or None. An unknown token re-checks the mirror once a minute."""
         found = self._db.execute("SELECT person FROM members WHERE token = ?", (_hash(token),)).fetchone()
+        if found is None and time.time() - self._members_synced > 60:
+            self._members_synced = time.time()
+            self._sync_members()
+            found = self._db.execute("SELECT person FROM members WHERE token = ?", (_hash(token),)).fetchone()
         return found[0] if found else None
 
     def members(self) -> set[str]:

@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 
@@ -12,6 +13,14 @@ class GcsMirror:
         self.client = storage.Client(project=project)
         name = bucket_name or f"{project}-knowledge-graph"
         self.bucket = self.client.lookup_bucket(name) or self.client.create_bucket(name, location="us-central1")
+
+    def load_members(self) -> dict[str, str]:
+        """token hash -> person, kept as its own small blob so a redeploy race cannot drop a member."""
+        blob = self.bucket.blob("members.json")
+        return json.loads(blob.download_as_text()) if blob.exists() else {}
+
+    def save_members(self, members: dict[str, str]) -> None:
+        self.bucket.blob("members.json").upload_from_string(json.dumps(members), content_type="application/json")
 
     def upload(self, path: Path) -> None:
         self.bucket.blob(path.name).upload_from_filename(str(path))

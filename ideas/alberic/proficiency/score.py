@@ -80,7 +80,11 @@ def who_knows(query: str, signals: list[dict], at: datetime | None = None) -> di
     at = at or datetime.now(timezone.utc)
     tasks = build_tasks(signals, at)
     relevant = [(t, s) for t, s in zip(tasks, similarities(query, tasks)) if s >= MIN_SIMILARITY]
+    return {"query": query, "at": at.isoformat(), **rank(relevant, at)}
 
+
+def rank(relevant: list[tuple[dict, float]], at: datetime) -> dict:
+    """Rank people over (task, similarity) pairs. Callers pick the tasks: similar to a question, or one topic."""
     people: dict[str, dict] = {}
     for task, sim in relevant:
         reasoning = sum(
@@ -111,7 +115,8 @@ def who_knows(query: str, signals: list[dict], at: datetime | None = None) -> di
     ranked.sort(key=lambda e: -e["proficiency"])
 
     above = [p for p in ranked if p["proficiency"] >= OWNER_THRESHOLD]
-    if not any(p["proficiency"] > 0 for p in ranked):
+    # dark = no human reasoning ever; reasoning that decayed to ~0 is fading, not dark.
+    if not any(p["evidence"] for p in ranked):
         status = "dark"
     elif not above:
         status = "fading"
@@ -121,8 +126,6 @@ def who_knows(query: str, signals: list[dict], at: datetime | None = None) -> di
         status = "healthy"
 
     return {
-        "query": query,
-        "at": at.isoformat(),
         "status": status,
         "owner": above[0]["person"] if above else None,
         "similar_tasks": len(relevant),

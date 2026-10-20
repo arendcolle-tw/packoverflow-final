@@ -9,12 +9,12 @@ on:
       source:
         description: Folder to deploy
         type: choice
-        options: [app, ideas/alberic, ideas/wout, ideas/tristan]
+        options: [app, ideas/alberic]
         default: app
       service:
         description: Cloud Run service name
         type: choice
-        options: [packoverflow, knowledge-graph, knowledge-mcp, whoknows]
+        options: [packoverflow, knowledge-graph]
         default: packoverflow
       min_instances:
         description: Min instances (blank = unchanged)
@@ -63,9 +63,10 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           KG_ADMIN_TOKEN: ${{ secrets.KG_ADMIN_TOKEN }}
         run: |
-          # Only these folder and service pairs can be deployed.
+          # Only these folder and service pairs can be deployed, and only they are made public:
+          # both are demo sites judges open without logging in. Writes need a token in-app.
           case "$SOURCE:$SERVICE" in
-            app:packoverflow|ideas/alberic:knowledge-graph|ideas/wout:knowledge-mcp|ideas/tristan:whoknows) ;;
+            app:packoverflow|ideas/alberic:knowledge-graph) ;;
             *) echo "refusing to deploy $SOURCE as $SERVICE"; exit 1 ;;
           esac
           scale=()

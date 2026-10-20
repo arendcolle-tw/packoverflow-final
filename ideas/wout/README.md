@@ -14,6 +14,8 @@ uv run --python 3.13 --with fastapi --with uvicorn uvicorn knowledge_clock.serve
 
 Open http://localhost:8765. Demo mode is on by default (fixed "now" of 2026-10-20 16:15). `KC_NOW=live` uses the real time, `KC_SIGNALS=a.json,b.json` reads several signal files (a later file replaces rows with the same `source_id`), `KC_FADING_DAYS` changes the fading threshold.
 
+Open http://localhost:8765/?me=wout to see the questions for one person: decisions and corrections of Claude without a why. Answers go to `data/whys.json` (not committed) and show up as that row's why.
+
 Tests:
 
 ```bash
@@ -33,5 +35,4 @@ Only the extracted rows are committed, never raw sessions.
 - `data/signals.json` holds only Wout's sessions, so no topic can be `healthy` yet. Tristan's multi-person rows replace the stand-in.
 - `fading` uses a fixed 14 days. Albéric's proficiency decay should replace it.
 - Meeting notes as a second source: the row shape supports `source: meeting`, nothing reads meetings yet.
-- Asking for the why when someone overrules Claude without one.
-- No login. Security lives in `app/`.
+- No login. Anyone who can reach the server can answer a question for anyone (`POST /api/why`). Security lives in `app/`.

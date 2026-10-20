@@ -14,6 +14,7 @@ def client(tmp_path, monkeypatch):
     ])
     monkeypatch.setenv("KC_SIGNALS", str(signals))
     monkeypatch.setenv("KC_ALIASES", str(tmp_path / "none.json"))
+    monkeypatch.setenv("KC_WHYS", str(tmp_path / "whys.json"))
     from knowledge_clock.server import app
     return TestClient(app)
 
@@ -34,3 +35,36 @@ def test_page_never_injects_html(client):
     html = (Path(__file__).parents[1] / "knowledge_clock/static/index.html").read_text()
     assert "innerHTML" not in html and "/api/summary" in html
     assert client.get("/").status_code == 200
+
+
+@pytest.fixture
+def qclient(tmp_path, monkeypatch):
+    signals = write(tmp_path, "signals.json", [
+        row(id="s2:q1", source_id="s2", topic="slack-bot", human_role="corrected", why=None),
+        row(id="s2:q2", source_id="s2", topic="slack-bot", human_role="decided", why="already said"),
+        row(id="s2:q3", source_id="s2", topic="slack-bot", human_role="accepted_as_is", why=None),
+        row(id="s2:q4", source_id="s2", topic="slack-bot", human_role="decided", why=None, actor="unknown"),
+    ])
+    monkeypatch.setenv("KC_SIGNALS", str(signals))
+    monkeypatch.setenv("KC_ALIASES", str(tmp_path / "none.json"))
+    monkeypatch.setenv("KC_WHYS", str(tmp_path / "whys.json"))
+    from knowledge_clock.server import app
+    return TestClient(app)
+
+
+def test_questions_list_only_unexplained_human_decisions(qclient):
+    assert [q["id"] for q in qclient.get("/api/questions", params={"person": "wout"}).json()] == ["s2:q1"]
+    assert qclient.get("/api/questions", params={"person": "tristan"}).json() == []
+
+
+def test_answering_removes_question_and_shows_why(qclient):
+    assert qclient.post("/api/why", json={"id": "s2:q1", "why": "the bot posts twice otherwise"}).status_code == 204
+    assert qclient.get("/api/questions", params={"person": "wout"}).json() == []
+    whys = [s["why"] for s in qclient.get("/api/topics/slack-bot").json()["signals"]]
+    assert "the bot posts twice otherwise" in whys
+
+
+def test_why_validation(qclient):
+    assert qclient.post("/api/why", json={"id": "s2:q1", "why": "   "}).status_code == 422
+    assert qclient.post("/api/why", json={"id": "s2:q1", "why": "x" * 201}).status_code == 422
+    assert qclient.post("/api/why", json={"id": "nope", "why": "because"}).status_code == 404

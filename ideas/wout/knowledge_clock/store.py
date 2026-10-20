@@ -48,3 +48,17 @@ def load_signals(paths: list[Path]) -> tuple[list[dict], int]:
 
 def load_aliases(path: Path) -> dict[str, str]:
     return json.loads(path.read_text()) if path.exists() else {}
+
+
+def load_whys(path: Path) -> dict[str, str]:
+    return json.loads(path.read_text()) if path.exists() else {}
+
+
+def save_why(path: Path, row_id: str, why: str) -> None:
+    whys = load_whys(path)
+    whys[row_id] = why
+    path.write_text(json.dumps(whys, indent=1, ensure_ascii=False))
+
+
+def apply_whys(rows: list[dict], whys: dict[str, str]) -> list[dict]:
+    return [{**r, "why": whys[r["id"]]} if r["id"] in whys else r for r in rows]

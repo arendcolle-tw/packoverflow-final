@@ -39,6 +39,11 @@
   .signal q { display: block; margin-top: 6px; font-style: italic; overflow-wrap: anywhere; }
   .tag { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; margin-left: 6px; }
   .empty { color: var(--muted); }
+  .question { background: var(--card); border: 2px solid var(--human); border-radius: 12px; padding: 16px; margin: 0 0 24px; }
+  .question .title { font-weight: 700; color: var(--human); margin-bottom: 4px; }
+  .question form { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .question input { flex: 1 1 260px; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
+  .question button { font: inherit; padding: 8px 14px; border: 0; border-radius: 8px; background: var(--human); color: #fff; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -46,6 +51,7 @@
   <p class="eyebrow">Knowledge clock · who still understands this?</p>
   <h1 id="headline">Loading…</h1>
   <p class="sub" id="sub"></p>
+  <div id="question"></div>
   <div class="layout">
     <div class="topics" id="topics"></div>
     <aside class="detail" id="detail"><p class="empty">Pick a topic to see who reasoned about it, and why.</p></aside>
@@ -150,7 +156,35 @@ async function load() {
   }
 }
 
+async function loadQuestion() {
+  const me = new URLSearchParams(location.search).get("me");
+  const box = document.getElementById("question");
+  box.replaceChildren();
+  if (!me) return;
+  const questions = await fetch(`/api/questions?person=${encodeURIComponent(me)}`).then(r => r.json());
+  if (!questions.length) return;
+  const q = questions[0];
+  const card = el("div", "question");
+  card.appendChild(el("div", "title", `${questions.length} question${questions.length === 1 ? "" : "s"} for you, ${me}`));
+  card.appendChild(el("div", null, `On ${day(q.at)} you ${ROLE_LABEL[q.human_role]} about ${q.topic}, but nobody knows why. One line is enough.`));
+  const form = el("form");
+  const input = el("input");
+  input.placeholder = "Why?";
+  input.maxLength = 200;
+  input.required = true;
+  form.appendChild(input);
+  form.appendChild(el("button", null, "Save"));
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    const res = await fetch("/api/why", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: q.id, why: input.value }) });
+    if (res.ok) { await load(); await loadQuestion(); }
+  });
+  card.appendChild(form);
+  box.appendChild(card);
+}
+
 load();
+loadQuestion();
 </script>
 </body>
 </html>

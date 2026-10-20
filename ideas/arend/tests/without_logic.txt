@@ -1,0 +1,77 @@
+FF.FFFF.FF
+======================================================================
+FAIL: test_brief_detour_is_dropped (test_grouping.GroupingTest.test_brief_detour_is_dropped)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/packoverflow-final/ideas/arend/tests/test_grouping.py", line 42, in test_brief_detour_is_dropped
+    self.assertEqual(len(steps), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+AssertionError: 3 != 1
+
+======================================================================
+FAIL: test_same_window_is_one_step (test_grouping.GroupingTest.test_same_window_is_one_step)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/packoverflow-final/ideas/arend/tests/test_grouping.py", line 23, in test_same_window_is_one_step
+    self.assertEqual(len(steps), 2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+AssertionError: 5 != 2
+
+======================================================================
+FAIL: test_card (test_redact.RedactTest.test_card)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/packoverflow-final/ideas/arend/tests/test_redact.py", line 34, in test_card
+    self.assertIn("[CARD]", redact("card 4111 1111 1111 1111"))
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '[CARD]' not found in 'card 4111 1111 1111 1111'
+
+======================================================================
+FAIL: test_email (test_redact.RedactTest.test_email)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/packoverflow-final/ideas/arend/tests/test_redact.py", line 20, in test_email
+    self.assertNotIn("jan.peeters", out)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'jan.peeters' unexpectedly found in 'Mail jan.peeters@client-bv.be about it'
+
+======================================================================
+FAIL: test_iban (test_redact.RedactTest.test_iban)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/packoverflow-final/ideas/arend/tests/test_redact.py", line 12, in test_iban
+    self.assertNotIn("0961", out)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+AssertionError: '0961' unexpectedly found in 'Pay to BE71 0961 2345 6769 today'
+
+======================================================================
+FAIL: test_iban_compact (test_redact.RedactTest.test_iban_compact)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/packoverflow-final/ideas/arend/tests/test_redact.py", line 16, in test_iban_compact
+    self.assertIn("[IBAN]", redact("iban NL91ABNA0417164300"))
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '[IBAN]' not found in 'iban NL91ABNA0417164300'
+
+======================================================================
+FAIL: test_national_number (test_redact.RedactTest.test_national_number)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/packoverflow-final/ideas/arend/tests/test_redact.py", line 37, in test_national_number
+    self.assertIn("[NATIONAL_NUMBER]", redact("RRN 85.07.30-033.28"))
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '[NATIONAL_NUMBER]' not found in 'RRN 85.07.30-033.28'
+
+======================================================================
+FAIL: test_token (test_redact.RedactTest.test_token)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/packoverflow-final/ideas/arend/tests/test_redact.py", line 30, in test_token
+    self.assertNotIn(secret, out, secret)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'sk-ant-api03-AbCdEfGh1234567890XyZ_qwerty' unexpectedly found in 'key: sk-ant-api03-AbCdEfGh1234567890XyZ_qwerty' : sk-ant-api03-AbCdEfGh1234567890XyZ_qwerty
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.002s
+
+FAILED (failures=8)

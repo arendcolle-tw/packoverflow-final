@@ -1,0 +1,3 @@
+# Local-only state: captured events and review decisions never leave the laptop.
+local/
+*.png

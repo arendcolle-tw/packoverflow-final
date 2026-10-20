@@ -12,6 +12,12 @@ on:
       service:
         description: Cloud Run service name
         default: packoverflow
+      min_instances:
+        description: Min instances (blank = unchanged)
+        required: false
+      max_instances:
+        description: Max instances (blank = unchanged)
+        required: false
 
 env:
   PROJECT_ID: qwiklabs-gcp-04-61c2ca7d9c86
@@ -37,10 +43,16 @@ jobs:
           service_account: ${{ env.DEPLOY_SA }}
       - uses: google-github-actions/setup-gcloud@v2
       - name: Deploy from source
+        env:
+          MIN_INSTANCES: ${{ inputs.min_instances }}
+          MAX_INSTANCES: ${{ inputs.max_instances }}
         run: |
+          scale=()
+          [ -n "$MIN_INSTANCES" ] && scale+=(--min-instances "$MIN_INSTANCES")
+          [ -n "$MAX_INSTANCES" ] && scale+=(--max-instances "$MAX_INSTANCES")
           gcloud run deploy "${{ inputs.service || 'packoverflow' }}" \
             --source "${{ inputs.source || 'app' }}" \
             --project "$PROJECT_ID" --region "$REGION" \
-            --allow-unauthenticated --quiet
+            --allow-unauthenticated --quiet "${scale[@]}"
       - name: Print URL
         run: gcloud run services describe "${{ inputs.service || 'packoverflow' }}" --project "$PROJECT_ID" --region "$REGION" --format='value(status.url)' | tee -a "$GITHUB_STEP_SUMMARY"

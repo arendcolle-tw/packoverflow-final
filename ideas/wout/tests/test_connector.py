@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+from conftest import CODE
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -93,7 +95,7 @@ def client(tmp_path, monkeypatch):
 
 
 def _token(client) -> str:
-    return client.post("/api/join", json={"name": "Jan"}).json()["url"].split("/u/")[1].split("/")[0]
+    return client.post("/api/join", json={"name": "Jan", "code": CODE}).json()["url"].split("/u/")[1].split("/")[0]
 
 
 def test_shared_connector_needs_no_name(client):
@@ -109,9 +111,9 @@ def test_shared_connector_needs_no_name(client):
 
 
 def test_personal_url_still_works(client):
-    r = client.post("/api/join", json={"name": "Jan"}, headers={**CLOUD_RUN_HOST, "x-forwarded-proto": "https"})
+    r = client.post("/api/join", json={"name": "Jan", "code": CODE}, headers={**CLOUD_RUN_HOST, "x-forwarded-proto": "https"})
     assert r.json()["url"].startswith("https://knowledge-mcp-xyz.a.run.app/u/")
-    assert client.post("/api/join", json={"name": "  "}).status_code == 422
+    assert client.post("/api/join", json={"name": "  ", "code": CODE}).status_code == 422
     assert client.post("/u/nope/mcp", json={}).status_code == 404
     token = r.json()["url"].split("/u/")[1].split("/")[0]
     r = client.post(f"/u/{token}/mcp", headers=MCP_HEADERS, json={

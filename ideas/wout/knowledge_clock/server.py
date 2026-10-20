@@ -1,3 +1,4 @@
+import hmac
 import logging
 import os
 import re
@@ -34,6 +35,7 @@ class WhyAnswer(BaseModel):
 
 class JoinRequest(BaseModel):
     name: str = Field(max_length=100)
+    code: str = Field(default="", max_length=200)
 
 
 def _whys_path() -> Path:
@@ -142,8 +144,17 @@ def _is_open_question(signal: dict) -> bool:
     )
 
 
+def _member(authorization: str) -> str:
+    """The person behind a member token. Who you are always comes from the token, never from the request."""
+    person = _store().person_for(authorization.removeprefix("Bearer ").strip())
+    if person is None:
+        raise HTTPException(status_code=401, detail="Join first: your member token is required")
+    return person
+
+
 @router.get("/api/questions")
-def get_questions(person: str) -> list[dict]:
+def get_questions(authorization: str = Header("")) -> list[dict]:
+    person = _member(authorization)
     return [
         {"id": s["id"], "topic": s["topic"], "at": s["at"], "human_role": s["human_role"]}
         for s in _config()["signals"]
@@ -154,9 +165,7 @@ def get_questions(person: str) -> list[dict]:
 @router.post("/api/why", status_code=204)
 def post_why(answer: WhyAnswer, authorization: str = Header("")) -> Response:
     # The person comes from their member token, so nobody can put words in someone else's mouth.
-    person = _store().person_for(authorization.removeprefix("Bearer ").strip())
-    if person is None:
-        raise HTTPException(status_code=401, detail="Join first: your member token is required")
+    person = _member(authorization)
     # Only open questions, so nobody can overwrite a quote or put words on an AI-handled row.
     if not any(s["id"] == answer.id and s["person"] == person and _is_open_question(s) for s in _config()["signals"]):
         raise HTTPException(status_code=404, detail="No open question with this id")
@@ -207,6 +216,10 @@ def _join_allowed(ip: str, limit: int = 5, window: float = 600) -> bool:
 
 @router.post("/api/join")
 def join(body: JoinRequest, request: Request) -> dict:
+    # Joining needs the team's invite code (KC_JOIN_CODE, at least 12 characters). Without one set, joining is closed.
+    code = os.environ.get("KC_JOIN_CODE", "")
+    if len(code) < 12 or not hmac.compare_digest(body.code.encode(), code.encode()):
+        raise HTTPException(status_code=403, detail="A valid invite code is required")
     if not _join_allowed(request.headers.get("x-forwarded-for", "").split(",")[-1].strip() or str(request.client and request.client.host)):
         raise HTTPException(status_code=429, detail="Too many joins, try again in a few minutes")
     store = _store()
@@ -216,7 +229,7 @@ def join(body: JoinRequest, request: Request) -> dict:
         raise HTTPException(status_code=409, detail="This name already has a connector")
     member = store.create_member(body.name)
     if member is None:
-        raise HTTPException(status_code=422, detail="Name must be 1 to 40 characters")
+        raise HTTPException(status_code=422, detail="Name must be 1 to 40 letters, digits, spaces, dots, hyphens or apostrophes, or the team is full")
     token, person = member
     return {"person": person, **_links(f"{_base(request)}/u/{token}/mcp")}
 

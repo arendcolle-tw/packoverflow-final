@@ -29,7 +29,8 @@ def load_signals(paths: list[Path]) -> tuple[list[dict], int]:
     by_id: dict[str, dict] = {}
     skipped = 0
     for path in paths:
-        if not path.exists():
+        # Signal files are JSON only, so a stray path can never pull in some other file.
+        if path.suffix != ".json" or not path.is_file():
             continue
         try:
             rows = json.loads(path.read_text())
@@ -47,6 +48,8 @@ def load_signals(paths: list[Path]) -> tuple[list[dict], int]:
 
 
 def _load_mapping(path: Path) -> dict[str, str]:
+    if path.suffix != ".json":
+        return {}
     try:
         data = json.loads(path.read_text())
     except (FileNotFoundError, json.JSONDecodeError):

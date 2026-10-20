@@ -232,10 +232,11 @@ def post_call(gap_id: str) -> dict:
     try:
         call_id = voice.start_call(gap)
     except voice.NotConfigured as error:
-        raise HTTPException(409, f"{error}; use /gaps/{gap_id}/talk") from None
+        print(f"outbound call not configured: {error}", file=sys.stderr)
+        raise HTTPException(409, "Phone calls are not set up for this owner. Answer on the talk page: /gaps/" + gap_id + "/talk") from None
     except Exception as error:  # noqa: BLE001
         print(f"outbound call failed: {type(error).__name__}", file=sys.stderr)
-        raise HTTPException(502, f"call failed; use /gaps/{gap_id}/talk") from None
+        raise HTTPException(502, "The call failed. Answer on the talk page: /gaps/" + gap_id + "/talk") from None
     gap.update(status="calling", call_id=call_id)
     GRAPH.save_gaps([gap])
     return gaps.public(gap)

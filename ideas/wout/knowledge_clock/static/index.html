@@ -157,15 +157,18 @@ async function load() {
 }
 
 async function loadQuestion() {
-  const me = new URLSearchParams(location.search).get("me");
+  let token = "";
+  try { token = localStorage.getItem("kcToken") || ""; } catch {}
   const box = document.getElementById("question");
   box.replaceChildren();
-  if (!me) return;
-  const questions = await fetch(`/api/questions?person=${encodeURIComponent(me)}`).then(r => r.json());
+  if (!token) return;
+  const res = await fetch("/api/questions", { headers: { "Authorization": `Bearer ${token}` } });
+  if (!res.ok) return;
+  const questions = await res.json();
   if (!questions.length) return;
   const q = questions[0];
   const card = el("div", "question");
-  card.appendChild(el("div", "title", `${questions.length} question${questions.length === 1 ? "" : "s"} for you, ${me}`));
+  card.appendChild(el("div", "title", `${questions.length} question${questions.length === 1 ? "" : "s"} for you`));
   card.appendChild(el("div", null, `On ${day(q.at)} you ${ROLE_LABEL[q.human_role]} about ${q.topic}, but nobody knows why. One line is enough.`));
   const form = el("form");
   const input = el("input");
@@ -176,8 +179,6 @@ async function loadQuestion() {
   form.appendChild(el("button", null, "Save"));
   form.addEventListener("submit", async event => {
     event.preventDefault();
-    let token = "";
-    try { token = localStorage.getItem("kcToken") || ""; } catch {}
     const res = await fetch("/api/why", { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ id: q.id, why: input.value }) });
     if (res.ok) { await load(); await loadQuestion(); }
   });

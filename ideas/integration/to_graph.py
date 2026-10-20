@@ -6,6 +6,7 @@ Dry run by default: prints the payload summary and writes it to --out. Posts onl
 import argparse
 import json
 import sys
+import urllib.parse
 import urllib.request
 from datetime import datetime
 from pathlib import Path
@@ -60,9 +61,16 @@ def convert(rows: list) -> tuple[list[dict], list[str]]:
     return [signals[i] for i in sorted(seen.values())], dropped
 
 
+
+def check_url(url: str) -> None:
+    """Only send member tokens over HTTPS, or plain HTTP to this machine for local testing."""
+    parts = urllib.parse.urlsplit(url)
+    local = parts.hostname in ("localhost", "127.0.0.1", "::1")
+    if not parts.hostname or parts.username or not (parts.scheme == "https" or (parts.scheme == "http" and local)):
+        raise ValueError(f"refusing to send to {url!r}: use an https:// URL")
+
 def post(signals: list[dict], url: str, token: str, chunk: int = 1000) -> list[dict]:
-    if not url.startswith(("https://", "http://")):
-        raise ValueError("--post needs an http(s) URL")
+    check_url(url)
     results = []
     for start in range(0, len(signals), chunk):
         request = urllib.request.Request(

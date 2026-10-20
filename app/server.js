@@ -24,7 +24,7 @@ const TYPES = {
   ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg", ".svg": "image/svg+xml", ".webp": "image/webp",
   ".gif": "image/gif", ".mp4": "video/mp4", ".webm": "video/webm",
-  ".woff": "font/woff", ".woff2": "font/woff2", ".pdf": "application/pdf",
+  ".woff": "font/woff", ".woff2": "font/woff2", ".pdf": "application/pdf", ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
 };
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
@@ -41,6 +41,13 @@ function videoBlock() {
 }
 
 function slidesBlock() {
+  if (fs.existsSync(path.join(SLIDES_DIR, "deck.pdf"))) {
+    return `<iframe class="frame" src="/slides/deck.pdf" title="Pitch deck"></iframe>
+      <p class="hint"><a href="/slides/deck.pdf" target="_blank">Open the deck full screen</a>${fs.existsSync(path.join(SLIDES_DIR, "deck.pptx")) ? ` · <a href="/slides/deck.pptx">Download PowerPoint</a>` : ""}</p>`;
+  }
+  if (fs.existsSync(path.join(SLIDES_DIR, "deck.pptx"))) {
+    return `<div class="empty"><h2>Pitch deck</h2><p><a class="btn" href="/slides/deck.pptx">Download the PowerPoint</a></p></div>`;
+  }
   if (fs.existsSync(path.join(SLIDES_DIR, "index.html"))) {
     return `<iframe class="frame" src="/slides/index.html" allowfullscreen></iframe>
       <p class="hint"><a href="/slides/index.html" target="_blank">Open slides full screen</a></p>`;
@@ -67,6 +74,39 @@ function demoVideo() {
   return VIDEO_URL ? videoBlock() : "";
 }
 
+
+// What Nobikos is and its use cases, shown under the call. Status per item is kept honest.
+const DESCRIPTION = "Facts are not knowledge. AI can tell you what was done and how, but only a person knows why, and the why is what matters. And now that AI writes most of the text, we have to tell what the AI generated apart from what a human actually reasoned. Nobikos keeps only the human reasoning. It picks up the decisions people make in their AI sessions, the moments they correct the AI or explain why, and stores each one with the person behind it and their reason in their own words. Anyone can ask in Slack or from their AI assistant and get the answer, who knows it and why. When nobody has recorded it yet, Nobikos tags the person most likely to know, and their reply becomes the next answer.";
+const USE_CASES = [
+  ["For the employee", [
+    ["Find who knows", "Live", "Ask \"who knows X\" in Slack or any assistant. You get the colleague who actually worked it out, with their reason in their own words. An \"Ask\" button opens the chat with them."],
+    ["Call the knowledge base", "Live", "Ask by voice instead of interrupting a senior. The call above is this use case."],
+    ["Get the steps when starting a task", "Prototype", "The recorder learns how colleagues did a manual task and turns it into a step list. You review it before anything is shared. Works on sample data only, not merged yet."],
+    ["Close a gap without writing a doc", "Built", "When the system spots work nobody ever explained, the owner gets a message to answer in a line or take a 60-second call. The answer becomes knowledge in their own words. Tested with mocks; the message to the owner is still missing."],
+  ]],
+  ["For the employer", [
+    ["See where knowledge is at risk", "Live", "Shows topics that one person or nobody holds."],
+    ["Watch gaps close", "Built", "A board shows each gap, the draft and the owner's real answer side by side."],
+    ["Keep knowledge when people leave", "Follows from the same data", "Handovers and departures don't wipe out the why, because each reason is stored with the person who gave it."],
+  ]],
+  ["On the same knowledge base (roadmap)", [
+    ["Onboarding path", "Roadmap", "Built around what a newcomer already knows."],
+    ["Personal skill view", "Roadmap", "Visible only to the person."],
+    ["Portfolio handover", "Roadmap", "See who really worked through a client's questions before you take it over."],
+    ["Private fact note in meetings", "Roadmap", "A quiet note only you see when a meeting drifts from what was decided."],
+    ["Any agent can ask it", "Roadmap", "Including SD Worx's own agents."],
+  ]],
+];
+
+function aboutBlock() {
+  return `<section class="about">
+    <p class="desc">${esc(DESCRIPTION)}</p>
+    ${USE_CASES.map(([group, items]) => `<h2>${esc(group)}</h2>` + items.map(([title, status, detail]) =>
+      `<details class="glass uc"><summary><span>${esc(title)}</span><span class="badge s-${esc(status.split(" ")[0].toLowerCase())}">${esc(status)}</span></summary><p>${esc(detail)}</p></details>`).join("")).join("")}
+    <p class="close">Less asking how, more talking why.</p>
+  </section>`;
+}
+
 // The main page: only the call, plus the demo video when there is one. The longer pages stay at /flow and /full, unlinked.
 function callPage() {
   const video = demoVideo();
@@ -86,14 +126,48 @@ function callPage() {
   blockquote { margin: 8px 0; padding-left: 14px; border-left: 3px solid var(--amber); font-size: 1.05rem; }
   .sample { display: inline-block; font-size: 0.8rem; font-weight: 600; color: var(--navy-950); background: var(--amber); border-radius: 999px; padding: 2px 10px; margin-bottom: 8px; }
   .frame { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 18px; background: #000; margin-top: 28px; }
+  nav { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 24px; }
+  nav button { background: none; border: 0; border-radius: 999px; color: var(--muted); font: inherit; font-weight: 600; padding: 8px 20px; cursor: pointer; }
+  nav button[aria-selected="true"] { color: var(--navy-950); background: var(--ai); }
+  .view[hidden] { display: none; }
+  .about { margin-top: 36px; }
+  .about h2 { font-size: 1.3rem; margin: 28px 0 10px; }
+  .desc { font-size: 1.05rem; line-height: 1.6; }
+  .uc { margin-bottom: 8px; padding: 0 18px; }
+  .uc summary { cursor: pointer; padding: 14px 0; font-weight: 600; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+  .uc p { color: var(--muted); margin: 0 0 14px; }
+  .badge { font-size: 0.75rem; font-weight: 600; border-radius: 999px; padding: 2px 10px; white-space: nowrap; background: rgba(255,255,255,0.08); color: var(--muted); }
+  .badge.s-live { background: rgba(35,219,193,0.15); color: var(--teal); }
+  .badge.s-built, .badge.s-prototype { background: rgba(158,210,255,0.15); color: var(--sky-300); }
+  .close { font: 800 1.6rem var(--display); margin-top: 32px; }
+  .empty { text-align: center; padding: 80px 16px; border: 2px dashed var(--glass-line); border-radius: 18px; }
+  .empty p, .hint { color: var(--muted); }
 ${voice.STYLE}
 </style></head>
 <body><main>
   <h1>Nobikos</h1>
+  <nav class="glass" role="tablist">
+    <button role="tab" data-view="home" aria-selected="true">Call</button>
+    <button role="tab" data-view="deck" aria-selected="false">Slides</button>
+  </nav>
+  <div class="view" id="home">
 ${voice.SECTION}
 ${video}
+${aboutBlock()}
+  </div>
+  <div class="view" id="deck" hidden>${slidesBlock()}</div>
 </main>
-<script>document.getElementById("call").hidden = false;</script>
+<script>
+  document.getElementById("call").hidden = false;
+  const views = document.querySelectorAll("nav button");
+  function view(name) {
+    if (name !== "deck") name = "home";
+    views.forEach((b) => b.setAttribute("aria-selected", b.dataset.view === name));
+    document.querySelectorAll(".view").forEach((v) => (v.hidden = v.id !== name));
+  }
+  views.forEach((b) => b.addEventListener("click", () => { history.replaceState(null, "", b.dataset.view === "deck" ? "#slides" : "#"); view(b.dataset.view); }));
+  view(location.hash === "#slides" ? "deck" : "home");
+</script>
 ${voice.SCRIPTS}
 </body></html>`;
 }

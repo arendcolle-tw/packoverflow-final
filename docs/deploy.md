@@ -21,7 +21,7 @@ Threads never deploy themselves and have no Google Cloud access.
 
 ## Manual run
 
-Actions tab > "Deploy to Cloud Run" > Run workflow (inputs: source folder, service name).
+Actions tab > "Deploy to Cloud Run" > Run workflow (inputs: source folder, service name, and optional min and max instances; blank leaves them unchanged). For `knowledge-mcp` use source `ideas/wout`, min 1, max 1, so its in-memory data is not split or dropped.
 
 ## Troubleshooting
 

@@ -151,6 +151,7 @@ function callPage() {
 <title>Nobikos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="/theme.css">
 <style>
   main { max-width: 900px; margin: 0 auto; padding: 40px 20px 64px; }
@@ -218,6 +219,7 @@ function simplePage() {
 <title>Nobikos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="/theme.css">
 <style>
   main { max-width: 900px; margin: 0 auto; padding: 40px 20px 64px; }
@@ -328,6 +330,7 @@ function page() {
 <title>Nobikos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="/theme.css">
 <style>
   header { padding: 56px 20px 0; max-width: 1100px; margin: 0 auto; }
@@ -579,6 +582,14 @@ const server = http.createServer((req, res) => {
     });
   }
   if (voice.handle(req, res, urlPath)) return;
+  const ICONS = { "/favicon.svg": "image/svg+xml", "/favicon.ico": "image/x-icon", "/apple-touch-icon.png": "image/png" };
+  if (ICONS[urlPath]) {
+    return fs.readFile(path.join(__dirname, "icons", urlPath.slice(1)), (err, data) => {
+      if (err) { res.writeHead(404); return res.end(); }
+      res.writeHead(200, { "Content-Type": ICONS[urlPath], "Cache-Control": "public, max-age=86400" });
+      res.end(data);
+    });
+  }
   if (urlPath === "/video/demo.mp4") {
     fs.stat(DEMO_VIDEO, (err, st) => {
       if (err) { res.writeHead(404); return res.end("no video yet"); }

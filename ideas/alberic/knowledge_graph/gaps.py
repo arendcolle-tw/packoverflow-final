@@ -144,6 +144,28 @@ def all_gaps(graph: KnowledgeGraph) -> list[dict]:
     return sorted(_distinct(ordered), key=lambda g: (g["status"] not in UNANSWERED, *_rank(g)))
 
 
+def set_draft(graph: KnowledgeGraph, gap_id: str, draft: str, check_question: str, source: str = "claude") -> dict | None:
+    """Store a draft written elsewhere (by Claude in a thread, say). Still a hypothesis: it never enters signals."""
+    gap = graph.gap(gap_id)
+    if gap is None:
+        return None
+    gap.update(draft=draft.strip()[:400], check_question=check_question.strip()[:200], draft_source=source)
+    graph.save_gaps([gap])
+    return gap
+
+
+def load_drafts(graph: KnowledgeGraph, path: Path) -> int:
+    """Seed drafts (gap id -> draft) replace template drafts only, so a later Claude or owner edit wins."""
+    if not path.exists():
+        return 0
+    done = 0
+    for gap_id, d in json.loads(path.read_text()).items():
+        gap = graph.gap(gap_id)
+        if gap and gap.get("draft_source") == "template" and gap["status"] in UNANSWERED:
+            done += bool(set_draft(graph, gap_id, d["draft"], d["check_question"]))
+    return done
+
+
 def redraft_templates(graph: KnowledgeGraph, limit: int = 10) -> int:
     """With a Claude key, replace the riskiest template drafts. Run at startup so nobody has to call /gaps/scan."""
     if not os.environ.get("ANTHROPIC_API_KEY"):

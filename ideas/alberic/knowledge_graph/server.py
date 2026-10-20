@@ -74,6 +74,7 @@ def _load_artifacts(graph: KnowledgeGraph) -> None:
         if fresh:
             graph.add_artifacts(fresh)
     gaps.find_gaps(graph)
+    gaps.load_drafts(graph, HERE / "seed" / "drafts.json")
 
 
 GRAPH, STORAGE = make_graph()
@@ -187,9 +188,17 @@ def post_scan(claude: int = Query(0, ge=0, le=50)) -> dict:
     return {"open": len(found), "claude_drafts": drafted}
 
 
+class Draft(BaseModel):
+    draft: str = Field(min_length=1, max_length=400, pattern=r"\S")
+    check_question: str = Field(min_length=1, max_length=200, pattern=r"\S")
+
+
 @app.post("/gaps/{gap_id}/draft", dependencies=[Depends(admin)])
-def post_draft(gap_id: str) -> dict:
+def post_draft(gap_id: str, body: Draft | None = None) -> dict:
+    """No body: ask Claude (template fallback). With {draft, check_question}: store that draft as given."""
     _gap(gap_id)
+    if body is not None:
+        return gaps.public(gaps.set_draft(GRAPH, gap_id, body.draft, body.check_question))
     return gaps.public(gaps.draft_gap(GRAPH, gap_id))
 
 
@@ -215,7 +224,7 @@ def get_board() -> str:
     found = gaps.all_gaps(GRAPH)
     answered = sorted((g for g in found if g["status"] == "answered"), key=lambda g: g["answered_at"] or "", reverse=True)
     waiting = [g for g in found if g["status"] in gaps.UNANSWERED]
-    return pages.board(waiting, answered, phone=_callable({g["owner"] for g in waiting}), claude=bool(os.environ.get("ANTHROPIC_API_KEY")))
+    return pages.board(waiting, answered, phone=_callable({g["owner"] for g in waiting}), claude=bool(os.environ.get("ANTHROPIC_API_KEY")) or any(g.get("draft_source") == "claude" for g in waiting))
 
 
 @app.get("/gaps/{gap_id}/talk", response_class=HTMLResponse)

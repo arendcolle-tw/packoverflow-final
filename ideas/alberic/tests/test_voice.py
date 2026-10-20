@@ -70,7 +70,7 @@ def test_webhook_stores_confirmed_at_half_and_edited_at_full_weight(client):
 
     result = client.post("/webhooks/elevenlabs", **signed(event(first, ["Yes.", "Yes, that's right."], "c1"))).json()
     assert result["draft_result"] == "confirmed"
-    second_words = second["draft"].replace("Was that because ...?", "because the scan blocked our deploy at 18:00.")
+    second_words = second["draft"].split(" because")[0] + " because the scan blocked our deploy at 18:00 on the night before."
     result = client.post("/webhooks/elevenlabs", **signed(event(second, [second_words, "Yes."], "c2"))).json()
     assert result["draft_result"] in ("edited", "rewritten")
 

@@ -4,14 +4,28 @@ Context only: how we're judged and what we learned from round 1.
 
 Prize: €10,000, winner takes all. 15 teams in our track (SD Worx). Judged on a live pitch with a demo.
 
-## How we're scored (assumed same as round 1)
+## How we're scored
 
-| Criterion | What it means in practice |
-|---|---|
-| **Creativity** | Is the idea original? Can a jury member get it in 5 seconds? |
-| **Technical ability** | Does it actually work, live, end to end? |
-| **Fit** | Does it solve SD Worx's case, for a real role at SD Worx? |
-| **Security (10%)** | Aikido AI Code Audit: business logic, IDOR, authentication, authorization. Score = issues left after fixes. Before/after screenshots. |
+Official weights from the final's submission page.
+
+| Criterion | Weight | What it means in practice |
+|---|---|---|
+| **Originality** | 25% | Is the idea original? Can a jury member get it in 5 seconds? |
+| **Pitch quality** | 25% | The live pitch with the demo. |
+| **Technical ability** | 20% | Does it actually work, live, end to end? |
+| **Applicability to the challenge** | 20% | Does it solve SD Worx's case, for a real role at SD Worx? |
+| **Security** | 10% | Aikido AI Code Audit: business logic, IDOR, authentication, authorization. Score = issues left after fixes. Before/after screenshots. |
+
+## What we submit
+
+Can be updated until the submission deadline.
+
+| Item | Status | Note |
+|---|---|---|
+| Short description | Required | A description of the solution. |
+| GitHub repository link | Required | The repo must be public so judges can review the code. |
+| Pitch slides | Required | As ppt or pdf. |
+| Screenshots from the Aikido platform | Optional | The before/after audit screenshots. |
 
 Rules (round 1): built during the event only · repo public until judging ends · README with what it is, how to run, what's unfinished · no secrets in git · final means final.
 
@@ -50,18 +64,18 @@ Caveat: matched on lead names, selection was top ~20% per city, and the cutoff w
 
 ## Do's and don'ts
 
-**Creativity**
+**Originality (25%)**
 - Do have a one-sentence idea and a 5-second visual.
 - Do pick one role, one moment of doubt, one workflow. SD Worx's brief asked for exactly that.
 - Don't build "chat with your docs + trust score". That's the baseline now.
 
-**Technical ability**
+**Technical ability (20%)**
 - Do make one end-to-end happy path work before adding breadth.
 - Do keep a demo mode: seeded data, a reset button, a fixed demo date, no dependency on a live API.
 - If AI is in the loop, plan for quota limits with caching and a fallback.
 - Don't fake core logic. Judges and other teams read repos.
 
-**Fit**
+**Applicability (20%)**
 - Do use real SD Worx vocabulary: payroll consultant, client portfolio, joint committee (PC 200…), mysdworx, Legal Watch, indexation.
 - Do show how it plugs into what SD Worx already runs (see context/SDWORX.md), not replaces it.
 - Don't drift to a different user than the one in the case.
@@ -71,6 +85,6 @@ Caveat: matched on lead names, selection was top ~20% per city, and the cutoff w
 - Do keep the Aikido before/after screenshots; the audit can sit in a queue for a long time.
 - Don't over-invest. It's 10%, and round 1 shows it didn't make or break teams.
 
-**Pitch (live)**
+**Pitch quality (25%)**
 - Do open with the moment of doubt, demo the fix, end with why SD Worx should care. One number if you have an honest one.
 - Do have a recorded screen capture of the happy path as a backup if the live demo fails.

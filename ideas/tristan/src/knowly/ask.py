@@ -27,7 +27,7 @@ def related_facts(lookup: dict) -> list[dict]:
 class Asker:
     def __init__(self, graph, db_path: Path, tokens_path: Path, notify=None, compose=None):
         if compose is None:
-            from whoknows.answer import compose
+            from knowly.answer import compose
         self.graph = graph
         self.compose = compose
         self.tokens_path = Path(tokens_path)

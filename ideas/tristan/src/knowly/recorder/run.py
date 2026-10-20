@@ -14,13 +14,12 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-from recorder.classify import ACTORS, ROLES, classify
-from recorder.sessions import scrub, session_files, session_items
-from recorder.summarise import compact, summarise, to_row
+from knowly.recorder.classify import ACTORS, ROLES, classify
+from knowly.recorder.sessions import scrub, session_files, session_items
+from knowly.recorder.summarise import compact, summarise, to_row
 
-CACHE = Path.home() / ".cache" / "packoverflow-recorder" / "cache.json"
+CACHE = Path.home() / ".cache" / "knowly" / "cache.json"
 SUMMARIES = CACHE.with_name("summaries.json")
-DATA = Path(__file__).resolve().parent.parent / "data"
 
 
 def verbatim_why(why: str | None, text: str) -> str | None:
@@ -143,7 +142,6 @@ def record_summaries(files: list[Path], person: str, out: Path, cache_path: Path
     return rows
 
 
-
 def check_url(url: str) -> None:
     """Only send member tokens over HTTPS, or plain HTTP to this machine for local testing."""
     parts = urllib.parse.urlsplit(url)
@@ -151,32 +149,19 @@ def check_url(url: str) -> None:
     if not parts.hostname or parts.username or not (parts.scheme == "https" or (parts.scheme == "http" and local)):
         raise ValueError(f"refusing to send to {url!r}: use an https:// URL")
 
-def push(rows: list[dict], url: str, token: str, path: str = "/signals", chunk: int = 1000) -> tuple[int, int]:
+
+def push(rows: list[dict], url: str, token: str, chunk: int = 1000) -> tuple[int, int]:
     check_url(url)
     stored = skipped = 0
-    path = "/" + path.lstrip("/")
     for start in range(0, len(rows), chunk):
         batch = json.dumps(rows[start:start + chunk], ensure_ascii=False).encode()
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-        try:
-            with urllib.request.urlopen(urllib.request.Request(url.rstrip("/") + path, batch, headers), timeout=30) as response:
-                result = json.load(response)
-        except urllib.error.HTTPError as error:
-            # An old Who knows store has no /signals, only /api/signals.
-            if path != "/signals" or error.code not in (404, 405):
-                raise
-            path = "/api/signals"
-            with urllib.request.urlopen(urllib.request.Request(url.rstrip("/") + path, batch, headers), timeout=30) as response:
-                result = json.load(response)
-        # The knowledge graph answers {added, updated, rejected}, the whoknows server {stored, skipped}.
-        if "rejected" in result:
-            stored += result["added"] + result["updated"]
-            skipped += len(result["rejected"])
-            if result["rejected"]:
-                print(f"rejected: {result['rejected'][0]}", file=sys.stderr)
-        else:
-            stored += result["stored"]
-            skipped += result["skipped"]
+        with urllib.request.urlopen(urllib.request.Request(url.rstrip("/") + "/signals", batch, headers), timeout=30) as response:
+            result = json.load(response)
+        stored += result["added"] + result["updated"]
+        skipped += len(result["rejected"])
+        if result["rejected"]:
+            print(f"rejected: {result['rejected'][0]}", file=sys.stderr)
     return stored, skipped
 
 
@@ -190,22 +175,20 @@ def main() -> None:
                              "turns: one row per human turn")
     parser.add_argument("--out", type=Path)
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument("--push", metavar="URL", help="also send the rows to this store, e.g. the knowledge graph")
-    parser.add_argument("--push-path", default="/signals",
-                        help="the store's endpoint for rows: /signals for the knowledge graph (default), /api/signals for the whoknows server")
-    parser.add_argument("--token", default=os.environ.get("WHOKNOWS_TOKEN"), help="member token, default $WHOKNOWS_TOKEN")
+    parser.add_argument("--push", metavar="URL", help="also send the rows to the knowledge graph at this URL")
+    parser.add_argument("--token", default=os.environ.get("KNOWLY_TOKEN"), help="graph member token, default $KNOWLY_TOKEN")
     args = parser.parse_args()
     if args.push and not args.token:
-        parser.error("--push needs --token or WHOKNOWS_TOKEN")
+        parser.error("--push needs --token or KNOWLY_TOKEN")
 
     person = " ".join(args.person.split()).lower()
-    out = args.out or DATA / f"signals-{person}.json"
+    out = args.out or CACHE.with_name(f"signals-{person}.json")
     files = session_files(args.projects_dir, args.match)
     rows = (record_summaries if args.mode == "summary" else record)(files, person, out, workers=args.workers)
     if not args.push:
         return
     try:
-        stored, skipped = push(rows, args.push, args.token, args.push_path)
+        stored, skipped = push(rows, args.push, args.token)
     except urllib.error.HTTPError as error:
         sys.exit(f"push to {args.push} failed: HTTP {error.code} {error.read().decode(errors='replace')[:200]}; rows kept in {out}")
     except (OSError, ValueError, KeyError) as error:

@@ -3,7 +3,7 @@ import importlib
 import pytest
 from fastapi.testclient import TestClient
 
-from whoknows.graph import GraphError
+from knowly.graph import GraphError
 
 HEADERS = {"Accept": "application/json, text/event-stream", "MCP-Protocol-Version": "2025-11-25"}
 KNOWN = {"known": True, "question_id": None, "pinged": None,
@@ -29,22 +29,21 @@ class FakeAsker:
 
 @pytest.fixture
 def mcp_api(tmp_path, monkeypatch):
-    monkeypatch.setenv("WHOKNOWS_DB", str(tmp_path / "store.db"))
-    monkeypatch.setenv("WHOKNOWS_QUESTIONS_DB", str(tmp_path / "questions.db"))
-    monkeypatch.setenv("WHOKNOWS_GRAPH_TOKENS", str(tmp_path / "graph_tokens.json"))
+    monkeypatch.setenv("KNOWLY_TOKENS_DB", str(tmp_path / "tokens.db"))
+    monkeypatch.setenv("KNOWLY_QUESTIONS_DB", str(tmp_path / "questions.db"))
+    monkeypatch.setenv("KNOWLY_GRAPH_TOKENS", str(tmp_path / "graph_tokens.json"))
     monkeypatch.delenv("SLACK_BOT_TOKEN", raising=False)
     monkeypatch.delenv("SLACK_APP_TOKEN", raising=False)
-    server = importlib.reload(importlib.import_module("whoknows.server"))
-    monkeypatch.setattr(server, "DATA", tmp_path)
+    server = importlib.reload(importlib.import_module("knowly.server"))
     asker = FakeAsker()
     monkeypatch.setattr(server, "asker", asker)
     monkeypatch.setattr(server.mcp, "asker", asker)
     with TestClient(server.app) as client:
-        yield client, server.store, asker
+        yield client, server.tokens, asker
 
 
-def routes(store, person):
-    token = store.add_member(person)
+def routes(tokens, person):
+    token = tokens.add(person)
     return {"personal": (f"/u/{token}/mcp", {}), "bearer": ("/mcp", {"Authorization": f"Bearer {token}"})}
 
 
@@ -62,11 +61,11 @@ def call(client, route, tool, arguments=None):
 
 @pytest.mark.parametrize("kind", ["personal", "bearer"])
 def test_mcp_protocol_and_ask_on_both_routes(mcp_api, kind):
-    client, store, asker = mcp_api
-    route = routes(store, "lies")[kind]
+    client, tokens, asker = mcp_api
+    route = routes(tokens, "lies")[kind]
     init = rpc(client, route, "initialize", {
         "protocolVersion": "2025-11-25", "capabilities": {}, "clientInfo": {"name": "test", "version": "0"}})
-    assert init["serverInfo"]["name"] == "whoknows" and "Call ask when" in init["instructions"]
+    assert init["serverInfo"]["name"] == "knowly" and "Call ask when" in init["instructions"]
     url, auth = route
     note = client.post(url, json={"jsonrpc": "2.0", "method": "notifications/initialized"}, headers={**HEADERS, **auth})
     assert note.status_code == 202
@@ -82,16 +81,16 @@ def test_mcp_protocol_and_ask_on_both_routes(mcp_api, kind):
 
 
 def test_ask_unknown_question_reports_who_was_asked(mcp_api):
-    client, store, asker = mcp_api
-    result = call(client, routes(store, "lies")["bearer"], "ask", {"question": "What time does the nightly payroll export start?"})
+    client, tokens, asker = mcp_api
+    result = call(client, routes(tokens, "lies")["bearer"], "ask", {"question": "What time does the nightly payroll export start?"})
     assert not result["isError"]
     assert result["structuredContent"]["known"] is False and result["structuredContent"]["pinged"] == "tristan"
     assert result["content"][0]["text"].endswith("I asked tristan; ask again once they have answered.")
 
 
 def test_ask_takes_the_asker_from_the_token_only(mcp_api):
-    client, store, asker = mcp_api
-    route = routes(store, "lies")["personal"]
+    client, tokens, asker = mcp_api
+    route = routes(tokens, "lies")["personal"]
     result = call(client, route, "ask", {"question": "What time does the export start?", "asker": "tristan", "person": "tristan"})
     assert not result["isError"]
     assert asker.calls == [("What time does the export start?", "lies")]
@@ -99,20 +98,20 @@ def test_ask_takes_the_asker_from_the_token_only(mcp_api):
 
 @pytest.mark.parametrize("arguments", [{}, {"question": " x "}, {"question": "q" * 301}])
 def test_ask_rejects_empty_or_overlong_questions(mcp_api, arguments):
-    client, store, asker = mcp_api
-    assert call(client, routes(store, "lies")["bearer"], "ask", arguments)["isError"]
+    client, tokens, asker = mcp_api
+    assert call(client, routes(tokens, "lies")["bearer"], "ask", arguments)["isError"]
     assert asker.calls == []
 
 
 def test_ask_reports_an_unreachable_graph_as_a_tool_error(mcp_api):
-    client, store, _ = mcp_api
-    result = call(client, routes(store, "lies")["bearer"], "ask", {"question": "graph unreachable?"})
+    client, tokens, _ = mcp_api
+    result = call(client, routes(tokens, "lies")["bearer"], "ask", {"question": "graph unreachable?"})
     assert result["isError"] and "knowledge graph is unreachable" in result["content"][0]["text"]
 
 
 def test_unknown_or_missing_token_is_401(mcp_api):
-    client, store, asker = mcp_api
-    store.add_member("lies")
+    client, tokens, asker = mcp_api
+    tokens.add("lies")
     body = {"jsonrpc": "2.0", "id": 1, "method": "tools/list"}
     for url, headers in [("/u/wk_wrong/mcp", {}), ("/mcp", {}), ("/mcp", {"Authorization": "Bearer wk_wrong"}),
                          ("/mcp", {"Authorization": "wrong"})]:
@@ -122,8 +121,8 @@ def test_unknown_or_missing_token_is_401(mcp_api):
 
 
 def test_api_ask_uses_the_token_person(mcp_api):
-    client, store, asker = mcp_api
-    auth = {"Authorization": f"Bearer {store.add_member('lies')}"}
+    client, tokens, asker = mcp_api
+    auth = {"Authorization": f"Bearer {tokens.add('lies')}"}
     for headers in [{}, {"Authorization": "Bearer wk_wrong"}]:
         assert client.post("/api/ask", json={"question": "What time?"}, headers=headers).status_code == 401
     assert client.post("/api/ask", json={"question": "x"}, headers=auth).status_code == 422
@@ -154,9 +153,9 @@ class FakeGraph:
 
 
 def test_demo_flow_through_mcp_with_the_real_asker(mcp_api, tmp_path, monkeypatch):
-    from whoknows.ask import Asker
+    from knowly.ask import Asker
 
-    client, store, _ = mcp_api
+    client, tokens, _ = mcp_api
     graph, pings = FakeGraph(), []
     (tmp_path / "graph_tokens.json").write_text('{"tristan": "kg_tristan"}')
 
@@ -169,9 +168,9 @@ def test_demo_flow_through_mcp_with_the_real_asker(mcp_api, tmp_path, monkeypatc
         pings.append(record)
 
     asker = Asker(graph, tmp_path / "questions.db", tmp_path / "graph_tokens.json", notify=notify, compose=compose)
-    server = importlib.import_module("whoknows.server")
+    server = importlib.import_module("knowly.server")
     monkeypatch.setattr(server.mcp, "asker", asker)
-    lies = routes(store, "lies")["bearer"]
+    lies = routes(tokens, "lies")["bearer"]
     question = {"question": "What time does the nightly payroll export start?"}
 
     first = call(client, lies, "ask", question)["structuredContent"]

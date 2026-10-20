@@ -2,7 +2,6 @@ import hashlib
 import json
 import os
 import re
-import sqlite3
 import subprocess
 import sys
 import time
@@ -12,9 +11,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from recorder import screenshots
-from whoknows.rank import who_knows
-from whoknows.store import FIELDS, Store, valid
+from knowly.recorder import screenshots
 
 TRANSCRIPT = {
     "app": "Copilot",
@@ -141,12 +138,8 @@ def test_a_retaken_or_overlapping_capture_does_not_duplicate_turns(fake_claude, 
     rows, done = screenshots.record(shots, "tristan", tmp_path / "out.json", state_path=tmp_path / "state.json")
     assert done == 2 and len(rows) == 2 and len({r["id"] for r in rows}) == 2
 
-    store = Store(tmp_path / "store.db")
-    store.upsert(rows, "tristan")
-    answer = who_knows("which message queue", store.rows(), datetime(2026, 10, 2, tzinfo=UTC))
-    [person] = answer["people"]
-    assert person["roles"] == {"explained_why": 2} and answer["human_reasoning"] == 2
-    assert [e["why"] for e in person["evidence"]] == ["because we already run everything on AWS"]
+    assert [r["human_role"] for r in rows] == ["explained_why", "explained_why"]
+    assert [r["why"] for r in rows if r["why"]] == ["because we already run everything on AWS"]
 
     bob = screenshots.transcript_items(TRANSCRIPT["turns"], "ab" * 32, TAKEN, "bob")
     assert {i["key"] for i in bob}.isdisjoint(r["id"] for r in rows)
@@ -204,34 +197,3 @@ def test_main_pushes_the_rows(fake_claude, tmp_path, monkeypatch, capsys):
     [(rows, url, token)] = pushed
     assert (len(rows), url, token) == (2, "http://store", "tok") and {r["person"] for r in rows} == {"tristan"}
     assert "2 stored, 0 skipped" in capsys.readouterr().out
-
-
-def _row(**extra):
-    return {"id": "shot-abc:t1", "person": "alice", "topic": "message-queue", "source": "screenshot",
-            "source_id": "shot-abc", "at": "2026-10-20T12:05:00Z", "human_role": "decided", "why": None,
-            "actor": "human", "task": "pick a queue", **extra}
-
-
-def test_store_accepts_screenshot_rows_with_an_app(tmp_path):
-    store = Store(tmp_path / "store.db")
-    assert valid(_row(app="copilot")) and valid(_row())
-    assert not valid(_row(app=3)) and not valid(_row(app="x" * 301)) and not valid(_row(source="fax"))
-    assert store.upsert([_row(app="copilot"), _row(id="shot-abc:t2")]) == (2, 0)
-    assert sorted((r["id"], r["source"], r["app"]) for r in store.rows()) == [
-        ("shot-abc:t1", "screenshot", "copilot"), ("shot-abc:t2", "screenshot", None)]
-
-
-def test_store_adds_the_app_column_to_an_old_database(tmp_path):
-    path = tmp_path / "old.db"
-    old_fields = [f for f in FIELDS if f != "app"]
-    with sqlite3.connect(path) as db:
-        db.execute(f"CREATE TABLE signals ({', '.join(old_fields)}, PRIMARY KEY (id))")
-        db.execute("CREATE TABLE members (token TEXT PRIMARY KEY, person TEXT NOT NULL)")
-        old = _row(source="claude_session", id="s1:u1", source_id="s1")
-        db.execute(f"INSERT INTO signals VALUES ({', '.join('?' * len(old_fields))})", [old[f] for f in old_fields])
-    db.close()
-
-    store = Store(path)
-    assert store.upsert([_row(app="chatgpt")]) == (1, 0)
-    assert sorted((r["id"], r["app"]) for r in store.rows()) == [("s1:u1", None), ("shot-abc:t1", "chatgpt")]
-    assert sorted(r["id"] for r in Store(path).rows()) == ["s1:u1", "shot-abc:t1"]

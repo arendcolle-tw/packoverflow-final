@@ -13,9 +13,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from recorder.classify import classify
-from recorder.run import CACHE, DATA, push, to_rows
-from recorder.sessions import scrub
+from knowly.recorder.classify import classify
+from knowly.recorder.run import CACHE, push, to_rows
+from knowly.recorder.sessions import scrub
 
 STATE = CACHE.with_name("screenshots.json")
 IMAGES = {".png", ".jpg", ".jpeg", ".webp"}
@@ -190,18 +190,18 @@ def record(folder: Path, person: str, out: Path, state_path: Path = STATE, model
 def main() -> None:
     parser = argparse.ArgumentParser(description="Turn screenshots of AI chats into knowledge signal rows.")
     parser.add_argument("--person", required=True, help="your first name, e.g. tristan")
-    parser.add_argument("--dir", type=Path, default=Path.home() / "WhoKnows" / "screenshots")
+    parser.add_argument("--dir", type=Path, default=Path.home() / "Knowly" / "screenshots")
     parser.add_argument("--out", type=Path)
     parser.add_argument("--model", default="sonnet", help="the Claude model that reads the screenshots")
-    parser.add_argument("--push", metavar="URL", help="also send the rows to this Who knows store")
-    parser.add_argument("--token", default=os.environ.get("WHOKNOWS_TOKEN"), help="store token, default $WHOKNOWS_TOKEN")
+    parser.add_argument("--push", metavar="URL", help="also send the rows to the knowledge graph at this URL")
+    parser.add_argument("--token", default=os.environ.get("KNOWLY_TOKEN"), help="graph member token, default $KNOWLY_TOKEN")
     parser.add_argument("--watch", action="store_true", help=f"keep reading new screenshots, checking every {POLL_SECONDS} s")
     args = parser.parse_args()
     if args.push and not args.token:
-        parser.error("--push needs --token or WHOKNOWS_TOKEN")
+        parser.error("--push needs --token or KNOWLY_TOKEN")
 
     person = " ".join(args.person.split()).lower()
-    out = args.out or DATA / f"signals-{person}-screenshots.json"
+    out = args.out or CACHE.with_name(f"signals-{person}-screenshots.json")
     args.dir.mkdir(parents=True, exist_ok=True)
     if args.watch:
         print(f"watching {args.dir}, Ctrl-C to stop", file=sys.stderr)

@@ -6,7 +6,7 @@ import subprocess
 import sys
 import tempfile
 
-from recorder.classify import parse_output
+from knowly.recorder.classify import parse_output
 
 MAX_EVIDENCE = 6
 SOURCE = ("person", "task", "at", "why")

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sets up the whole Who knows demo on this Mac: a local copy of Alberic's knowledge graph, graph members,
+# Sets up the whole Knowly demo on this Mac: a local copy of Alberic's knowledge graph, graph members,
 # tristan's payroll session pushed as a fact, and the Slack bot with MCP on port 8091.
 # Usage: demo/full_demo.sh [--reset | --stop]
 #   --reset  wipes the local graph, open questions and the demo session first, then sets everything up again
@@ -8,16 +8,17 @@ set -euo pipefail
 
 ROOT=${ROOT:-$(cd "$(dirname "$0")/.." && pwd)}
 ALB=${ALB:-$(cd "$ROOT/../alberic" && pwd)}
-PY=$ROOT/.venv/bin/python
+BIN=$ROOT/.venv/bin
+PY=$BIN/python
 KG_PORT=8770
 KG=http://127.0.0.1:$KG_PORT
 GRAPH_DIR=$ROOT/data/demo-graph
 TOKENS=$ROOT/data/graph_tokens.json
-DB=${WHOKNOWS_DB:-$ROOT/data/store.db}
+DB=${KNOWLY_TOKENS_DB:-$ROOT/data/tokens.db}
 LIES_TOKEN_FILE=$ROOT/data/demo-lies-mcp-token
 ROWS=$ROOT/data/demo-rows.json
-WORK=$HOME/WhoKnows/demo-whoknows-payroll
-LIES_DIR=$HOME/WhoKnows/demo-lies
+WORK=$HOME/Knowly/demo-knowly-payroll
+LIES_DIR=$HOME/Knowly/demo-lies
 TEAM=T0C9C4CTJEP
 BOT_PORT=8091
 BOT=http://127.0.0.1:$BOT_PORT
@@ -70,12 +71,14 @@ if [ "$MODE" = --stop ]; then
   exit 0
 fi
 
+[ -x "$BIN/knowly-token" ] || { echo "install Knowly first: uv pip install --python $PY -e $ROOT" >&2; exit 1; }
+
 if [ "$MODE" = --reset ]; then
   printf '== reset: local graph, open questions, demo session\n'
   stop_slack
   kill_port "$KG_PORT"
   rm -rf "$GRAPH_DIR" "$ROWS" "$ROOT/data/questions.db" "$ROOT/data/questions.db-wal" "$ROOT/data/questions.db-shm"
-  rm -rf "$HOME/.claude/projects/"*demo-whoknows-payroll
+  rm -rf "$HOME/.claude/projects/"*demo-knowly-payroll
 fi
 
 printf '\n== 1/6  local knowledge graph on %s\n' "$KG"
@@ -135,11 +138,11 @@ path.chmod(0o600)
 PY
 TRISTAN=$("$PY" -c 'import json, sys; print(json.load(open(sys.argv[1]))["tristan"])' "$TOKENS")
 
-printf '\n== 3/6  MCP token for lies (store %s)\n' "$DB"
+printf '\n== 3/6  MCP token for lies (tokens %s)\n' "$DB"
 LIES=$(cat "$LIES_TOKEN_FILE" 2>/dev/null || true)
-OWNER=$("$PY" -c 'import sys; from pathlib import Path; from whoknows.store import Store; print(Store(Path(sys.argv[1])).person_for(sys.argv[2]))' "$DB" "${LIES:-none}")
+OWNER=$("$PY" -c 'import sys; from pathlib import Path; from knowly.tokens import Tokens; print(Tokens(Path(sys.argv[1])).person_for(sys.argv[2]))' "$DB" "${LIES:-none}")
 if [ "$OWNER" != lies ]; then
-  LIES=$("$PY" -m whoknows.store --db "$DB" lies)
+  LIES=$("$BIN/knowly-token" --db "$DB" lies)
   (umask 077; printf '%s\n' "$LIES" > "$LIES_TOKEN_FILE")
 fi
 echo "   $LIES"
@@ -151,7 +154,7 @@ if [ "$COUNT" -gt 0 ]; then
   curl -fsS -X POST "$KG/signals" -H "Authorization: Bearer $TRISTAN" -H "Content-Type: application/json" --data-binary @"$ROWS"
   echo
 else
-  rm -rf "$HOME/.claude/projects/"*demo-whoknows-payroll
+  rm -rf "$HOME/.claude/projects/"*demo-knowly-payroll
   mkdir -p "$WORK"
   SESSION=$(cd "$WORK" && env -u RECORDER_CHILD claude -p \
     "Draft a short plan for the nightly payroll export to the bank over SFTP, with 5 retries for a failed upload." \
@@ -160,8 +163,8 @@ else
     "No, retry 3 times, not 5, because the bank closes the SFTP window at 18:00 and a late file is rejected anyway." \
     --resume "$SESSION" --model haiku --tools "" --output-format json) > /dev/null
   echo "   session $SESSION in $WORK"
-  "$PY" -m recorder.run --mode summary --person tristan --match demo-whoknows-payroll \
-    --push "$KG" --token "$TRISTAN" --out "$ROWS"
+  "$BIN/knowly-record" --mode summary --person tristan --match demo-knowly-payroll \
+    --push "$KG" --token="$TRISTAN" --out "$ROWS"
 fi
 "$PY" - "$KG" "$QUESTION" <<'PY'
 import json
@@ -184,7 +187,7 @@ PY
 
 printf '\n== 5/6  Slack bot + MCP on %s (slack run, team %s)\n' "$BOT" "$TEAM"
 stop_slack
-(cd "$ROOT" && KG_URL="$KG" SLACK_PEOPLE=tristan:U0C9D2HJUA1 DEFAULT_EXPERT=tristan PORT="$BOT_PORT" WHOKNOWS_DB="$DB" \
+(cd "$ROOT" && KG_URL="$KG" SLACK_PEOPLE=tristan:U0C9D2HJUA1 DEFAULT_EXPERT=tristan PORT="$BOT_PORT" KNOWLY_TOKENS_DB="$DB" \
   nohup slack run --team "$TEAM" --app local --manifest-source local --no-activity --hide-triggers --skip-update \
   > "$SLACK_LOG" 2>&1 < /dev/null &)
 wait_for "$BOT/healthz" 120 "$SLACK_LOG"
@@ -197,17 +200,17 @@ cat <<EOF
 
 lies's Claude Code (second terminal), once:
   cd $LIES_DIR
-  claude mcp remove -s local whoknows 2>/dev/null; claude mcp add --transport http -s local whoknows $BOT/mcp --header "Authorization: Bearer $LIES"
+  claude mcp remove -s local knowly 2>/dev/null; claude mcp add --transport http -s local knowly $BOT/mcp --header "Authorization: Bearer $LIES"
   claude
 
 Step 1  tristan's payroll session is in the graph (shown above).
 Step 2  lies asks in Claude Code:
-          Ask whoknows: $QUESTION
+          Ask knowly: $QUESTION
         Expected: not recorded yet, the related payroll fact, "I asked tristan". tristan gets a Slack DM with an Answer button.
 Step 3  tristan clicks Answer in Slack and submits:
           $ANSWER
 Step 4  lies asks the same question again:
-          Ask whoknows: $QUESTION
+          Ask knowly: $QUESTION
         Expected: tristan's answer, his name and today's date.
 
 Without Slack or Claude Code, the same ask over HTTP:

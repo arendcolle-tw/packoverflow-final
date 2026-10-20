@@ -1,0 +1,34 @@
+[project]
+name = "knowly"
+version = "0.1.0"
+description = "A central, fact-based knowledge base: every fact linked to the person it comes from and their reason."
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "slack_bolt",
+    "aiohttp",
+    "mcp>=2.3,<3",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx", "pytest-socket"]
+
+[project.scripts]
+knowly-server = "knowly.server:main"
+knowly-record = "knowly.recorder.run:main"
+knowly-hook = "knowly.recorder.hook:main"
+knowly-install = "knowly.recorder.install:main"
+knowly-screenshots = "knowly.recorder.screenshots:main"
+knowly-token = "knowly.tokens:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/knowly"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--allow-hosts=127.0.0.1,::1"]

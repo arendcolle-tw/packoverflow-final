@@ -9,10 +9,10 @@ from types import SimpleNamespace
 
 import pytest
 
-import recorder.hook as hook
-import recorder.run as run
-import recorder.summarise as summarise
-from recorder.summarise import compact, guard_quotes, to_row
+import knowly.recorder.hook as hook
+import knowly.recorder.run as run
+import knowly.recorder.summarise as summarise
+from knowly.recorder.summarise import compact, guard_quotes, to_row
 
 ALBERIC = Path(__file__).resolve().parents[2] / "alberic"
 SUMMARY = {"title": "pick a database for the queue", "topic": "Database Choice", "role": "decided",
@@ -151,11 +151,11 @@ def test_record_summaries_keeps_the_previous_row_when_a_summary_fails(session, t
 def worker(tmp_path, monkeypatch, session):
     config = tmp_path / "recorder.json"
     config.write_text(json.dumps({"person": "tristan", "push_url": "http://store", "token": "tok"}))
-    monkeypatch.setenv("WHOKNOWS_RECORDER_CONFIG", str(config))
+    monkeypatch.setenv("KNOWLY_RECORDER_CONFIG", str(config))
     monkeypatch.setattr(hook, "STATE", tmp_path / "state")
     summarised, slept = [], []
     monkeypatch.setattr(run, "record_summaries", lambda files, person, out, cache_path: summarised.append(files) or [{"id": "s1:summary"}])
-    monkeypatch.setattr(run, "push", lambda rows, url, token, path: (1, 0))
+    monkeypatch.setattr(run, "push", lambda rows, url, token: (1, 0))
     monkeypatch.setattr(hook.time, "sleep", slept.append)
 
     def cached(sha256, seconds_ago):

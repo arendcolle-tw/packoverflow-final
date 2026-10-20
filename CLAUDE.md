@@ -6,6 +6,7 @@ Goal is a live, working demo at the final. Working beats clean.
 
 @context/HACKATHON.md
 @context/SDWORX.md
+@context/DESIGN.md
 
 ## Layout
 

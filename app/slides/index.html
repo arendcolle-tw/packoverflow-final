@@ -2,23 +2,26 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PackOverflow pitch</title>
-<!-- Starter deck. Replace this folder with the built deck (index.html plus assets). -->
+<!-- Starter deck. Replace this folder with the built deck (index.html plus assets). Style rules: context/DESIGN.md -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/theme.css">
 <style>
-  * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; background: #0f172a; color: #f8fafc; font-family: system-ui, sans-serif; overflow: hidden; }
+  html, body { height: 100%; overflow: hidden; }
   .slide { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; padding: 6vw 8vw; }
   .slide.on { display: flex; }
-  .kicker { color: #38bdf8; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: clamp(12px, 1.6vw, 20px); margin-bottom: 2vh; }
-  h1 { font-size: clamp(28px, 6vw, 84px); line-height: 1.05; margin: 0 0 3vh; }
-  h2 { font-size: clamp(22px, 4vw, 56px); line-height: 1.1; margin: 0 0 3vh; }
-  p, li { font-size: clamp(14px, 2.2vw, 30px); color: #cbd5e1; line-height: 1.4; }
-  ul { margin: 0; padding-left: 1.2em; } li { margin: 1vh 0; }
-  em { color: #38bdf8; font-style: normal; }
-  .big { font-size: clamp(40px, 10vw, 140px); font-weight: 800; color: #38bdf8; line-height: 1; }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3vw; }
-  .box { background: #1e293b; border-radius: 12px; padding: 2.5vw; }
-  .box h3 { margin: 0 0 1vh; font-size: clamp(16px, 2.4vw, 32px); }
-  .foot { position: absolute; bottom: 2vh; right: 3vw; color: #64748b; font-size: 14px; }
+  .kicker { font-size: clamp(12px, 1.4vw, 18px); margin-bottom: 2.5vh; }
+  h1 { font-size: clamp(30px, 6.4vw, 92px); font-weight: 800; margin-bottom: 3vh; }
+  h2 { font-size: clamp(24px, 4.2vw, 60px); font-weight: 800; margin-bottom: 3vh; }
+  p, li { font-size: clamp(15px, 2.1vw, 30px); color: var(--muted); line-height: 1.45; max-width: 40ch; }
+  ul { margin: 0; padding-left: 1.2em; } li { margin: 1.2vh 0; max-width: 46ch; }
+  em { font-style: normal; color: var(--amber); }
+  .big { font-family: var(--display); font-size: clamp(56px, 14vw, 200px); font-weight: 800; line-height: 1; margin-bottom: 2vh; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2vw; }
+  .box { padding: 2.2vw; }
+  .box h3 { margin-bottom: 1vh; font-size: clamp(17px, 2.4vw, 34px); }
+  .box p { font-size: clamp(13px, 1.5vw, 22px); max-width: none; margin: 0; }
+  .foot { position: absolute; bottom: 2.5vh; right: 3vw; color: var(--muted); font-size: 14px; }
 </style></head>
 <body>
 <section class="slide on">
@@ -28,22 +31,22 @@
 </section>
 <section class="slide">
   <div class="kicker">On our own team, after one day</div>
-  <div class="big">6&times; vs 1</div>
+  <div class="big grad-human">6&times; vs 1</div>
   <h2>Claude set up our Aikido scan six times. One human ever reasoned about it.</h2>
   <p>Measured on our own Claude sessions this week.</p>
 </section>
 <section class="slide">
   <div class="kicker">PackOverflow</div>
-  <h1>Knows who actually knows, not who only prompted.</h1>
+  <h1>Knows who <span class="grad-human">actually knows</span>, not who only prompted.</h1>
   <p>A connector in Claude. It reads the work people already do and tells you who to ask, in their own words.</p>
 </section>
 <section class="slide">
   <div class="kicker">How it works</div>
   <div class="grid">
-    <div class="box"><h3>Automatic</h3><p>Every Claude session is read in the background. Decided, corrected, explained why, or just accepted.</p></div>
-    <div class="box"><h3>Human, only when it matters</h3><p>When someone overrules Claude, we keep one line of why. Nothing else to maintain.</p></div>
-    <div class="box"><h3>Who knows</h3><p>Ask "who knows X?" and get people ranked by real reasoning, fading over time.</p></div>
-    <div class="box"><h3>No black box</h3><p>Every answer shows the person's own words. No scores on screen.</p></div>
+    <div class="box glass"><h3>Automatic</h3><p>Every Claude session is read in the background. Decided, corrected, explained why, or just accepted.</p></div>
+    <div class="box glass"><h3>Human, only when it matters</h3><p>When someone overrules Claude, we keep one line of why. Nothing else to maintain.</p></div>
+    <div class="box glass"><h3>Who knows</h3><p>Ask "who knows X?" and get people ranked by real reasoning, fading over time.</p></div>
+    <div class="box glass"><h3>No black box</h3><p>Every answer shows the person's own words. No scores on screen.</p></div>
   </div>
 </section>
 <section class="slide">

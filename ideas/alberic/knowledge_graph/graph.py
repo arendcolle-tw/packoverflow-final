@@ -20,7 +20,8 @@ LIMITS = {"why": 200, "task": 80, "app": 300}  # optional fields and their max l
 FIELDS = REQUIRED + tuple(LIMITS)
 MAX_STRING = 300
 ROLES = {"decided", "corrected", "explained_why", "answered_question", "accepted_as_is"}
-SOURCES = {"claude_session", "meeting", "copilot_chat", "copilot_cli", "m365_copilot", "screenshot", "mcp_record"}
+SOURCES = {"claude_session", "meeting", "copilot_chat", "copilot_cli", "m365_copilot", "screenshot", "mcp_record", "voice_call", "gap_form"}
+DRAFTS = {"confirmed", "edited", "rewritten"}  # optional `draft`: how much a person changed a Claude draft
 ACTORS = {"human", "agent", "unknown"}
 SQLITE_HEADER = b"SQLite format 3\x00"
 
@@ -43,6 +44,8 @@ def validate(row: dict) -> str | None:
             return f"{field} is not text"
         if len(row.get(field) or "") > limit:
             return f"{field} longer than {limit} characters"
+    if row.get("draft") is not None and row["draft"] not in DRAFTS:
+        return "unknown draft"
     if any(len(row[f]) > MAX_STRING for f in REQUIRED):
         return f"field longer than {MAX_STRING} characters"
     try:
@@ -53,10 +56,10 @@ def validate(row: dict) -> str | None:
 
 
 def _clean(row: dict) -> dict:
-    """Known fields only; `why` is always present (None when missing), task and app only when set."""
+    """Known fields only; `why` is always present (None when missing), task, app and draft only when set."""
     out = {f: row[f] for f in REQUIRED}
     out["why"] = row.get("why")
-    out.update({f: row[f] for f in ("task", "app") if row.get(f) is not None})
+    out.update({f: row[f] for f in ("task", "app", "draft") if row.get(f) is not None})
     return out
 
 
@@ -88,6 +91,9 @@ class KnowledgeGraph:
         self._db.executescript(
             "CREATE TABLE IF NOT EXISTS signals (id TEXT PRIMARY KEY, person TEXT NOT NULL, row TEXT NOT NULL);"
             "CREATE TABLE IF NOT EXISTS members (token TEXT PRIMARY KEY, person TEXT NOT NULL);"
+            # Work without a session behind it, and gaps with Claude's draft. Drafts never enter `signals`.
+            "CREATE TABLE IF NOT EXISTS artifacts (id TEXT PRIMARY KEY, row TEXT NOT NULL);"
+            "CREATE TABLE IF NOT EXISTS gaps (id TEXT PRIMARY KEY, row TEXT NOT NULL);"
         )
         self._rows: dict[str, dict] = {
             id_: json.loads(row) for id_, row in self._db.execute("SELECT id, row FROM signals ORDER BY rowid")
@@ -158,6 +164,38 @@ class KnowledgeGraph:
         """The person a member token belongs to, or None."""
         found = self._db.execute("SELECT person FROM members WHERE token = ?", (_hash(token),)).fetchone()
         return found[0] if found else None
+
+    def members(self) -> set[str]:
+        return {p for (p,) in self._db.execute("SELECT DISTINCT person FROM members")}
+
+    def artifacts(self) -> list[dict]:
+        return [json.loads(r) for (r,) in self._db.execute("SELECT row FROM artifacts ORDER BY rowid")]
+
+    def add_artifacts(self, artifacts: list[dict]) -> int:
+        with _LOCK:
+            for a in artifacts:
+                self._db.execute(
+                    "INSERT INTO artifacts (id, row) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET row = excluded.row",
+                    (a["id"], json.dumps(a, ensure_ascii=False)),
+                )
+            self._commit()
+        return len(artifacts)
+
+    def gaps(self) -> list[dict]:
+        return [json.loads(r) for (r,) in self._db.execute("SELECT row FROM gaps ORDER BY rowid")]
+
+    def gap(self, gap_id: str) -> dict | None:
+        found = self._db.execute("SELECT row FROM gaps WHERE id = ?", (gap_id,)).fetchone()
+        return json.loads(found[0]) if found else None
+
+    def save_gaps(self, gaps: list[dict]) -> None:
+        with _LOCK:
+            for g in gaps:
+                self._db.execute(
+                    "INSERT INTO gaps (id, row) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET row = excluded.row",
+                    (g["id"], json.dumps(g, ensure_ascii=False)),
+                )
+            self._commit()
 
     def who_knows(self, question: str, at: datetime | None = None) -> dict:
         return who_knows(question, self.rows(), at)

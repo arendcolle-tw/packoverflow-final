@@ -394,6 +394,7 @@
     "bank",
     "upload"
    ],
+   "label": "Nightly payroll export",
    "who_knows": {
     "query": "nightly payroll export retries to the bank over SFTP",
     "at": "2026-10-20T09:00:00+00:00",
@@ -461,6 +462,7 @@
     "scale",
     "salary increase"
    ],
+   "label": "PC 200 indexation",
    "who_knows": {
     "query": "PC 200 salary indexation in mysdworx",
     "at": "2026-10-20T09:00:00+00:00",
@@ -527,6 +529,7 @@
     "leave",
     "sick note"
    ],
+   "label": "Sick leave and guaranteed salary",
    "who_knows": {
     "query": "guaranteed salary for sick leave",
     "at": "2026-10-20T09:00:00+00:00",
@@ -593,6 +596,7 @@
     "starter",
     "first day"
    ],
+   "label": "Onboarding a new hire",
    "who_knows": {
     "query": "onboard a new hire contract Dimona first payslip",
     "at": "2026-10-20T09:00:00+00:00",
@@ -679,6 +683,7 @@
     "regularisation",
     "social secretariat"
    ],
+   "label": "DmfA filing",
    "who_knows": {
     "query": "quarterly DmfA social security filing corrections",
     "at": "2026-10-20T09:00:00+00:00",
@@ -742,6 +747,7 @@
     "hours",
     "cut-off"
    ],
+   "label": "Contract changes",
    "who_knows": {
     "query": "change contract part-time to full-time",
     "at": "2026-10-20T09:00:00+00:00",
@@ -804,6 +810,7 @@
     "directive",
     "candidate"
    ],
+   "label": "Pay transparency",
    "who_knows": {
     "query": "pay transparency directive recruitment salary history",
     "at": "2026-10-20T09:00:00+00:00",

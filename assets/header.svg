@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 560" width="1600" height="560" font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="title desc">
-  <title id="title">knowly</title>
-  <desc id="desc">Knowledge from heads, AI sessions and docs is summarised around decisions into one knowledge base where every fact has a person and a reason. Ask a question and get the answer with the person and the reason. If nobody recorded it yet, Knowly asks the person and their answer becomes a fact.</desc>
+  <title id="title">nobikos</title>
+  <desc id="desc">Knowledge from heads, AI sessions and docs is summarised around decisions into one knowledge base where every fact has a person and a reason. Ask a question and get the answer with the person and the reason. If nobody recorded it yet, Nobikos asks the person and their answer becomes a fact.</desc>
   <defs>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
       <feGaussianBlur in="SourceAlpha" stdDeviation="9"/>
@@ -23,7 +23,7 @@
   <rect width="1600" height="560" fill="#F3F0E5"/>
 
   <!-- title -->
-  <text x="62" y="100" font-size="80" font-weight="900" letter-spacing="-3.2" fill="#0E1714">knowly<tspan fill="#18A757">.</tspan></text>
+  <text x="62" y="100" font-size="80" font-weight="900" letter-spacing="-3.2" fill="#0E1714">nobikos<tspan fill="#18A757">.</tspan></text>
   <text x="64" y="143" font-size="22" fill="#0E1714" fill-opacity="0.72">One central, fact-based knowledge base. <tspan font-weight="700" fill-opacity="1">Every fact has a person and a reason.</tspan></text>
 
   <!-- column headings -->
@@ -157,7 +157,7 @@
   <!-- loop: ask the person -->
   <path d="M1400,230 C1400,150 1000,150 958,230" fill="none" stroke="#18A757" stroke-width="2" stroke-dasharray="7 6" stroke-linecap="round" marker-end="url(#arrow-green)"/>
   <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" fill="#0E1714" text-anchor="middle">
-    <text x="1196" y="128"><tspan fill="#18A757" font-weight="700">not known yet?</tspan> Knowly asks the person;</text>
+    <text x="1196" y="128"><tspan fill="#18A757" font-weight="700">not known yet?</tspan> Nobikos asks the person;</text>
     <text x="1196" y="149" fill-opacity="0.75">their answer becomes a fact</text>
   </g>
 </svg>

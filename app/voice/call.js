@@ -15,7 +15,7 @@
     line.textContent = text;
     const box = $("captions");
     box.appendChild(line);
-    while (box.children.length > 4) box.removeChild(box.firstChild);
+    while (box.children.length > 2) box.removeChild(box.firstChild);
   };
 
   function reset() {
@@ -107,7 +107,7 @@
     audio.currentTime = 0;
     audio.play();
   });
-  audio.addEventListener("play", () => { playBtn.textContent = "Pause recorded call"; set("Playing a recorded call with this same agent."); });
+  audio.addEventListener("play", () => { playBtn.textContent = "Pause recorded call"; set("Playing a recorded run of this same agent, with its real answers."); });
   audio.addEventListener("pause", () => { playBtn.textContent = "Play recorded call"; });
   audio.addEventListener("timeupdate", () => {
     if (!timeline) return;

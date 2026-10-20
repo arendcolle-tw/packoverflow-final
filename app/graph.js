@@ -50,7 +50,8 @@ function shape(question, answer, allRows) {
 
   const whys = whysFor(top, question);
   const src = whys[0] || { source_id: top.evidence[0].source_id, at: top.evidence[0].at };
-  const row = allRows.find((r) => r.source_id === src.source_id);
+  const row = allRows.find((r) => r.source_id === src.source_id && src.why && r.why === src.why)
+    || allRows.find((r) => r.source_id === src.source_id);
   return {
     live: true,
     question,

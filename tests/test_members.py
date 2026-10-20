@@ -13,7 +13,7 @@ from knowly import client
 from knowly.client import StoreError
 from knowly.members import Members
 
-ROOT = "http://knowly.test"
+ROOT = "https://knowly.test"
 ADMIN = "-admin-token-" + "x" * 40
 QUESTION = "What time does the nightly payroll export start?"
 ANSWER = "16:00, so three retries still finish before the bank closes the SFTP window at 18:00."

@@ -27,11 +27,11 @@ def no_claude(monkeypatch):
     monkeypatch.setattr(extract_mod.subprocess, "run", run)
 
 
-def test_extract_keeps_a_short_reply_verbatim(monkeypatch):
+def test_extract_rephrases_the_reply_into_a_standalone_fact(monkeypatch):
     calls = []
     fake_claude(monkeypatch, {"is_answer": True, "fact": "Export starts at 16:00.", "topic": "Payroll Export_Schedule"}, calls)
     result = extract(QUESTION, ANSWER, "tristan")
-    assert result == {"is_answer": True, "fact": ANSWER, "topic": "payroll-export-schedule"}
+    assert result == {"is_answer": True, "fact": "Export starts at 16:00.", "topic": "payroll-export-schedule"}
     cmd, kwargs = calls[0]
     assert cmd[:4] == ["claude", "-p", "--model", "haiku"]
     assert json.loads(cmd[cmd.index("--json-schema") + 1])["required"] == ["is_answer", "fact", "topic"]

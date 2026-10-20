@@ -5,7 +5,7 @@ import pytest
 from knowly import ask as ask_mod
 from knowly.ask import Asker
 
-BASE = "http://knowly.test/store"
+BASE = "https://knowly.test/store"
 QUESTION = "What time does the nightly payroll export start?"
 PAYROLL = {"person": "tristan", "task": "Payroll SFTP export retries", "at": "2026-10-18",
            "why": 'Retry 3 times, not 5, "because the bank closes the SFTP window at 18:00"'}

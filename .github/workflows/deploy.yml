@@ -63,11 +63,16 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           KNOWLY_ADMIN_TOKEN: ${{ secrets.KNOWLY_ADMIN_TOKEN }}
         run: |
-          # Only these folder and service pairs can be deployed.
+          # Only these folder and service pairs can be deployed, and only they are made public:
+          # both are demo sites judges open without logging in. Writes need a token in-app.
           case "$SOURCE:$SERVICE" in
             app:packoverflow|.:knowly) ;;
             *) echo "refusing to deploy $SOURCE as $SERVICE"; exit 1 ;;
           esac
+          # Scale inputs are free text, so only plain numbers may reach gcloud (no smuggled flags).
+          for v in "$MIN_INSTANCES" "$MAX_INSTANCES"; do
+            [[ -z "$v" || "$v" =~ ^[0-9]{1,3}$ ]] || { echo "min/max instances must be a number"; exit 1; }
+          done
           scale=()
           [ -n "$MIN_INSTANCES" ] && scale+=(--min-instances "$MIN_INSTANCES")
           [ -n "$MAX_INSTANCES" ] && scale+=(--max-instances "$MAX_INSTANCES")

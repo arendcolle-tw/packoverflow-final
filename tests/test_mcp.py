@@ -151,7 +151,7 @@ def test_demo_flow_through_mcp_with_the_real_asker(tmp_path, monkeypatch):
     pings, members = [], FakeMembers()
     monkeypatch.setattr(ask_mod, "answer", answer)
     tokens = Tokens(tmp_path / "tokens.db")
-    asker = Asker("http://knowly.test/store", tmp_path, members, notify=notify)
+    asker = Asker("https://knowly.test/store", tmp_path, members, notify=notify)
     question = {"question": "What time does the nightly payroll export start?"}
 
     with serve(tokens, asker) as client:

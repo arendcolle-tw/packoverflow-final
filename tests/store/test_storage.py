@@ -98,3 +98,25 @@ def test_facts_under_a_colleagues_session_do_not_change_their_task(tmp_path):
     after = store.who_knows("indexation of wages in joint committee 200", NOW)
     assert [p["person"] for p in after["people"] if p["evidence"]] == ["alberic"]
     assert after["people"][0]["proficiency"] == before["people"][0]["proficiency"]
+
+
+def test_members_survive_a_stale_database_copy(tmp_path):
+    class Mirror:
+        blob: dict = {}
+
+        def upload(self, path):
+            pass
+
+        def load_members(self):
+            return dict(self.blob)
+
+        def save_members(self, members):
+            Mirror.blob = dict(members)
+
+    first = FactStore(tmp_path / "a.sqlite", mirror=Mirror())
+    stale = FactStore(tmp_path / "b.sqlite", mirror=Mirror())  # started before the member existed
+    token = first.add_member("arend")
+    assert stale.member(token) is None  # checked the mirror less than a minute ago
+    stale._members_synced = 0
+    assert stale.member(token) == "arend"
+    assert FactStore(tmp_path / "c.sqlite", mirror=Mirror()).member(token) == "arend"

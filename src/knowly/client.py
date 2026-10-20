@@ -21,9 +21,18 @@ class StoreError(Exception):
         self.status = status
 
 
+def check_base_url(url: str) -> str:
+    """Only talk to the store over HTTPS, or plain HTTP on this machine, so a bad URL cannot make urlopen read file:// or other schemes."""
+    parts = urllib.parse.urlsplit(url)
+    local = parts.hostname in ("localhost", "127.0.0.1", "::1")
+    if not parts.hostname or parts.username or not (parts.scheme == "https" or (parts.scheme == "http" and local)):
+        raise ValueError(f"refusing store URL {url!r}: use an https:// URL")
+    return url.rstrip("/")
+
+
 class StoreClient:
     def __init__(self, base_url: str):
-        self.base_url = base_url.rstrip("/")
+        self.base_url = check_base_url(base_url)
         self._rows: list[dict] | None = None
         self._rows_at = 0.0
 
@@ -33,7 +42,8 @@ class StoreClient:
             headers["Authorization"] = f"Bearer {token}"
         data = None if body is None else json.dumps(body, ensure_ascii=False).encode()
         try:
-            with urllib.request.urlopen(urllib.request.Request(self.base_url + path, data, headers), timeout=15) as response:
+            # base_url is validated by check_base_url; path is a fixed endpoint with url-encoded query values.
+            with urllib.request.urlopen(urllib.request.Request(self.base_url + path, data, headers), timeout=15) as response:  # nosec B310
                 return json.load(response)
         except urllib.error.HTTPError as error:
             detail = error.read()[:300].decode(errors="replace")

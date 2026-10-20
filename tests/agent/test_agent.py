@@ -11,7 +11,7 @@ from knowly import agent, client
 from knowly.agent import tools
 from knowly.client import StoreClient
 
-BASE = "http://knowly.test/store"
+BASE = "https://knowly.test/store"
 PAYROLL_WHY = 'Set retries to 3 instead of 5 "because the bank closes the SFTP window at 18:00 and a late file is rejected anyway".'
 ROWS = [
     {"id": "s1:a", "person": "tristan", "topic": "payroll-sftp-export", "source": "claude_session", "source_id": "s1",

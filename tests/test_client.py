@@ -7,7 +7,7 @@ import pytest
 from knowly import client as client_mod
 from knowly.client import StoreClient, StoreError
 
-BASE = "http://knowly.test/store"
+BASE = "https://knowly.test/store"
 PAYROLL_WHY = 'Chose 3 retries over 5 "because the bank closes the SFTP window at 18:00"'
 WHO_KNOWS = {
     "query": "payroll export", "status": "single_point", "owner": "tristan", "similar_tasks": 1,
@@ -104,3 +104,9 @@ def test_http_failures_raise_store_error_with_the_status(http, error, status):
     with pytest.raises(StoreError) as raised:
         StoreClient(BASE).post_facts(ROWS, "tok")
     assert raised.value.status == status
+
+
+@pytest.mark.parametrize("url", ["file:///etc/passwd", "http://knowly.example", "https://user:pw@knowly.example", "ftp://knowly.example"])
+def test_refuses_unsafe_store_urls(url):
+    with pytest.raises(ValueError):
+        StoreClient(url)

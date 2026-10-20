@@ -11,7 +11,7 @@ from slack_sdk.web.async_slack_response import AsyncSlackResponse
 from knowly.slack.bot import register_bot
 from knowly.slack.channel import register_channel
 
-BASE = "http://knowly.test/store"
+BASE = "https://knowly.test/store"
 QUESTION = "When does the nightly payroll export start?"
 PAYROLL = {"person": "tristan", "task": "Payroll SFTP export", "at": "2026-10-19T15:00:00+00:00",
            "why": "Retry 3 times, \"because the bank closes the SFTP window at 18:00\" <b>"}

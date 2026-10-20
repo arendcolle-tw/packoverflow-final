@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 700" width="1600" height="700" font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="title desc">
+  <title id="title">knowly</title>
+  <desc id="desc">One central, fact-based knowledge base. Every fact has a person and a reason. Sessions, docs and heads flow into knowly, which stores facts with a person and a reason, and asks the person when it does not know.</desc>
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="12"/>
+      <feOffset dy="8" result="blur"/>
+      <feFlood flood-color="#0E1714" flood-opacity="0.10"/>
+      <feComposite in2="blur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="arrow" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M3,2.5 L12,7 L3,11.5" fill="none" stroke="#0E1714" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M3,2.5 L12,7 L3,11.5" fill="none" stroke="#18A757" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="700" fill="#F3F0E5"/>
+
+  <!-- title -->
+  <text x="800" y="175" font-size="120" font-weight="900" letter-spacing="-4.8" fill="#0E1714" text-anchor="middle">knowly<tspan fill="#18A757">.</tspan></text>
+  <text x="800" y="243" font-size="26" fill="#0E1714" fill-opacity="0.7" text-anchor="middle">One central, fact-based knowledge base. <tspan font-weight="700" fill-opacity="1">Every fact has a person and a reason.</tspan></text>
+
+  <!-- sources -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20" fill="#0E1714" fill-opacity="0.7" text-anchor="end">
+    <text x="396" y="372">sessions</text>
+    <text x="396" y="442">docs</text>
+    <text x="396" y="512">heads</text>
+  </g>
+  <g fill="#F3F0E5" stroke="#0E1714" stroke-width="2">
+    <circle cx="420" cy="365" r="8"/>
+    <circle cx="420" cy="435" r="8"/>
+    <circle cx="420" cy="505" r="8"/>
+  </g>
+  <g fill="none" stroke="#0E1714" stroke-width="2" stroke-linecap="round">
+    <path d="M428,365 C530,365 520,435 600,435"/>
+    <path d="M428,435 H600"/>
+    <path d="M428,505 C530,505 520,435 600,435"/>
+    <path d="M600,435 H662" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- knowly node -->
+  <circle cx="720" cy="435" r="54" fill="#063E33" filter="url(#shadow)"/>
+  <text x="720" y="443" font-size="24" font-weight="800" letter-spacing="-0.6" fill="#F3F0E5" text-anchor="middle">knowly<tspan fill="#18A757">.</tspan></text>
+
+  <!-- knowly to fact -->
+  <path d="M780,435 H892" fill="none" stroke="#0E1714" stroke-width="2" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <!-- fact card -->
+  <rect x="900" y="337" width="384" height="198" rx="20" fill="#FBFAF6" stroke="#0E1714" stroke-opacity="0.06" filter="url(#shadow)"/>
+  <text x="932" y="385" font-size="24" font-weight="700" fill="#0E1714">Payroll export retries 3×</text>
+  <g font-size="20" fill="#0E1714" fill-opacity="0.7">
+    <text x="932" y="421">because the bank closes the SFTP</text>
+    <text x="932" y="449">window at 18:00</text>
+  </g>
+  <path d="M932,471 H1252" stroke="#0E1714" stroke-opacity="0.1" stroke-width="1"/>
+  <circle cx="938" cy="499" r="6" fill="#063E33"/>
+  <text x="954" y="505" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" fill="#0E1714" fill-opacity="0.75">Tristan · 20 Oct</text>
+
+  <!-- loop: card to person to knowly -->
+  <g fill="none" stroke="#18A757" stroke-width="2" stroke-dasharray="6 7" stroke-linecap="round">
+    <path d="M1092,541 C1092,605 900,605 736,605" marker-end="url(#arrow-green)"/>
+    <path d="M720,593 V497" marker-end="url(#arrow-green)"/>
+  </g>
+  <circle cx="720" cy="605" r="9" fill="#18A757"/>
+  <text x="696" y="612" font-size="20" fill="#0E1714" fill-opacity="0.75" text-anchor="end">asks the person when it does not know</text>
+</svg>

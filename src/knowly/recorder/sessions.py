@@ -2,7 +2,7 @@ import json
 import re
 from pathlib import Path
 
-# Parsing rules copied from ideas/wout/standin/sessions.py, except that this copy skips /compact summaries and scrubs more token formats.
+# Parsing rules for Claude Code transcripts; this version skips /compact summaries and scrubs more token formats.
 PASTED = re.compile(r"<pasted_content\b[^>]*>.*?</pasted_content>", re.DOTALL)
 SECRETS = re.compile(
     r"sk-[A-Za-z0-9_-]{10,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_\w{20,}|glpat-[\w-]{20,}"

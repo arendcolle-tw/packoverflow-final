@@ -1,1 +1,0 @@
-Vendored from ideas/alberic at a9184f6. Re-run vendor/sync.sh, never edit by hand.

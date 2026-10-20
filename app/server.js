@@ -6,7 +6,7 @@ const path = require("path");
 // VIDEO_URL env var on Cloud Run overrides it.
 const VIDEO_URL = process.env.VIDEO_URL || "";
 
-// app/slides/ holds a starter deck. Replace it with the built deck (index.html plus assets).
+// app/slides/ holds the pitch deck once it is built (index.html plus assets); until then the Slides tab shows a placeholder.
 const SLIDES_DIR = path.join(__dirname, "slides");
 const CONNECTOR = "https://knowledge-mcp-323892475788.us-central1.run.app";
 const graph = require("./graph");

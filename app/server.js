@@ -46,11 +46,12 @@ function slideViewer() {
   if (!files.length) return "";
   const dl = ["Nobikos.pdf", "Nobikos.pptx"].filter((f) => fs.existsSync(path.join(SLIDES_DIR, f)));
   return `<div class="deck">
-    <img id="slideimg" src="/slides/${files[0]}" alt="Slide 1" width="1600" height="900">
+    <img id="slideimg" src="/slides/${files[0]}" alt="Slide 1" width="1600" height="900" title="Click to go forward, F for full screen">
     <div class="deckbar">
       <button class="btn ghost" id="prev" aria-label="Previous slide">&larr;</button>
       <span id="slideno">1 / ${files.length}</span>
       <button class="btn ghost" id="next" aria-label="Next slide">&rarr;</button>
+      <button class="btn ghost" id="full" aria-label="Full screen">Full screen</button>
       <span class="hint">${dl.map((f) => `<a href="/slides/${f}" download>${f.endsWith(".pdf") ? "Download PDF" : "Download PowerPoint"}</a>`).join(" · ")}</span>
     </div>
   </div>
@@ -63,11 +64,18 @@ function slideViewer() {
     function go(k) { i = Math.max(0, Math.min(files.length - 1, k)); img.src = "/slides/" + files[i]; img.alt = "Slide " + (i + 1); no.textContent = (i + 1) + " / " + files.length; }
     document.getElementById("prev").addEventListener("click", () => go(i - 1));
     document.getElementById("next").addEventListener("click", () => go(i + 1));
+    const deck = document.querySelector(".deck");
+    function full() {
+      if (document.fullscreenElement) return document.exitFullscreen();
+      (deck.requestFullscreen || deck.webkitRequestFullscreen || function () {}).call(deck);
+    }
+    document.getElementById("full").addEventListener("click", full);
     img.addEventListener("click", (e) => go(e.offsetX > img.clientWidth / 3 ? i + 1 : i - 1));
     addEventListener("keydown", (e) => {
       if (document.getElementById("deck").hidden) return;
       if (["ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); go(i + 1); }
       if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); go(i - 1); }
+      if (e.key === "f" || e.key === "F") full();
     });
   })();
   </script>`;
@@ -196,7 +204,11 @@ function callPage(host) {
   .close { font: 800 1.6rem var(--display); margin-top: 32px; }
   .empty { text-align: center; padding: 80px 16px; border: 2px dashed var(--glass-line); border-radius: 18px; }
   .empty p, .hint { color: var(--muted); }
+  .deck { --w: min(96vw, 1600px, calc((100vh - 260px) * 16 / 9)); width: var(--w); margin-left: calc(50% - var(--w) / 2); }
   .deck img { width: 100%; height: auto; border-radius: 12px; display: block; cursor: pointer; background: #000; }
+  .deck:fullscreen { width: 100vw; margin: 0; background: #000; display: flex; flex-direction: column; justify-content: center; }
+  .deck:fullscreen img { width: 100vw; height: calc(100vh - 64px); object-fit: contain; border-radius: 0; }
+  .deck:fullscreen .deckbar { padding: 0 16px 12px; }
   .deckbar { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
   .deckbar button { cursor: pointer; font: inherit; font-weight: 600; padding: 8px 18px; }
   .deckbar .hint { margin-left: auto; }

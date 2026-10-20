@@ -1,0 +1,151 @@
+name: Cloud Run ops
+
+# Lets cloud threads do allowlisted Google Cloud ops by dispatching this workflow (GitHub MCP actions_run_trigger).
+# No free-form commands: every op, service and endpoint is a fixed choice, and inputs reach scripts only as env vars.
+on:
+  workflow_dispatch:
+    inputs:
+      op:
+        description: describe | set-env | admin-call
+        type: choice
+        options: [describe, set-env, admin-call]
+        default: describe
+      service:
+        description: Target service (describe, set-env)
+        type: choice
+        options: [packoverflow, knowledge-graph, knowledge-mcp, whoknows]
+        default: packoverflow
+      name:
+        description: "set-env: env var name, e.g. ELEVENLABS_API_KEY"
+        required: false
+      from_service:
+        description: "set-env: copy NAME from this service's env (none = use value)"
+        type: choice
+        options: [none, packoverflow, knowledge-graph, knowledge-mcp, whoknows]
+        default: none
+      value:
+        description: "set-env: literal NON-secret value (visible in the run); refused for secret-looking names"
+        required: false
+      call:
+        description: "admin-call: knowledge-graph endpoint"
+        type: choice
+        options: [gaps-scan, add-member]
+        default: gaps-scan
+      claude:
+        description: "admin-call gaps-scan: Claude drafts, 0 to 50"
+        required: false
+        default: "0"
+      person:
+        description: "admin-call add-member: person key"
+        required: false
+      pubkey:
+        description: "admin-call add-member: base64 of an RSA public key PEM; the token comes back encrypted to it"
+        required: false
+
+env:
+  PROJECT_ID: qwiklabs-gcp-04-61c2ca7d9c86
+  REGION: us-central1
+  WIF_PROVIDER: projects/323892475788/locations/global/workloadIdentityPools/github/providers/github-oidc
+  DEPLOY_SA: github-deployer@qwiklabs-gcp-04-61c2ca7d9c86.iam.gserviceaccount.com
+
+permissions: {}
+
+concurrency:
+  group: ops-${{ inputs.service }}
+  cancel-in-progress: false
+
+jobs:
+  op:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+
+      - name: describe
+        if: inputs.op == 'describe'
+        env:
+          SERVICE: ${{ inputs.service }}
+        run: |
+          set -euo pipefail
+          # Non-secret facts only: env var NAMES, never values.
+          gcloud run services describe "$SERVICE" --project "$PROJECT_ID" --region "$REGION" --format=json | jq -r '
+            "service: \(.metadata.name)",
+            "url: \(.status.url)",
+            "ready revision: \(.status.latestReadyRevisionName)",
+            "traffic: \([.status.traffic[]? | "\(.revisionName // "latest")=\(.percent // 0)%"] | join(", "))",
+            "min instances: \(.spec.template.metadata.annotations["autoscaling.knative.dev/minScale"] // "0")",
+            "max instances: \(.spec.template.metadata.annotations["autoscaling.knative.dev/maxScale"] // "default")",
+            "concurrency: \(.spec.template.spec.containerConcurrency // "default")",
+            "memory: \(.spec.template.spec.containers[0].resources.limits.memory // "default")",
+            "env names: \([.spec.template.spec.containers[0].env[]? | .name + (if .valueFrom then " (secret ref)" else "" end)] | join(", "))"
+          ' | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: set-env
+        if: inputs.op == 'set-env'
+        env:
+          SERVICE: ${{ inputs.service }}
+          NAME: ${{ inputs.name }}
+          FROM_SERVICE: ${{ inputs.from_service }}
+          VALUE: ${{ inputs.value }}
+        run: |
+          set -euo pipefail
+          [[ "$NAME" =~ ^[A-Z][A-Z0-9_]{0,63}$ ]] || { echo "name must be UPPER_SNAKE_CASE"; exit 1; }
+          [[ "$NAME" == PORT || "$NAME" == K_* ]] && { echo "refusing reserved name $NAME"; exit 1; }
+          if [ "$FROM_SERVICE" != none ]; then
+            [ "$FROM_SERVICE" != "$SERVICE" ] || { echo "from_service equals service"; exit 1; }
+            v=$(gcloud run services describe "$FROM_SERVICE" --project "$PROJECT_ID" --region "$REGION" --format=json \
+              | jq -r --arg n "$NAME" '[.spec.template.spec.containers[0].env[]? | select(.name == $n) | .value // empty] | first // empty')
+            [ -n "$v" ] || { echo "$NAME has no plain value on $FROM_SERVICE"; exit 1; }
+            echo "::add-mask::$v"
+            src="copied from $FROM_SERVICE"
+          else
+            # Literal values are visible in the run inputs, so secret-looking names must be copied instead.
+            [[ "$NAME" =~ (KEY|TOKEN|SECRET|PASSWORD|PASS|CRED) ]] && { echo "refusing literal value for $NAME; use from_service"; exit 1; }
+            [ -n "$VALUE" ] || { echo "value is empty"; exit 1; }
+            v="$VALUE"
+            src="literal"
+          fi
+          [[ "$v" != *$'\n'* && "$v" != *@@* ]] || { echo "value has a newline or @@"; exit 1; }
+          # "^@@^" sets @@ as the separator, so a comma inside a value cannot split it.
+          gcloud run services update "$SERVICE" --project "$PROJECT_ID" --region "$REGION" --quiet \
+            --update-env-vars "^@@^$NAME=$v" >/dev/null
+          echo "set $NAME on $SERVICE ($src)" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: admin-call
+        if: inputs.op == 'admin-call'
+        env:
+          CALL: ${{ inputs.call }}
+          CLAUDE: ${{ inputs.claude }}
+          PERSON: ${{ inputs.person }}
+          PUBKEY: ${{ inputs.pubkey }}
+        run: |
+          set -euo pipefail
+          desc=$(gcloud run services describe knowledge-graph --project "$PROJECT_ID" --region "$REGION" --format=json)
+          url=$(jq -r '.status.url' <<<"$desc")
+          token=$(jq -r '[.spec.template.spec.containers[0].env[]? | select(.name == "KG_ADMIN_TOKEN") | .value // empty] | first // empty' <<<"$desc")
+          [ -n "$token" ] || { echo "KG_ADMIN_TOKEN is not set on knowledge-graph"; exit 1; }
+          echo "::add-mask::$token"
+          auth=(-H "Authorization: Bearer $token")
+          case "$CALL" in
+            gaps-scan)
+              [[ "$CLAUDE" =~ ^[0-9]{1,2}$ ]] && [ "$CLAUDE" -le 50 ] || { echo "claude must be 0 to 50"; exit 1; }
+              curl -sS --fail-with-body -X POST "${auth[@]}" "$url/gaps/scan?claude=$CLAUDE" | tee -a "$GITHUB_STEP_SUMMARY"
+              ;;
+            add-member)
+              [[ "$PERSON" =~ ^[a-z0-9][a-z0-9._-]{0,63}$ ]] || { echo "person must be a lowercase key"; exit 1; }
+              # The minted token is shown once. It leaves this job only encrypted to the caller's public key.
+              base64 -d <<<"$PUBKEY" > pub.pem 2>/dev/null || { echo "pubkey is not base64"; exit 1; }
+              openssl pkey -pubin -in pub.pem -noout 2>/dev/null || { echo "pubkey is not a public key PEM"; exit 1; }
+              body=$(jq -nc --arg p "$PERSON" '{person: $p}')
+              member=$(curl -sS --fail-with-body -X POST "${auth[@]}" -H "Content-Type: application/json" -d "$body" "$url/members" | jq -r '.token')
+              echo "::add-mask::$member"
+              enc=$(printf '%s' "$member" | openssl pkeyutl -encrypt -pubin -inkey pub.pem -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 | base64 -w0)
+              { echo "member token for $PERSON, RSA-OAEP-SHA256 encrypted, base64:"; echo "$enc"; } | tee -a "$GITHUB_STEP_SUMMARY"
+              ;;
+          esac

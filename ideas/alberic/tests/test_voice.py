@@ -76,7 +76,8 @@ def test_webhook_stores_confirmed_at_half_and_edited_at_full_weight(client):
 
     rows = {r["id"]: r for r in client.get("/rows").json()}
     confirmed, edited = rows[f"gap-{first['id']}"], rows[f"gap-{second['id']}"]
-    assert confirmed["source"] == "voice_call" and confirmed["source_id"] == "call-c1" and confirmed["draft"] == "confirmed"
+    # No call was placed by the server here, so these came through the browser widget.
+    assert confirmed["source"] == "voice_widget_unverified" and confirmed["source_id"] == "call-c1" and confirmed["draft"] == "confirmed"
     assert row_weight(confirmed) == 0.5 and row_weight(edited) == 1.0
     assert edited["why"] == second_words[:200] and edited["person"] == "wout"
     assert client.post("/webhooks/elevenlabs", **signed(event(second, ["again"], "c2"))).json() == {"ignored": "already answered"}

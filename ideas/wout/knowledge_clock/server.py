@@ -1,18 +1,20 @@
 import logging
 import os
 import re
+import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote
 
-from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
+from fastapi import APIRouter, FastAPI, Header, HTTPException, Request, Response
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from knowledge_clock.clock import compute_topics, parse_at, summarize, topic_detail
 from knowledge_clock.connector import PersonGate, build_mcp
 from knowledge_clock.live_store import LiveStore
+from knowledge_clock.people import person_key
 from knowledge_clock.store import apply_whys, load_aliases, load_signals, load_whys, save_why
 from vendor.knowledge_graph import KnowledgeGraph
 
@@ -149,9 +151,13 @@ def get_questions(person: str) -> list[dict]:
 
 
 @router.post("/api/why", status_code=204)
-def post_why(answer: WhyAnswer) -> Response:
+def post_why(answer: WhyAnswer, authorization: str = Header("")) -> Response:
+    # The person comes from their member token, so nobody can put words in someone else's mouth.
+    person = _store().person_for(authorization.removeprefix("Bearer ").strip())
+    if person is None:
+        raise HTTPException(status_code=401, detail="Join first: your member token is required")
     # Only open questions, so nobody can overwrite a quote or put words on an AI-handled row.
-    if not any(s["id"] == answer.id and _is_open_question(s) for s in _config()["signals"]):
+    if not any(s["id"] == answer.id and s["person"] == person and _is_open_question(s) for s in _config()["signals"]):
         raise HTTPException(status_code=404, detail="No open question with this id")
     save_why(_whys_path(), answer.id, answer.why.strip())
     return Response(status_code=204)
@@ -175,9 +181,30 @@ def connector(request: Request) -> dict:
     return _links(f"{_base(request)}/mcp")
 
 
+_JOINS: dict[str, list[float]] = {}
+
+
+def _join_allowed(ip: str, limit: int = 5, window: float = 600) -> bool:
+    now = time.monotonic()
+    recent = [t for t in _JOINS.get(ip, []) if now - t < window]
+    if len(recent) >= limit:
+        return False
+    _JOINS[ip] = recent + [now]
+    if len(_JOINS) > 5000:
+        _JOINS.clear()
+    return True
+
+
 @router.post("/api/join")
 def join(body: JoinRequest, request: Request) -> dict:
-    member = _store().create_member(body.name)
+    if not _join_allowed(request.headers.get("x-forwarded-for", "").split(",")[-1].strip() or str(request.client and request.client.host)):
+        raise HTTPException(status_code=429, detail="Too many joins, try again in a few minutes")
+    store = _store()
+    person = person_key(body.name)
+    # One connector per name: a second join under a taken name would let anyone act as that person.
+    if person and store.has_member(store.person_aliases.get(person, person)):
+        raise HTTPException(status_code=409, detail="This name already has a connector")
+    member = store.create_member(body.name)
     if member is None:
         raise HTTPException(status_code=422, detail="Name must be 1 to 40 characters")
     token, person = member

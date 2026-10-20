@@ -85,8 +85,10 @@ document.getElementById("join").addEventListener("submit", async event => {
   const result = document.getElementById("result");
   error.textContent = "";
   const res = await fetch("/api/join", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: document.getElementById("name").value }) });
-  if (!res.ok) { error.textContent = "Use a name of 1 to 40 characters."; return; }
+  if (!res.ok) { error.textContent = res.status === 409 ? "That name already has a connector." : res.status === 429 ? "Too many tries, wait a few minutes." : "Use a name of 1 to 40 characters."; return; }
   const body = await res.json();
+  // Kept in this browser so the map can save your answers as you.
+  try { localStorage.setItem("kcToken", body.url.split("/u/")[1].split("/")[0]); } catch {}
   result.replaceChildren();
   result.appendChild(el("p", null, `Personal URL for ${body.person} (keep it private). It adds "what do I know" for you:`));
   const add = el("a", "add", "Add my personal connector");

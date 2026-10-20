@@ -254,7 +254,12 @@ async def post_webhook(request: Request) -> dict:
     data = event.get("data") or {}
     call_id = data.get("conversation_id")
     variables = (data.get("conversation_initiation_client_data") or {}).get("dynamic_variables") or {}
-    gap = next((g for g in GRAPH.gaps() if call_id and g.get("call_id") == call_id), None) or GRAPH.gap(str(variables.get("gap_id", "")))
+    gap = next((g for g in GRAPH.gaps() if call_id and g.get("call_id") == call_id), None)
+    # A call this server placed reached the owner's phone. The browser widget names its gap itself and
+    # anyone can open it, so its answers are stored as unverified, not as a phone call with the owner.
+    source = "voice_call"
+    if gap is None:
+        gap, source = GRAPH.gap(str(variables.get("gap_id", ""))), "voice_widget_unverified"
     if gap is None:
         return {"ignored": "no matching gap"}
     if gap["status"] == "answered":
@@ -263,6 +268,6 @@ async def post_webhook(request: Request) -> dict:
     if extracted is None:
         return {"ignored": "nothing said"}
     answer, result = extracted
-    stored = gaps.answer_gap(GRAPH, gap["id"], answer, "voice_call", f"call-{call_id or gap['id']}",
+    stored = gaps.answer_gap(GRAPH, gap["id"], answer, source, f"call-{call_id or gap['id']}",
                              draft_result=result, call_id=call_id)
     return {"answered": stored["id"], "draft_result": stored["draft_result"]}

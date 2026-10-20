@@ -176,7 +176,9 @@ async function loadQuestion() {
   form.appendChild(el("button", null, "Save"));
   form.addEventListener("submit", async event => {
     event.preventDefault();
-    const res = await fetch("/api/why", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: q.id, why: input.value }) });
+    let token = "";
+    try { token = localStorage.getItem("kcToken") || ""; } catch {}
+    const res = await fetch("/api/why", { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ id: q.id, why: input.value }) });
     if (res.ok) { await load(); await loadQuestion(); }
   });
   card.appendChild(form);

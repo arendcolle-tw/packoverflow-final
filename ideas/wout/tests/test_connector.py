@@ -113,7 +113,8 @@ def test_personal_url_still_works(client):
     assert r.json()["url"].startswith("https://knowledge-mcp-xyz.a.run.app/u/")
     assert client.post("/api/join", json={"name": "  "}).status_code == 422
     assert client.post("/u/nope/mcp", json={}).status_code == 404
-    r = client.post(f"/u/{_token(client)}/mcp", headers=MCP_HEADERS, json={
+    token = r.json()["url"].split("/u/")[1].split("/")[0]
+    r = client.post(f"/u/{token}/mcp", headers=MCP_HEADERS, json={
         "jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "what_i_know", "arguments": {}}})
     assert r.status_code == 200 and "jan" in r.text
 

@@ -70,6 +70,9 @@ class LiveStore:
                 self.mirror.upload(self.members_path)
         return token, person
 
+    def has_member(self, person: str) -> bool:
+        return person in self._load_members().values()
+
     def person_for(self, token: str) -> str | None:
         person = self._members.get(token)
         return self.person_aliases.get(person, person) if person else None

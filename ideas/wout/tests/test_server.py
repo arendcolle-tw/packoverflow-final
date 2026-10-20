@@ -51,7 +51,21 @@ def qclient(tmp_path, monkeypatch):
     monkeypatch.setenv("KC_WHYS", str(tmp_path / "whys.json"))
     monkeypatch.setenv("KC_DATA_DIR", str(tmp_path / "live"))
     from knowledge_clock.server import app
-    return TestClient(app)
+    client = TestClient(app)
+    token = client.post("/api/join", json={"name": "wout"}).json()["url"].split("/u/")[1].split("/")[0]
+    client.headers["Authorization"] = f"Bearer {token}"
+    return client
+
+
+def test_why_needs_the_owners_token(qclient):
+    assert qclient.post("/api/why", json={"id": "s2:q1", "why": "x"}, headers={"Authorization": ""}).status_code == 401
+    assert qclient.post("/api/why", json={"id": "s2:q1", "why": "x"}, headers={"Authorization": "Bearer nope"}).status_code == 401
+    other = qclient.post("/api/join", json={"name": "tristan"}).json()["url"].split("/u/")[1].split("/")[0]
+    assert qclient.post("/api/why", json={"id": "s2:q1", "why": "x"}, headers={"Authorization": f"Bearer {other}"}).status_code == 404
+
+
+def test_join_refuses_a_taken_name(qclient):
+    assert qclient.post("/api/join", json={"name": "Wout"}).status_code == 409
 
 
 def test_questions_list_only_unexplained_human_decisions(qclient):

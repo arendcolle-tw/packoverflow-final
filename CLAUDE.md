@@ -16,6 +16,7 @@ Tectonic Hackathon final, SD Worx track. A team of four, each with their own Cla
 - `scripts/first-use.sh` checks that this Mac can work here.
 - `context/` holds background on the hackathon and SD Worx.
 - `.github/workflows/deploy.yml` deploys `app/` to Cloud Run on every merge to `main` that changes it. `app/` must build from source with Google buildpacks and listen on `$PORT`.
+- Live app: https://packoverflow-wwvoo2dieq-uc.a.run.app (exists after the first merge that changes app/). Check it after each merge.
 
 ## First time in this repo
 

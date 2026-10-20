@@ -51,13 +51,13 @@ def _who(gap: dict) -> str:
     return escape((gap.get("owner") or "nobody").capitalize())
 
 
-def _open_card(gap: dict, phone: bool) -> str:
+def _open_card(gap: dict, phone: set[str]) -> str:
     risk = gap.get("risk", "")
     tag = f"<span class='tag risk'>{escape(risk.replace('_', ' '))}</span>" if risk in ("dark", "single_point") else f"<span class=tag>{escape(risk)}</span>"
     kind = "no why given" if gap["kind"] == "missing_why" else "no session behind it"
     link = f" · <a href='{escape(gap['link'])}'>commit</a>" if gap.get("link") else ""
     source = "Claude's guess" if gap.get("draft_source") == "claude" else "template, no Claude key"
-    action = (f"<button class=btn data-call='{escape(gap['id'])}'>Call {_who(gap)}</button>" if phone and gap.get("owner")
+    action = (f"<button class=btn data-call='{escape(gap['id'])}'>Call {_who(gap)}</button>" if gap.get("owner") in phone
               else f"<a class=btn href='/gaps/{escape(gap['id'])}/talk'>Call {_who(gap)}</a>") if gap.get("owner") else ""
     calling = " <span class=tag>calling…</span>" if gap["status"] == "calling" else ""
     return (f"<div class=glass><div class=row><div><b>{escape(gap['subject'])}</b><br>"
@@ -86,7 +86,7 @@ if(!r.ok){location.href='/gaps/'+b.dataset.call+'/talk'}});
 </script>"""
 
 
-def board(open_gaps: list[dict], answered: list[dict], phone: bool, claude: bool, limit: int = 12) -> str:
+def board(open_gaps: list[dict], answered: list[dict], phone: set[str], claude: bool, limit: int = 12) -> str:
     shown = "".join(_open_card(g, phone) for g in open_gaps[:limit])
     more = f"<p class=muted>and {len(open_gaps) - limit} more</p>" if len(open_gaps) > limit else ""
     done = "".join(_answered_card(g) for g in answered) or "<p class=muted>Nothing answered yet. Call someone.</p>"

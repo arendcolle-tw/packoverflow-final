@@ -1,0 +1,21 @@
+# Never capture a window whose app name or title contains one of these words
+# (whole word, case-insensitive). Checked before the allowlist.
+1Password
+Bitwarden
+LastPass
+Dashlane
+Keychain Access
+Passwords
+Incognito
+InPrivate
+Private Browsing
+Private
+bank
+banking
+online banking
+KBC
+Belfius
+ING
+BNP Paribas Fortis
+Argenta
+PayPal

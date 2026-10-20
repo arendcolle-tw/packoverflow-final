@@ -1,0 +1,15 @@
+test_brief_detour_is_dropped (test_grouping.GroupingTest.test_brief_detour_is_dropped) ... ok
+test_same_window_is_one_step (test_grouping.GroupingTest.test_same_window_is_one_step) ... ok
+test_title_change_in_same_app_is_new_step (test_grouping.GroupingTest.test_title_change_in_same_app_is_new_step) ... ok
+test_card (test_redact.RedactTest.test_card) ... ok
+test_email (test_redact.RedactTest.test_email) ... ok
+test_iban (test_redact.RedactTest.test_iban) ... ok
+test_iban_compact (test_redact.RedactTest.test_iban_compact) ... ok
+test_keeps_work_words (test_redact.RedactTest.test_keeps_work_words) ... ok
+test_national_number (test_redact.RedactTest.test_national_number) ... ok
+test_token (test_redact.RedactTest.test_token) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.001s
+
+OK

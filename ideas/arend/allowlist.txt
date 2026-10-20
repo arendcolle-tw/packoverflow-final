@@ -1,0 +1,10 @@
+# Apps that may be captured. One app name per line, exact match (case-insensitive).
+Microsoft Excel
+Numbers
+Google Chrome
+Safari
+Firefox
+Microsoft Edge
+Arc
+Microsoft Outlook
+Mail

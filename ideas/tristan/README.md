@@ -58,7 +58,9 @@ Only rows where a human decided, corrected Claude or explained why count. Each r
 uv run --python 3.13 python -m recorder.run --person tristan --push http://localhost:8090 --token <token>
 ```
 
-Labels every turn missing from the cache, writes `data/signals-tristan.json` and, with `--push`, posts the rows to the store. `WHOKNOWS_TOKEN` can replace `--token`.
+Labels every turn missing from the cache, writes `data/signals-tristan.json` and, with `--push`, posts the rows to the store.
+
+The team's one store is the knowledge graph (`ideas/alberic`, https://knowledge-graph-323892475788.us-central1.run.app). Pass that as `--push` with your graph member token: the recorder, the hook and the screenshot watcher post to `POST /signals`, and fall back to `POST /api/signals` only for the old Who knows store. `WHOKNOWS_TOKEN` can replace `--token`.
 
 ## Live capture
 

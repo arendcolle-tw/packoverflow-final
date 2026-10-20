@@ -14,11 +14,11 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "ideas" / "tristan"))
 from recorder.sessions import scrub  # noqa: E402  same redaction the recorder applied on the laptop
 
-REQUIRED = ("id", "topic", "source", "source_id", "at", "human_role", "actor")
+REQUIRED = ("id", "person", "topic", "source", "source_id", "at", "human_role", "actor")
 ROLES = {"decided", "corrected", "explained_why", "answered_question", "accepted_as_is"}
 ACTORS = {"human", "agent", "unknown"}
-SOURCES = {"claude_session", "meeting", "screenshot", "mcp_record"}  # plus any copilot_*
-OPTIONAL = ("task", "app")
+# Same sets as ideas/alberic/knowledge_graph/graph.py; tests/test_to_graph.py checks the graph accepts our output.
+SOURCES = {"claude_session", "meeting", "copilot_chat", "copilot_cli", "m365_copilot", "screenshot", "mcp_record"}
 
 
 def to_signal(row: dict) -> tuple[dict | None, str | None]:
@@ -30,7 +30,7 @@ def to_signal(row: dict) -> tuple[dict | None, str | None]:
         return None, f"missing {', '.join(missing)}"
     if row["human_role"] not in ROLES or row["actor"] not in ACTORS:
         return None, "unknown human_role or actor"
-    if row["source"] not in SOURCES and not row["source"].startswith("copilot_"):
+    if row["source"] not in SOURCES:
         return None, f"unknown source {row['source']}"
     try:
         datetime.fromisoformat(row["at"].replace("Z", "+00:00"))
@@ -40,9 +40,9 @@ def to_signal(row: dict) -> tuple[dict | None, str | None]:
     if why is not None and not isinstance(why, str):
         return None, "why is not text"
     signal = {f: row[f] for f in REQUIRED}
-    # person is left out on purpose: the service takes it from the member token.
+    # The service requires person but overrides it with the member token's person.
     signal["why"] = scrub(why)[:200] if why and why.strip() else None
-    for field, limit in (("task", 80), ("app", 40)):
+    for field, limit in (("task", 80), ("app", 300)):
         if isinstance(row.get(field), str) and row[field].strip():
             signal[field] = scrub(row[field])[:limit]
     return signal, None

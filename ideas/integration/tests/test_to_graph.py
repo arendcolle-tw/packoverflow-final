@@ -20,14 +20,13 @@ def test_real_recorder_output_converts_without_loss():
     rows = json.loads(REAL.read_text())
     signals, dropped = to_graph.convert(rows)
     assert dropped == [] and len(signals) == len(rows)
-    assert all("person" not in s for s in signals)
+    assert all(s["person"] == "wout" for s in signals)
     assert sum(1 for s in signals if s["why"]) == sum(1 for r in rows if r["why"])
 
 
-def test_keeps_task_and_app_and_drops_person():
+def test_keeps_task_and_app():
     signal, _ = to_graph.to_signal(row(source="screenshot", app="copilot", source_id="shot-abc"))
     assert signal["task"] == "Set up the aikido security scan in CI" and signal["app"] == "copilot"
-    assert "person" not in signal
 
 
 def test_rescrubs_secrets_in_why_and_task():
@@ -37,6 +36,19 @@ def test_rescrubs_secrets_in_why_and_task():
 
 def test_rejects_bad_rows_and_dedupes_on_id():
     signals, dropped = to_graph.convert([row(human_role="guessed"), row(source="email"), row(at="yesterday"),
-                                         row(why="first"), row(why="second"), row(source="copilot_chat", id="c1")])
-    assert len(dropped) == 3
+                                         row(why="first"), row(why="second"), row(source="copilot_chat", id="c1"), row(source="copilot_whatever", id="c2")])
+    assert len(dropped) == 4
     assert [s["why"] for s in signals if s["id"] == "s1:u1"] == ["second"] and len(signals) == 2
+
+
+def test_knowledge_graph_accepts_every_converted_row(tmp_path, monkeypatch):
+    """Contract check against the real store, ideas/alberic, with a token person overriding the row's."""
+    monkeypatch.syspath_prepend(str(to_graph.ROOT / "ideas" / "alberic"))
+    from knowledge_graph.graph import KnowledgeGraph
+
+    rows = json.loads(REAL.read_text()) + [row(source="screenshot", app="copilot", id="shot-turn-1", source_id="shot-1")]
+    signals, _ = to_graph.convert(rows)
+    graph = KnowledgeGraph(tmp_path / "graph.sqlite")
+    result = graph.add_signals(signals, person="wout")
+    assert result["rejected"] == [] and result["added"] == len(signals)
+    assert graph.who_knows("set up the aikido security scan")["status"]

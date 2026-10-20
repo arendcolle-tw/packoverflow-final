@@ -152,15 +152,23 @@ def test_record_only_labels_new_turns(session, tmp_path, monkeypatch):
 
 @pytest.fixture
 def store_server():
-    received, reply = [], {"status": 200}
+    received, reply = [], {"status": 200, "graph": True}
 
     class Handler(BaseHTTPRequestHandler):
         def do_POST(self):
             rows = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
             received.append({"path": self.path, "auth": self.headers["Authorization"], "rows": rows})
-            ok = reply["status"] == 200
-            body = json.dumps({"stored": len(rows), "skipped": 0} if ok else {"detail": "missing or unknown token"}).encode()
-            self.send_response(reply["status"])
+            status = reply["status"]
+            if status == 200 and not reply["graph"] and self.path == "/signals":
+                status = 404
+            if status != 200:
+                body = {"detail": "missing or unknown token"}
+            elif self.path == "/signals":
+                body = {"added": len(rows) - 1, "updated": 1, "rejected": []}
+            else:
+                body = {"stored": len(rows), "skipped": 0}
+            body = json.dumps(body).encode()
+            self.send_response(status)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
@@ -180,7 +188,13 @@ def test_push_sends_chunks_with_bearer_token(store_server):
     rows = [{"id": str(n)} for n in range(2500)]
     assert run.push(rows, store_server.url + "/", "tok") == (2500, 0)
     assert [len(r["rows"]) for r in store_server.received] == [1000, 1000, 500]
-    assert {(r["path"], r["auth"]) for r in store_server.received} == {("/api/signals", "Bearer tok")}
+    assert {(r["path"], r["auth"]) for r in store_server.received} == {("/signals", "Bearer tok")}
+
+
+def test_push_falls_back_to_the_old_store(store_server):
+    store_server.reply["graph"] = False
+    assert run.push([{"id": str(n)} for n in range(1500)], store_server.url, "tok") == (1500, 0)
+    assert [r["path"] for r in store_server.received] == ["/signals", "/api/signals", "/api/signals"]
 
 
 def test_main_pushes_rows_and_failed_push_exits_nonzero_keeping_rows(store_server, tmp_path, monkeypatch, capsys):

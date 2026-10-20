@@ -164,7 +164,7 @@ else
     --resume "$SESSION" --model haiku --tools "" --output-format json) > /dev/null
   echo "   session $SESSION in $WORK"
   "$BIN/knowly-record" --mode summary --person tristan --match demo-knowly-payroll \
-    --push "$KG" --token "$TRISTAN" --out "$ROWS"
+    --push "$KG" --token="$TRISTAN" --out "$ROWS"
 fi
 "$PY" - "$KG" "$QUESTION" <<'PY'
 import json

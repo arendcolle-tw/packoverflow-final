@@ -123,3 +123,8 @@ def test_join_page_opens_claude_ai_in_the_browser():
 
     html = (Path(__file__).parents[1] / "knowledge_clock/static/join.html").read_text()
     assert "claude_app" not in html and "body.claude_ai" in html and "innerHTML" not in html
+
+
+def test_html_pages_are_never_cached(client):
+    for path in ["/join", "/"]:
+        assert client.get(path).headers["cache-control"] == "no-store"

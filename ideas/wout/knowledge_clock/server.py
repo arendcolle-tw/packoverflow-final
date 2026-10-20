@@ -149,14 +149,18 @@ def join(body: JoinRequest, request: Request) -> dict:
     }
 
 
+# The pages change during the day; a cached copy calls an API shape that no longer exists.
+NO_STORE = {"Cache-Control": "no-store"}
+
+
 @router.get("/join")
 def join_page() -> FileResponse:
-    return FileResponse(STATIC / "join.html")
+    return FileResponse(STATIC / "join.html", headers=NO_STORE)
 
 
 @router.get("/")
 def index() -> FileResponse:
-    return FileResponse(STATIC / "index.html")
+    return FileResponse(STATIC / "index.html", headers=NO_STORE)
 
 
 def create_app() -> FastAPI:

@@ -166,3 +166,22 @@ def test_phone_numbers_never_in_a_response(client):
     gap = client.get("/gaps").json()[0]
     pages.append(client.get(f"/gaps/{gap['id']}/talk").text)
     assert not any("+3247" in p for p in pages)
+
+
+def test_same_question_shows_once(tmp_path):
+    graph = KnowledgeGraph(tmp_path / "graph.sqlite")
+    graph.add_signals([row(1, "wout", role="decided", source_id="s1"), {**row(2, "wout", role="decided"), "source_id": "s1"}])
+    found = gaps.find_gaps(graph, NOW)
+    assert len(graph.gaps()) == 2 and len(found) == 1
+    gaps.answer_gap(graph, found[0]["id"], "Because the jury reads the repo.", "gap_form", "form-1")
+    assert gaps.open_gaps(graph) == [] and [g["status"] for g in gaps.all_gaps(graph)] == ["answered", "skipped"]
+
+
+def test_startup_redraft_only_with_a_key(tmp_path, monkeypatch):
+    graph = graph_with_gaps(tmp_path)
+    gaps.find_gaps(graph, NOW)
+    assert gaps.redraft_templates(graph) == 0
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "k")
+    monkeypatch.setattr(gaps, "ask_json", lambda *a, **k: {"draft": "We did it because of the bank.", "check_question": "Still true?"})
+    assert gaps.redraft_templates(graph, limit=2) == 2
+    assert sum(g["draft_source"] == "claude" for g in gaps.open_gaps(graph)) == 2

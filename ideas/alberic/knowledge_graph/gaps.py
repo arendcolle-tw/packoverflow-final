@@ -6,6 +6,7 @@ Only the owner's own answer becomes a signal row, with `draft` saying how much t
 
 import hashlib
 import json
+import os
 import re
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
@@ -121,12 +122,34 @@ def _rank(gap: dict) -> tuple:
     return (gap.get("risk") not in RISKY, gap.get("work_at") or "")
 
 
+def _distinct(found: list[dict]) -> list[dict]:
+    """One gap per owner, topic and subject: two why-less decisions in one session read as the same question."""
+    seen, out = set(), []
+    for gap in found:
+        key = (gap.get("owner"), gap["topic"], gap["subject"].lower())
+        if gap["status"] in UNANSWERED and key in seen:
+            continue
+        seen.add(key)
+        out.append(gap)
+    return out
+
+
 def open_gaps(graph: KnowledgeGraph) -> list[dict]:
-    return sorted((g for g in graph.gaps() if g["status"] in UNANSWERED), key=_rank)
+    return _distinct(sorted((g for g in graph.gaps() if g["status"] in UNANSWERED), key=_rank))
 
 
 def all_gaps(graph: KnowledgeGraph) -> list[dict]:
-    return sorted(graph.gaps(), key=lambda g: (g["status"] not in UNANSWERED, *_rank(g)))
+    """Answered first (an answered gap hides its open twins), then open ones riskiest first."""
+    ordered = sorted(graph.gaps(), key=lambda g: (g["status"] in UNANSWERED, *_rank(g)))
+    return sorted(_distinct(ordered), key=lambda g: (g["status"] not in UNANSWERED, *_rank(g)))
+
+
+def redraft_templates(graph: KnowledgeGraph, limit: int = 10) -> int:
+    """With a Claude key, replace the riskiest template drafts. Run at startup so nobody has to call /gaps/scan."""
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        return 0
+    todo = [g for g in open_gaps(graph) if g.get("draft_source") != "claude"][:limit]
+    return sum(draft_gap(graph, g["id"])["draft_source"] == "claude" for g in todo)
 
 
 DRAFT_SYSTEM = (
@@ -185,7 +208,10 @@ def answer_gap(graph: KnowledgeGraph, gap_id: str, answer: str, source: str, sou
         raise ValueError(stored["rejected"][0])
     gap.update(status="answered", answer=answer, draft_result=result, answered_at=row["at"],
                call_id=call_id or gap.get("call_id"))
-    graph.save_gaps([gap])
+    key = (gap.get("owner"), gap["topic"], gap["subject"].lower())
+    twins = [{**g, "status": "skipped"} for g in graph.gaps() if g["id"] != gap_id and g["status"] in UNANSWERED
+             and (g.get("owner"), g["topic"], g["subject"].lower()) == key]
+    graph.save_gaps([gap] + twins)
     return gap
 
 

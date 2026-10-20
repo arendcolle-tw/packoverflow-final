@@ -56,7 +56,7 @@ def _open_card(gap: dict, phone: set[str]) -> str:
     tag = f"<span class='tag risk'>{escape(risk.replace('_', ' '))}</span>" if risk in ("dark", "single_point") else f"<span class=tag>{escape(risk)}</span>"
     kind = "no why given" if gap["kind"] == "missing_why" else "no session behind it"
     link = f" · <a href='{escape(gap['link'])}'>commit</a>" if str(gap.get("link", "")).startswith(("https://", "http://")) else ""
-    source = "Claude's guess" if gap.get("draft_source") == "claude" else "template, no Claude key"
+    source = "Claude's guess, to confirm" if gap.get("draft_source") == "claude" else f"for {_who(gap)} to finish"
     action = (f"<button class=btn data-call='{escape(gap['id'])}'>Call {_who(gap)}</button>" if gap.get("owner") in phone
               else f"<a class=btn href='/gaps/{escape(gap['id'])}/talk'>Call {_who(gap)}</a>") if gap.get("owner") else ""
     calling = " <span class=tag>calling…</span>" if gap["status"] == "calling" else ""
@@ -90,8 +90,7 @@ def board(open_gaps: list[dict], answered: list[dict], phone: set[str], claude: 
     shown = "".join(_open_card(g, phone) for g in open_gaps[:limit])
     more = f"<p class=muted>and {len(open_gaps) - limit} more</p>" if len(open_gaps) > limit else ""
     done = "".join(_answered_card(g) for g in answered) or "<p class=muted>Nothing answered yet. Call someone.</p>"
-    state = ("Claude drafts on" if claude else "Template drafts (no Claude key)") + " · " + (
-        "phone calls on" if phone else "browser call (no phone number set)")
+    state = ("Drafts by Claude" if claude else "Drafts to finish") + " · " + ("Calls by phone" if phone else "Call in browser")
     body = (f"<div class=kicker>Backtracking</div><h1>Claude guessed. <span class=grad-human>The human fixed it.</span></h1>"
             f"<p class=muted>Work nobody explained, riskiest first. A guess stays a guess until its owner says it in their own words. {escape(state)}</p>"
             f"<h2>Now knowledge</h2>{done}<h2>Waiting for the why <span class=muted>({len(open_gaps)})</span></h2>{shown}{more}")

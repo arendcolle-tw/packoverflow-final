@@ -3,11 +3,12 @@
 The Mac capture loop and the demo replay both push frames through
 process_frame, so the demo exercises exactly the same rules as live capture.
 """
+import hashlib
 import json
 import os
 import re
 
-from .redact import count_redactions, redact
+from .redact import redact
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOCAL = os.path.join(ROOT, "local")
@@ -48,7 +49,11 @@ def process_frame(frame, rules, stats):
     """
     v = rules.verdict(frame.get("app"), frame.get("title"))
     if v != "ok":
-        stats[v] = stats.get(v, 0) + 1
+        # Count distinct windows by a short hash; names of blocked windows are never kept.
+        h = hashlib.sha1(f"{frame.get('app')}|{frame.get('title')}".encode()).hexdigest()[:8]
+        seen = stats.setdefault(v + "_windows", [])
+        if h not in seen:
+            seen.append(h)
         return None
     ev = {
         "ts": frame["ts"],
@@ -58,8 +63,6 @@ def process_frame(frame, rules, stats):
     }
     if frame.get("clipboard"):
         ev["clipboard"] = redact(frame["clipboard"])[:200]
-    n = sum(count_redactions(ev.get(k)) for k in ("title", "text", "clipboard"))
-    stats["redacted"] = stats.get("redacted", 0) + n
     stats["kept"] = stats.get("kept", 0) + 1
     return ev
 

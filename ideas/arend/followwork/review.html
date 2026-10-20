@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Follow the work</title>
+<style>
+  :root { --bg:#f6f5f2; --card:#fff; --ink:#1d1d1f; --muted:#6b6b70; --line:#e4e2dc;
+          --accent:#0a6e5c; --accent-ink:#fff; --warn:#8a5a00; --chip:#eef3f1; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  main { max-width:860px; margin:0 auto; padding:32px 16px 64px; }
+  .rec { display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); }
+  .dot { width:9px; height:9px; border-radius:50%; background:#c0392b; }
+  .dot.off { background:#aaa; }
+  h1 { font-size:28px; line-height:1.2; margin:10px 0 6px; letter-spacing:-.01em; }
+  .sub { color:var(--muted); margin:0 0 18px; }
+  .guard { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 24px; }
+  .guard span { background:var(--card); border:1px solid var(--line); border-radius:999px;
+                padding:4px 12px; font-size:13px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px;
+          padding:20px 22px; margin:0 0 16px; }
+  .card.done { opacity:.75; }
+  .topic { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--accent);
+           font-weight:600; }
+  h2 { font-size:19px; margin:4px 0 12px; }
+  ol { margin:0 0 14px; padding-left:22px; }
+  li { margin:3px 0; }
+  .apps { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .apps span { background:var(--chip); border-radius:6px; padding:2px 8px; font-size:13px; }
+  .meta { color:var(--muted); font-size:13px; margin-bottom:14px; }
+  .row { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+  button { font:inherit; border-radius:9px; border:1px solid var(--line); background:#fff;
+           padding:8px 16px; cursor:pointer; }
+  button.share { background:var(--accent); color:var(--accent-ink); border-color:var(--accent);
+                 font-weight:600; padding:8px 22px; }
+  button:hover { filter:brightness(.96); }
+  label { font-size:13px; color:var(--muted); display:inline-flex; gap:6px; align-items:center; }
+  input[type=text] { font:inherit; font-size:13px; padding:5px 8px; border:1px solid var(--line);
+                     border-radius:7px; width:150px; }
+  .status { font-weight:600; color:var(--accent); }
+  pre { background:#f3f2ee; border-radius:8px; padding:10px 12px; font-size:12px; overflow:auto;
+        margin:12px 0 0; }
+  .empty { color:var(--muted); text-align:center; padding:40px 0; }
+  .toolbar { display:flex; justify-content:space-between; align-items:center; }
+  .reset { font-size:13px; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#151517; --card:#1f1f22; --ink:#ececee; --muted:#9b9ba1; --line:#323236;
+            --chip:#22302c; --accent:#36b39a; --accent-ink:#0b1714; }
+    button, input[type=text] { background:#26262a; color:var(--ink); }
+    pre { background:#26262a; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="toolbar">
+    <div class="rec"><span class="dot" id="dot"></span><span id="rec">Local review</span></div>
+    <button class="reset" id="reset" hidden>Reset demo</button>
+  </div>
+  <h1>This is what I learned from you today. Nothing leaves your laptop until you press Share.</h1>
+  <p class="sub">Follow the work watches the work, not the worker: screenshots are read and deleted
+    straight away, and procedures are filed by topic, never by person.</p>
+  <div class="guard" id="guard"></div>
+  <div id="list"></div>
+</main>
+<script>
+const DEMO = __DEMO__;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function post(path, body) {
+  const r = await fetch(path, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body||{})});
+  return r.json();
+}
+async function load() {
+  const s = await (await fetch('/api/state')).json();
+  document.getElementById('reset').hidden = !DEMO;
+  document.getElementById('dot').className = 'dot' + (s.paused || DEMO ? ' off' : '');
+  document.getElementById('rec').textContent = DEMO ? 'Demo replay of one captured task'
+      : (s.paused ? 'Capture paused' : 'Review of today\'s capture');
+  const st = s.stats || {};
+  const blocked = (st.blocked_windows || []).length, other = (st.not_allowed_windows || []).length;
+  const red = s.items.reduce((n, p) => n + p._redacted, 0);
+  document.getElementById('guard').innerHTML =
+    `<span>${st.kept || 0} window snapshots kept as text, 0 images</span>` +
+    `<span>${blocked} windows never captured (password manager, private, bank)</span>` +
+    (other ? `<span>${other} apps outside the allowlist ignored</span>` : '') +
+    `<span>${red} personal details redacted</span>`;
+  const list = document.getElementById('list');
+  if (!s.items.length) { list.innerHTML = '<p class="empty">Nothing learned yet.</p>'; return; }
+  list.innerHTML = s.items.map(p => `
+    <section class="card ${p.status !== 'new' ? 'done' : ''}" data-id="${esc(p.id)}">
+      <div class="topic">${esc(p.topic)}</div>
+      <h2>${esc(p.title)}</h2>
+      <ol>${p.steps.map(x => `<li>${esc(x)}</li>`).join('')}</ol>
+      <div class="apps">${p.apps.map(a => `<span>${esc(a)}</span>`).join('')}</div>
+      <div class="meta">Learned ${esc(p.captured_at)} from ${p._events} window snapshots, ${p._redacted} redacted</div>
+      ${p.status === 'new' ? `
+      <div class="row">
+        <button class="share" data-act="share">Share</button>
+        <button data-act="skip">Skip</button>
+        <button data-act="forget">Forget</button>
+        <label><input type="checkbox" class="cred"> Credit me as <input type="text" class="name" placeholder="your name"></label>
+      </div>` : `<div class="status">${p.status === 'shared' ? 'Shared to ' + esc(s.out) : 'Skipped, stays on this laptop'}</div>
+      ${p.shared ? `<pre>${esc(JSON.stringify(p.shared, null, 2))}</pre>` : ''}`}
+    </section>`).join('');
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'reset') { await post('/api/reset'); return load(); }
+  const card = b.closest('.card'); if (!card) return;
+  const id = card.dataset.id, act = b.dataset.act;
+  if (act === 'share') {
+    const credit = card.querySelector('.cred').checked ? card.querySelector('.name').value : '';
+    await post('/api/share', {id, credit});
+  } else if (act === 'skip') await post('/api/skip', {id});
+  else if (act === 'forget') await post('/api/forget', {id});
+  load();
+});
+load();
+</script>
+</body>
+</html>

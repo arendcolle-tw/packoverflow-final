@@ -1,0 +1,214 @@
+[
+ {
+  "t": 0,
+  "app": "Microsoft Outlook",
+  "title": "Inbox - Indexation PC 200 per 1 November",
+  "text": "Inbox\nSubject: Indexation PC 200 per 1 November\nFrom: Legal Watch <legalwatch@sdworx.example>\nSalaries in joint committee 200 rise by 2.21% on 1 November.\nApply the new base to every PC 200 client before the November payroll run."
+ },
+ {
+  "t": 2,
+  "app": "Microsoft Outlook",
+  "title": "Inbox - Indexation PC 200 per 1 November",
+  "text": "Inbox\nSubject: Indexation PC 200 per 1 November\nFrom: Legal Watch <legalwatch@sdworx.example>\nSalaries in joint committee 200 rise by 2.21% on 1 November.\nApply the new base to every PC 200 client before the November payroll run."
+ },
+ {
+  "t": 4,
+  "app": "Microsoft Outlook",
+  "title": "Inbox - Indexation PC 200 per 1 November",
+  "text": "Inbox\nSubject: Indexation PC 200 per 1 November\nFrom: Legal Watch <legalwatch@sdworx.example>\nSalaries in joint committee 200 rise by 2.21% on 1 November.\nApply the new base to every PC 200 client before the November payroll run."
+ },
+ {
+  "t": 6,
+  "app": "1Password",
+  "title": "1Password - mysdworx login",
+  "text": "mysdworx  user  ********"
+ },
+ {
+  "t": 8,
+  "app": "1Password",
+  "title": "1Password - mysdworx login",
+  "text": "mysdworx  user  ********"
+ },
+ {
+  "t": 10,
+  "app": "Microsoft Excel",
+  "title": "salary_export_oct.xlsx",
+  "text": "salary_export_oct.xlsx\nEmployee ID  Joint committee  Status  Gross monthly\nE-1001  200  white-collar  3,412.00\nE-1002  124  blue-collar  2,980.50\nE-1003  200  white-collar  4,105.75\nE-1004  302  blue-collar  2,711.20\nE-1005  200  white-collar  3,690.00\nContact payroll: hr@bakkerij-janssens.be"
+ },
+ {
+  "t": 12,
+  "app": "Microsoft Excel",
+  "title": "salary_export_oct.xlsx",
+  "text": "salary_export_oct.xlsx\nEmployee ID  Joint committee  Status  Gross monthly\nE-1001  200  white-collar  3,412.00\nE-1002  124  blue-collar  2,980.50\nE-1003  200  white-collar  4,105.75\nE-1004  302  blue-collar  2,711.20\nE-1005  200  white-collar  3,690.00\nContact payroll: hr@bakkerij-janssens.be"
+ },
+ {
+  "t": 14,
+  "app": "Microsoft Excel",
+  "title": "Book2",
+  "text": ""
+ },
+ {
+  "t": 16,
+  "app": "Microsoft Excel",
+  "title": "salary_export_oct.xlsx",
+  "text": "salary_export_oct.xlsx\nEmployee ID  Joint committee  Status  Gross monthly\nE-1001  200  white-collar  3,412.00\nE-1002  124  blue-collar  2,980.50\nE-1003  200  white-collar  4,105.75\nE-1004  302  blue-collar  2,711.20\nE-1005  200  white-collar  3,690.00\nContact payroll: hr@bakkerij-janssens.be\nFilter: Joint committee = 200\nE-1001  200  white-collar  3,412.00\nE-1003  200  white-collar  4,105.75\nE-1005  200  white-collar  3,690.00"
+ },
+ {
+  "t": 18,
+  "app": "Microsoft Excel",
+  "title": "salary_export_oct.xlsx",
+  "text": "salary_export_oct.xlsx\nEmployee ID  Joint committee  Status  Gross monthly\nE-1001  200  white-collar  3,412.00\nE-1002  124  blue-collar  2,980.50\nE-1003  200  white-collar  4,105.75\nE-1004  302  blue-collar  2,711.20\nE-1005  200  white-collar  3,690.00\nContact payroll: hr@bakkerij-janssens.be\nFilter: Joint committee = 200\nE-1001  200  white-collar  3,412.00\nE-1003  200  white-collar  4,105.75\nE-1005  200  white-collar  3,690.00"
+ },
+ {
+  "t": 20,
+  "app": "Microsoft Excel",
+  "title": "salary_export_oct.xlsx",
+  "text": "salary_export_oct.xlsx\nEmployee ID  Joint committee  Status  Gross monthly\nE-1001  200  white-collar  3,412.00\nE-1002  124  blue-collar  2,980.50\nE-1003  200  white-collar  4,105.75\nE-1004  302  blue-collar  2,711.20\nE-1005  200  white-collar  3,690.00\nContact payroll: hr@bakkerij-janssens.be\nFilter: Joint committee = 200\nE-1001  200  white-collar  3,412.00\nE-1003  200  white-collar  4,105.75\nE-1005  200  white-collar  3,690.00"
+ },
+ {
+  "t": 22,
+  "app": "Microsoft Excel",
+  "title": "salary_export_oct.xlsx",
+  "text": "salary_export_oct.xlsx\nEmployee ID  Joint committee  Status  Gross monthly\nE-1001  200  white-collar  3,412.00\nE-1002  124  blue-collar  2,980.50\nE-1003  200  white-collar  4,105.75\nE-1004  302  blue-collar  2,711.20\nE-1005  200  white-collar  3,690.00\nContact payroll: hr@bakkerij-janssens.be\nFilter: Joint committee = 200\nE-1001  200  white-collar  3,412.00\nE-1003  200  white-collar  4,105.75\nE-1005  200  white-collar  3,690.00\n=SUM(D2:D41)\nTotal gross PC 200  48,213.50"
+ },
+ {
+  "t": 24,
+  "app": "Microsoft Excel",
+  "title": "salary_export_oct.xlsx",
+  "text": "salary_export_oct.xlsx\nEmployee ID  Joint committee  Status  Gross monthly\nE-1001  200  white-collar  3,412.00\nE-1002  124  blue-collar  2,980.50\nE-1003  200  white-collar  4,105.75\nE-1004  302  blue-collar  2,711.20\nE-1005  200  white-collar  3,690.00\nContact payroll: hr@bakkerij-janssens.be\nFilter: Joint committee = 200\nE-1001  200  white-collar  3,412.00\nE-1003  200  white-collar  4,105.75\nE-1005  200  white-collar  3,690.00\n=SUM(D2:D41)\nTotal gross PC 200  48,213.50"
+ },
+ {
+  "t": 26,
+  "app": "Microsoft Excel",
+  "title": "salary_export_oct.xlsx",
+  "text": "salary_export_oct.xlsx\nEmployee ID  Joint committee  Status  Gross monthly\nE-1001  200  white-collar  3,412.00\nE-1002  124  blue-collar  2,980.50\nE-1003  200  white-collar  4,105.75\nE-1004  302  blue-collar  2,711.20\nE-1005  200  white-collar  3,690.00\nContact payroll: hr@bakkerij-janssens.be\nFilter: Joint committee = 200\nE-1001  200  white-collar  3,412.00\nE-1003  200  white-collar  4,105.75\nE-1005  200  white-collar  3,690.00\n=SUM(D2:D41)\nTotal gross PC 200  48,213.50",
+  "clipboard": "48213.50"
+ },
+ {
+  "t": 28,
+  "app": "Google Chrome",
+  "title": "Private Browsing - Gmail",
+  "text": "personal mail",
+  "clipboard": "48213.50"
+ },
+ {
+  "t": 30,
+  "app": "Google Chrome",
+  "title": "Private Browsing - Gmail",
+  "text": "personal mail",
+  "clipboard": "48213.50"
+ },
+ {
+  "t": 32,
+  "app": "Google Chrome",
+  "title": "mysdworx - Client portfolio",
+  "text": "mysdworx  Client portfolio\nBakkerij Janssens BV  PC 200  148 employees  Next payroll 25 Nov\nGarage Peeters NV  PC 112  23 employees\nClient account BE71 0961 2345 6769",
+  "clipboard": "48213.50"
+ },
+ {
+  "t": 34,
+  "app": "Google Chrome",
+  "title": "mysdworx - Client portfolio",
+  "text": "mysdworx  Client portfolio\nBakkerij Janssens BV  PC 200  148 employees  Next payroll 25 Nov\nGarage Peeters NV  PC 112  23 employees\nClient account BE71 0961 2345 6769",
+  "clipboard": "48213.50"
+ },
+ {
+  "t": 36,
+  "app": "Google Chrome",
+  "title": "mysdworx - Client portfolio",
+  "text": "mysdworx  Client portfolio\nBakkerij Janssens BV  PC 200  148 employees  Next payroll 25 Nov\nGarage Peeters NV  PC 112  23 employees\nClient account BE71 0961 2345 6769",
+  "clipboard": "48213.50"
+ },
+ {
+  "t": 38,
+  "app": "Google Chrome",
+  "title": "mysdworx - Indexation PC 200",
+  "text": "mysdworx  Indexation PC 200\nClient  Bakkerij Janssens BV\nIndexation rate  2.21%\nTotal gross base  ______\nEffective date  01/11/2026",
+  "clipboard": "48213.50"
+ },
+ {
+  "t": 40,
+  "app": "Google Chrome",
+  "title": "mysdworx - Indexation PC 200",
+  "text": "mysdworx  Indexation PC 200\nClient  Bakkerij Janssens BV\nIndexation rate  2.21%\nTotal gross base  ______\nEffective date  01/11/2026",
+  "clipboard": "48213.50"
+ },
+ {
+  "t": 42,
+  "app": "Google Chrome",
+  "title": "mysdworx - Indexation PC 200",
+  "text": "mysdworx  Indexation PC 200\nClient  Bakkerij Janssens BV\nIndexation rate  2.21%\nTotal gross base  48213.50\nEffective date  01/11/2026",
+  "clipboard": "48213.50"
+ },
+ {
+  "t": 44,
+  "app": "Google Chrome",
+  "title": "mysdworx - Indexation PC 200",
+  "text": "mysdworx  Indexation PC 200\nClient  Bakkerij Janssens BV\nIndexation rate  2.21%\nTotal gross base  48213.50\nEffective date  01/11/2026",
+  "clipboard": "48213.50"
+ },
+ {
+  "t": 46,
+  "app": "Google Chrome",
+  "title": "mysdworx - Indexation PC 200",
+  "text": "mysdworx  Indexation PC 200\nClient  Bakkerij Janssens BV\nIndexation rate  2.21%\nTotal gross base  48213.50\nEffective date  01/11/2026\nSaved. Indexation of 2.21% scheduled for the November payroll.",
+  "clipboard": "48213.50"
+ },
+ {
+  "t": 48,
+  "app": "Google Chrome",
+  "title": "mysdworx - Indexation PC 200",
+  "text": "mysdworx  Indexation PC 200\nClient  Bakkerij Janssens BV\nIndexation rate  2.21%\nTotal gross base  48213.50\nEffective date  01/11/2026\nSaved. Indexation of 2.21% scheduled for the November payroll.",
+  "clipboard": "48213.50"
+ },
+ {
+  "t": 50,
+  "app": "Safari",
+  "title": "KBC Online Banking",
+  "text": "balance",
+  "clipboard": "48213.50"
+ },
+ {
+  "t": 52,
+  "app": "Safari",
+  "title": "KBC Online Banking",
+  "text": "balance",
+  "clipboard": "48213.50"
+ },
+ {
+  "t": 954,
+  "app": "Google Chrome",
+  "title": "mysdworx - Reports",
+  "text": "mysdworx  Reports\nPeriod  October 2026\nReport type  Payslips"
+ },
+ {
+  "t": 956,
+  "app": "Google Chrome",
+  "title": "mysdworx - Reports",
+  "text": "mysdworx  Reports\nPeriod  October 2026\nReport type  Payslips"
+ },
+ {
+  "t": 958,
+  "app": "Google Chrome",
+  "title": "mysdworx - Reports",
+  "text": "mysdworx  Reports\nPeriod  October 2026\nReport type  Payslips\nFilter: Period = October 2026"
+ },
+ {
+  "t": 960,
+  "app": "Google Chrome",
+  "title": "mysdworx - Reports",
+  "text": "mysdworx  Reports\nPeriod  October 2026\nReport type  Payslips\nFilter: Period = October 2026"
+ },
+ {
+  "t": 962,
+  "app": "Google Chrome",
+  "title": "mysdworx - Reports",
+  "text": "mysdworx  Reports\nPeriod  October 2026\nReport type  Payslips\nFilter: Period = October 2026\nDownload complete: payslips_oct.zip"
+ },
+ {
+  "t": 964,
+  "app": "Google Chrome",
+  "title": "mysdworx - Reports",
+  "text": "mysdworx  Reports\nPeriod  October 2026\nReport type  Payslips\nFilter: Period = October 2026\nDownload complete: payslips_oct.zip"
+ }
+]

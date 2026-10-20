@@ -5,6 +5,7 @@ All rules are deterministic. An optional Claude call can polish names
 """
 import hashlib
 import re
+from collections import Counter
 from datetime import datetime, timezone
 
 GAP_SECONDS = 300  # idle this long and a new procedure starts
@@ -125,8 +126,8 @@ def name_run(run, clip_before, seen_titles):
         if m:
             steps.append(f"Filter {m.group(1).strip()} = {m.group(2).strip()}")
     if app in SPREADSHEETS and SUM_RE.search(new_text):
-        m = re.search(r"(?i)total\s+([a-z][a-z ]*?)(?:\s+\d|$)", new_text, re.M)
-        steps.append(f"Sum {m.group(1).strip()}" if m else "Sum the column")
+        m = re.search(r"[Tt]otal\s+([a-z][a-z ]*?)(?=\s+(?:PC|\d)|$)", new_text, re.M)
+        steps.append(f"Sum the {m.group(1).strip()} column" if m else "Sum the column")
 
     clip = clip_before
     for e in run:
@@ -150,7 +151,6 @@ TOPICS = [
     (re.compile(r"(?i)\bindexation\b|\bindexering\b"), "indexation"),
     (re.compile(r"(?i)pay transparency"), "pay transparency"),
     (re.compile(r"(?i)\bpayslips?\b"), "payslips"),
-    (re.compile(r"(?i)\bsalary export\b|salary_export"), "salary export"),
 ]
 PC_RE = re.compile(r"(?i)(?:joint committee|paritair comit[eé]|\bPC)\s*[=:]?\s*(\d{3})")
 
@@ -158,19 +158,20 @@ PC_RE = re.compile(r"(?i)(?:joint committee|paritair comit[eé]|\bPC)\s*[=:]?\s*
 def topic_of(events):
     text = "\n".join(e["title"] + "\n" + e["text"] for e in events)
     tags = [t for pat, t in TOPICS if pat.search(text)]
-    pcs = sorted(set(PC_RE.findall(text)))
-    tags += [f"PC {p}" for p in pcs[:2]]
+    pcs = Counter(PC_RE.findall(text)).most_common(1)
+    tags += [f"PC {p}" for p, _ in pcs]
     return ", ".join(tags) if tags else "general"
 
 
 def title_of(topic, apps):
-    path = " to ".join(apps) if len(apps) > 1 else apps[0]
+    work = [a for a in apps if a not in MAIL.values()] or apps
+    path = f"from {work[0]} to {work[-1]}" if len(work) > 1 else f"in {work[0]}"
     if "indexation" in topic:
         pc = re.search(r"PC \d{3}", topic)
-        return f"Apply the {pc.group(0) + ' ' if pc else ''}indexation: {path}"
+        return f"Apply the {pc.group(0) + ' ' if pc else ''}indexation {path}"
     if "payslips" in topic:
-        return f"Get the payslips out of {path}"
-    return f"Move data: {path}"
+        return f"Download the monthly payslips {path}"
+    return f"Move data {path}"
 
 
 def extract(events):
@@ -197,6 +198,7 @@ def extract(events):
             # Local-only fields for the review screen; never written to the output.
             "_span": [proc[0]["ts"], proc[-1]["ts"]],
             "_events": len(proc),
-            "_redacted": sum(len(re.findall(r"\[[A-Z_]+\]", e["text"] + e["title"])) for e in proc),
+            "_redacted": len({ln for e in proc for ln in _lines(e["text"] + "\n" + e["title"])
+                              if re.search(r"\[(?:EMAIL|TOKEN|IBAN|NATIONAL_NUMBER|CARD)\]", ln)}),
         })
     return out

@@ -65,7 +65,7 @@ def load_cache(path: Path) -> dict:
 def locked_update(path: Path, update) -> dict:
     path.parent.mkdir(parents=True, exist_ok=True)
     # Hook workers for parallel sessions share these files: reload under a lock, then replace the file atomically.
-    with open(path.with_suffix(".lock"), "w") as lock:
+    with open(path.with_suffix(".lock"), "w", encoding="utf-8") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         cache = update(path)
         tmp = path.with_suffix(f".{os.getpid()}.tmp")

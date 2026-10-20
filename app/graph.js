@@ -115,7 +115,10 @@ async function safe(fn, sample, label) {
 // What came in: how many rows the recorders pushed, and the latest ones that carry a reason. Topics, not people.
 async function feed() {
   const all = await rows();
-  const latest = all.filter((r) => r.why).sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, 6)
+  // Only quotes that read as a reason: a correction or an explanation first, then a decision. Never "accepted as is".
+  const rank = { corrected: 0, explained_why: 1, decided: 2 };
+  const latest = all.filter((r) => r.why && r.human_role in rank && r.why.length >= 40 && r.why.length <= 200 && /^[\x20-\x7e\u2018-\u201d]+$/.test(r.why))
+    .sort((a, b) => rank[a.human_role] - rank[b.human_role] || (a.at < b.at ? 1 : -1)).slice(0, 3)
     .map((r) => ({ topic: topicLabel(r.topic), source: r.source.replace(/_/g, " "), at: r.at, role: r.human_role.replace(/_/g, " "), why: r.why }));
   return {
     live: true,

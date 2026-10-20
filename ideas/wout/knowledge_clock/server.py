@@ -1,4 +1,6 @@
+import logging
 import os
+import re
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -49,10 +51,21 @@ def _make_mirror() -> tuple[object | None, str]:
         mirror.download_all(_data_dir())
         return mirror, "gcs"
     except Exception as error:  # noqa: BLE001
-        return None, f"local ({type(error).__name__}: {error})"[:200]
+        return None, f"local ({type(error).__name__})"
 
 
 MIRROR, STORAGE = _make_mirror()
+
+PERSONAL_URL = re.compile(r"/u/[^/]+/")
+
+
+def hide_token(record: logging.LogRecord) -> bool:
+    # The access log line holds the request path, and /u/<token>/mcp puts a member token in it.
+    record.args = tuple(PERSONAL_URL.sub("/u/***/", a) if isinstance(a, str) else a for a in record.args or ())
+    return True
+
+
+logging.getLogger("uvicorn.access").addFilter(hide_token)
 
 
 def _seeds() -> list[Path]:

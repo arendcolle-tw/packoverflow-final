@@ -16,7 +16,7 @@ The script checks that git, `gh` and your GitHub login work, that your git name 
 - `app/` is the main product. It changes only through merged pull requests.
 - `ideas/your_name/` is yours. Put experiments here and push them to a branch named `idea/your_name`, or straight to `main` when you touch only your own folder. Leave other people's folders alone.
 - `scripts/` holds the first-use check.
-- `context/` holds background for the case: how we're judged and what round 1 taught us (`HACKATHON.md`), SD Worx's products, beliefs and the round-1 brief (`SDWORX.md`), and the pitch story with what we show and what we leave out (`PITCH.md`). `CLAUDE.md` loads them, so every Claude session has them.
+- `context/` holds background for the case: how we're judged and what round 1 taught us (`HACKATHON.md`), SD Worx's products, beliefs and the round-1 brief (`SDWORX.md`), and the design rules (`DESIGN.md`). `CLAUDE.md` loads them, so every Claude session has them.
 - `docs/` holds the text the project driver pastes into the Claude project settings.
 
 ## Hand an idea to the main thread

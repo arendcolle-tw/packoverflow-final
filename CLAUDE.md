@@ -7,14 +7,13 @@ Goal is a live, working demo at the final. Working beats clean.
 @context/HACKATHON.md
 @context/SDWORX.md
 @context/DESIGN.md
-@context/PITCH.md
 
 ## Layout
 
 - `app/` is the main product. It changes only through merged pull requests.
 - `ideas/<name>/` is one person's experiments. Push to branch `idea/<name>`, or straight to `main` if you touch only your own folder. Stay in your own folder.
 - `scripts/first-use.sh` checks that this Mac can work here.
-- `context/` holds background on the hackathon and SD Worx, the design rules, and the pitch story (`PITCH.md`).
+- `context/` holds background on the hackathon and SD Worx, and the design rules.
 - `.github/workflows/deploy.yml` deploys `app/` to Cloud Run on every merge to `main` that changes it. `app/` must build from source with Google buildpacks and listen on `$PORT`.
 - Live app: https://packoverflow-wwvoo2dieq-uc.a.run.app (exists after the first merge that changes app/). Check it after each merge.
 

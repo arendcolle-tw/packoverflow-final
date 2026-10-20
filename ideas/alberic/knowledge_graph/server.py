@@ -13,11 +13,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
-from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query
+from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
-from knowledge_graph import gaps, pages
+from knowledge_graph import gaps, pages, voice
 from knowledge_graph.graph import KnowledgeGraph
 from proficiency.score import parse_at
 
@@ -199,19 +199,68 @@ def post_answer(gap_id: str, body: Answer, person: str = Depends(member)) -> dic
     return gaps.public(gaps.answer_gap(GRAPH, gap_id, body.answer, "gap_form", f"form-{gap_id}"))
 
 
-def _phone_ready() -> bool:
-    return bool(os.environ.get("ELEVENLABS_PHONE_NUMBER_ID") and os.environ.get("ELEVENLABS_AGENT_ID")
-                and os.environ.get("ELEVENLABS_API_KEY"))
+def _callable(owners: set[str]) -> set[str]:
+    """Owners we can phone: calls configured and the owner opted in with a number in KG_PHONE_NUMBERS."""
+    if not all(os.environ.get(k) for k in ("ELEVENLABS_PHONE_NUMBER_ID", "ELEVENLABS_AGENT_ID", "ELEVENLABS_API_KEY")):
+        return set()
+    return {o for o in owners if o and voice.phone_number(o)}
 
 
 @app.get("/gaps/board", response_class=HTMLResponse)
 def get_board() -> str:
     found = gaps.all_gaps(GRAPH)
     answered = sorted((g for g in found if g["status"] == "answered"), key=lambda g: g["answered_at"] or "", reverse=True)
-    return pages.board([g for g in found if g["status"] in gaps.UNANSWERED], answered,
-                       phone=_phone_ready(), claude=bool(os.environ.get("ANTHROPIC_API_KEY")))
+    waiting = [g for g in found if g["status"] in gaps.UNANSWERED]
+    return pages.board(waiting, answered, phone=_callable({g["owner"] for g in waiting}), claude=bool(os.environ.get("ANTHROPIC_API_KEY")))
 
 
 @app.get("/gaps/{gap_id}/talk", response_class=HTMLResponse)
 def get_talk(gap_id: str) -> str:
-    return pages.talk(_gap(gap_id), widget="")
+    gap = _gap(gap_id)
+    return pages.talk(gap, widget=voice.widget(gap) if gap["status"] != "answered" else "")
+
+
+@app.post("/gaps/{gap_id}/call", dependencies=[Depends(admin)])
+def post_call(gap_id: str) -> dict:
+    """Phone the owner. 409 with the browser fallback URL when calls are not configured for them."""
+    gap = _gap(gap_id)
+    if gap["status"] == "answered":
+        raise HTTPException(409, "already answered")
+    try:
+        call_id = voice.start_call(gap)
+    except voice.NotConfigured as error:
+        raise HTTPException(409, f"{error}; use /gaps/{gap_id}/talk") from None
+    except Exception as error:  # noqa: BLE001
+        print(f"outbound call failed: {type(error).__name__}", file=sys.stderr)
+        raise HTTPException(502, f"call failed; use /gaps/{gap_id}/talk") from None
+    gap.update(status="calling", call_id=call_id)
+    GRAPH.save_gaps([gap])
+    return gaps.public(gap)
+
+
+@app.post("/webhooks/elevenlabs")
+async def post_webhook(request: Request) -> dict:
+    body = await request.body()
+    if not voice.verify(request.headers.get("elevenlabs-signature"), body, os.environ.get("ELEVENLABS_WEBHOOK_SECRET", "")):
+        raise HTTPException(401, "bad or missing signature")
+    try:
+        event = json.loads(body)
+    except ValueError:
+        raise HTTPException(400, "not JSON") from None
+    if event.get("type") != "post_call_transcription":
+        return {"ignored": event.get("type")}
+    data = event.get("data") or {}
+    call_id = data.get("conversation_id")
+    variables = (data.get("conversation_initiation_client_data") or {}).get("dynamic_variables") or {}
+    gap = next((g for g in GRAPH.gaps() if call_id and g.get("call_id") == call_id), None) or GRAPH.gap(str(variables.get("gap_id", "")))
+    if gap is None:
+        return {"ignored": "no matching gap"}
+    if gap["status"] == "answered":
+        return {"ignored": "already answered"}
+    extracted = voice.extract_answer(data.get("transcript") or [], gap["draft"])
+    if extracted is None:
+        return {"ignored": "nothing said"}
+    answer, result = extracted
+    stored = gaps.answer_gap(GRAPH, gap["id"], answer, "voice_call", f"call-{call_id or gap['id']}",
+                             draft_result=result, call_id=call_id)
+    return {"answered": stored["id"], "draft_result": stored["draft_result"]}

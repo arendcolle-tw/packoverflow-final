@@ -38,6 +38,11 @@ function whysFor(person, question) {
 
 async function ask(question) {
   const [answer, allRows] = await Promise.all([get("/who_knows?q=" + encodeURIComponent(question)), rows()]);
+  return shape(question, answer, allRows);
+}
+
+// Turns a /who_knows answer into what a person may see. Also used by the voice demo on its seeded rows.
+function shape(question, answer, allRows) {
   const reasoned = answer.people.filter((p) => p.evidence.length);
   const top = reasoned.find((p) => p.person === answer.owner) || reasoned[0];
   const status = STATUS[answer.status] || STATUS.dark;
@@ -55,7 +60,7 @@ async function ask(question) {
     owner: Boolean(answer.owner),
     others: reasoned.length - 1,
     whys: whys.map((w) => ({ role: w.role.replace(/_/g, " "), why: w.why })),
-    source: { kind: row ? row.source.replace(/_/g, " ") : "claude session", at: src.at, topic: topicLabel(row && row.topic) },
+    source: { kind: row ? row.source.replace(/_/g, " ") : "claude session", at: src.at, topic: topicLabel(row && row.topic), id: row && row.topic },
   };
 }
 
@@ -109,6 +114,10 @@ async function safe(fn, sample, label) {
 
 module.exports = {
   GRAPH_URL,
+  STATUS,
+  shape,
+  rows,
+  risks: () => get("/risks"),
   ask: (q) => safe(() => ask(q), { ...SAMPLE_ASK, asked: q }, "ask"),
   map: () => safe(map, SAMPLE_MAP, "map"),
 };

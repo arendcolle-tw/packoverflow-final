@@ -1,0 +1,201 @@
+{
+ "who_knows": {
+  "query": "nightly payroll export retries to the bank over SFTP",
+  "at": "2026-10-20T09:00:00+00:00",
+  "status": "single_point",
+  "owner": "marc",
+  "similar_tasks": 7,
+  "people": [
+   {
+    "person": "marc",
+    "evidence": [
+     {
+      "source_id": "marc-0",
+      "at": "2026-10-08T17:09:00+00:00",
+      "similarity": 0.86,
+      "takeover": 0.25,
+      "contribution": 0.321,
+      "whys": [
+       {
+        "role": "corrected",
+        "why": "No, retry the upload 3 times, not 5, because the bank closes the SFTP window at 18:00 and a late export is rejected anyway."
+       },
+       {
+        "role": "decided",
+        "why": "Start the export at 17:00, so a failed upload still has an hour before the window closes."
+       }
+      ]
+     }
+    ],
+    "proficiency": 0.274
+   },
+   {
+    "person": "sofie",
+    "evidence": [],
+    "proficiency": 0.0
+   }
+  ]
+ },
+ "risks": [
+  {
+   "topic": "payroll-export-retries",
+   "status": "single_point",
+   "owner": "marc",
+   "ai_count": 10,
+   "human_count": 2,
+   "last_human_reasoning_at": "2026-10-08T17:09:00+00:00",
+   "days_since": 11,
+   "people": [
+    {
+     "person": "marc",
+     "proficiency": 0.312,
+     "last_why": "No, retry the upload 3 times, not 5, because the bank closes the SFTP window at 18:00 and a late export is rejected anyway."
+    }
+   ]
+  }
+ ],
+ "rows": [
+  {
+   "id": "demo-sofie-0:0",
+   "person": "sofie",
+   "topic": "payroll-export-retries",
+   "source": "claude_session",
+   "source_id": "sofie-0",
+   "at": "2026-09-29T08:12:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Nightly payroll export to the bank over SFTP, retries on a failed upload"
+  },
+  {
+   "id": "demo-sofie-0:1",
+   "person": "sofie",
+   "topic": "payroll-export-retries",
+   "source": "claude_session",
+   "source_id": "sofie-0",
+   "at": "2026-09-29T08:12:10Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Nightly payroll export to the bank over SFTP, retries on a failed upload"
+  },
+  {
+   "id": "demo-sofie-1:0",
+   "person": "sofie",
+   "topic": "payroll-export-retries",
+   "source": "claude_session",
+   "source_id": "sofie-1",
+   "at": "2026-10-02T09:40:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Nightly payroll export to the bank over SFTP, retries on a failed upload"
+  },
+  {
+   "id": "demo-sofie-2:0",
+   "person": "sofie",
+   "topic": "payroll-export-retries",
+   "source": "claude_session",
+   "source_id": "sofie-2",
+   "at": "2026-10-06T14:05:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Nightly payroll export to the bank over SFTP, retries on a failed upload"
+  },
+  {
+   "id": "demo-sofie-2:1",
+   "person": "sofie",
+   "topic": "payroll-export-retries",
+   "source": "claude_session",
+   "source_id": "sofie-2",
+   "at": "2026-10-06T14:05:10Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Nightly payroll export to the bank over SFTP, retries on a failed upload"
+  },
+  {
+   "id": "demo-sofie-3:0",
+   "person": "sofie",
+   "topic": "payroll-export-retries",
+   "source": "claude_session",
+   "source_id": "sofie-3",
+   "at": "2026-10-14T10:20:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Nightly payroll export to the bank over SFTP, retries on a failed upload"
+  },
+  {
+   "id": "demo-sofie-4:0",
+   "person": "sofie",
+   "topic": "payroll-export-retries",
+   "source": "claude_session",
+   "source_id": "sofie-4",
+   "at": "2026-10-17T16:45:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Nightly payroll export to the bank over SFTP, retries on a failed upload"
+  },
+  {
+   "id": "demo-sofie-4:1",
+   "person": "sofie",
+   "topic": "payroll-export-retries",
+   "source": "claude_session",
+   "source_id": "sofie-4",
+   "at": "2026-10-17T16:45:10Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Nightly payroll export to the bank over SFTP, retries on a failed upload"
+  },
+  {
+   "id": "demo-sofie-5:0",
+   "person": "sofie",
+   "topic": "payroll-export-retries",
+   "source": "claude_session",
+   "source_id": "sofie-5",
+   "at": "2026-10-19T08:30:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Nightly payroll export to the bank over SFTP, retries on a failed upload"
+  },
+  {
+   "id": "demo-marc-0:0",
+   "person": "marc",
+   "topic": "payroll-export-retries",
+   "source": "claude_session",
+   "source_id": "marc-0",
+   "at": "2026-10-08T17:02:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Nightly payroll export to the bank over SFTP, retries on a failed upload"
+  },
+  {
+   "id": "demo-marc-0:1",
+   "person": "marc",
+   "topic": "payroll-export-retries",
+   "source": "claude_session",
+   "source_id": "marc-0",
+   "at": "2026-10-08T17:06:00Z",
+   "human_role": "corrected",
+   "actor": "human",
+   "why": "No, retry the upload 3 times, not 5, because the bank closes the SFTP window at 18:00 and a late export is rejected anyway."
+  },
+  {
+   "id": "demo-marc-0:2",
+   "person": "marc",
+   "topic": "payroll-export-retries",
+   "source": "claude_session",
+   "source_id": "marc-0",
+   "at": "2026-10-08T17:09:00Z",
+   "human_role": "decided",
+   "actor": "human",
+   "why": "Start the export at 17:00, so a failed upload still has an hour before the window closes."
+  }
+ ]
+}

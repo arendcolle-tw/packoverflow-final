@@ -29,6 +29,10 @@ When an idea in `ideas/<name>` should go into `app/`, push its branch, then post
 
 The project driver pastes it into the Claude project and replies in the Slack thread when it is picked up.
 
+## Google Cloud from a thread
+
+Never ask a person to run gcloud. Dispatch `.github/workflows/ops.yml` with the GitHub MCP `actions_run_trigger` (ref `main`) and read the job log: `describe` a service, `set-env` (copy an env var between services, masked), `admin-call` (knowledge-graph gaps scan or add member). Redeploy by dispatching `deploy.yml`. The deploy account cannot enable APIs or grant IAM roles, and key creation is blocked. Details in `docs/deploy.md`.
+
 ## Pull requests in cloud threads
 
 Use the built-in GitHub tools. `gh pr` and `gh issue` fail with a 403 in cloud threads because the GitHub proxy blocks GraphQL.

@@ -20,6 +20,7 @@ PEOPLE = Path(__file__).resolve().parents[1] / "seed" / "people.json"
 WINDOW = timedelta(hours=1.5)  # an artifact is covered by a signal row within 3 hours around it
 RISKY = {"dark", "single_point"}
 UNANSWERED = {"open", "drafted", "calling"}
+AI_SOURCES = {"claude", "gemini"}  # drafts written by a model; "template" otherwise
 TEMPLATE_QUESTION = "What would have gone wrong if you had done it the other way?"
 
 
@@ -144,12 +145,34 @@ def all_gaps(graph: KnowledgeGraph) -> list[dict]:
     return sorted(_distinct(ordered), key=lambda g: (g["status"] not in UNANSWERED, *_rank(g)))
 
 
+def set_draft(graph: KnowledgeGraph, gap_id: str, draft: str, check_question: str, source: str = "claude") -> dict | None:
+    """Store a draft written elsewhere (by Claude in a thread, say). Still a hypothesis: it never enters signals."""
+    gap = graph.gap(gap_id)
+    if gap is None:
+        return None
+    gap.update(draft=draft.strip()[:400], check_question=check_question.strip()[:200], draft_source=source)
+    graph.save_gaps([gap])
+    return gap
+
+
+def load_drafts(graph: KnowledgeGraph, path: Path) -> int:
+    """Seed drafts (gap id -> draft) replace template drafts only, so a later Claude or owner edit wins."""
+    if not path.exists():
+        return 0
+    done = 0
+    for gap_id, d in json.loads(path.read_text()).items():
+        gap = graph.gap(gap_id)
+        if gap and gap.get("draft_source") == "template" and gap["status"] in UNANSWERED:
+            done += bool(set_draft(graph, gap_id, d["draft"], d["check_question"]))
+    return done
+
+
 def redraft_templates(graph: KnowledgeGraph, limit: int = 10) -> int:
     """With a Claude key, replace the riskiest template drafts. Run at startup so nobody has to call /gaps/scan."""
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("K_SERVICE")):
         return 0
-    todo = [g for g in open_gaps(graph) if g.get("draft_source") != "claude"][:limit]
-    return sum(draft_gap(graph, g["id"])["draft_source"] == "claude" for g in todo)
+    todo = [g for g in open_gaps(graph) if g.get("draft_source") not in AI_SOURCES][:limit]
+    return sum(draft_gap(graph, g["id"])["draft_source"] in AI_SOURCES for g in todo)
 
 
 DRAFT_SYSTEM = (
@@ -171,8 +194,8 @@ def draft_gap(graph: KnowledgeGraph, gap_id: str) -> dict | None:
     found = ask_json(DRAFT_SYSTEM, f"<context>\n{context}\n</context>")
     draft, question = (found or {}).get("draft"), (found or {}).get("check_question")
     if isinstance(draft, str) and isinstance(question, str) and draft.strip() and question.strip():
-        gap.update(draft=draft.strip()[:400], check_question=question.strip()[:200], draft_source="claude")
-    elif gap.get("draft_source") != "claude":
+        gap.update(draft=draft.strip()[:400], check_question=question.strip()[:200], draft_source=found.get("_by", "claude"))
+    elif gap.get("draft_source") not in AI_SOURCES:
         gap.update(template_draft(gap))
     if gap["status"] == "open":
         gap["status"] = "drafted"

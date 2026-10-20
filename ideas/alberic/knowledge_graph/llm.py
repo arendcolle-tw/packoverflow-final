@@ -1,4 +1,5 @@
-"""The one place that calls Claude. Returns None without ANTHROPIC_API_KEY or on any failure, so callers fall back."""
+"""The one place that calls a language model. Claude with ANTHROPIC_API_KEY, else Gemini on Vertex AI with the Cloud Run
+service's own identity (no key). Returns None on any failure, so callers fall back to templates."""
 
 import json
 import os
@@ -8,6 +9,9 @@ import httpx
 
 MODEL = "claude-sonnet-5-5"
 URL = "https://api.anthropic.com/v1/messages"
+GEMINI = os.environ.get("KG_GEMINI_MODEL", "gemini-2.5-flash")
+REGION = "us-central1"
+METADATA = "http://metadata.google.internal/computeMetadata/v1"
 
 
 def ask_claude(system: str, user: str, max_tokens: int = 400) -> str | None:
@@ -29,13 +33,40 @@ def ask_claude(system: str, user: str, max_tokens: int = 400) -> str | None:
         return None
 
 
-def ask_json(system: str, user: str, max_tokens: int = 400) -> dict | None:
-    """ask_claude, parsed as one JSON object (the first {...} in the answer)."""
-    text = ask_claude(system, user, max_tokens)
-    if not text or "{" not in text:
+def ask_gemini(system: str, user: str, max_tokens: int = 400) -> str | None:
+    """Vertex AI generateContent, authorised by the metadata server's token. Only on Cloud Run (K_SERVICE)."""
+    if "K_SERVICE" not in os.environ:
         return None
     try:
-        found = json.loads(text[text.index("{"): text.rindex("}") + 1])
-    except ValueError:
+        flavor = {"Metadata-Flavor": "Google"}
+        token = httpx.get(f"{METADATA}/instance/service-accounts/default/token", headers=flavor, timeout=5).json()["access_token"]
+        project = httpx.get(f"{METADATA}/project/project-id", headers=flavor, timeout=5).text
+        response = httpx.post(
+            f"https://{REGION}-aiplatform.googleapis.com/v1/projects/{project}/locations/{REGION}/publishers/google/models/{GEMINI}:generateContent",
+            headers={"Authorization": f"Bearer {token}"}, timeout=30,
+            json={"systemInstruction": {"parts": [{"text": system}]},
+                  "contents": [{"role": "user", "parts": [{"text": user}]}],
+                  "generationConfig": {"maxOutputTokens": max_tokens + 600, "temperature": 0.2,
+                                       "responseMimeType": "application/json", "thinkingConfig": {"thinkingBudget": 0}}},
+        )
+        response.raise_for_status()
+        parts = response.json()["candidates"][0]["content"]["parts"]
+        return "".join(p.get("text", "") for p in parts)
+    except Exception as error:  # noqa: BLE001
+        print(f"Gemini call failed: {type(error).__name__}", file=sys.stderr)
         return None
-    return found if isinstance(found, dict) else None
+
+
+def ask_json(system: str, user: str, max_tokens: int = 400) -> dict | None:
+    """The first {...} in the model's answer, with `_by` naming the model ("claude" or "gemini")."""
+    for by, ask in (("claude", ask_claude), ("gemini", ask_gemini)):
+        text = ask(system, user, max_tokens)
+        if not text or "{" not in text:
+            continue
+        try:
+            found = json.loads(text[text.index("{"): text.rindex("}") + 1])
+        except ValueError:
+            continue
+        if isinstance(found, dict):
+            return {**found, "_by": by}
+    return None

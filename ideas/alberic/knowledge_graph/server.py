@@ -11,6 +11,7 @@ import os
 import sys
 import tempfile
 import threading
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
@@ -74,12 +75,14 @@ def _load_artifacts(graph: KnowledgeGraph) -> None:
         if fresh:
             graph.add_artifacts(fresh)
     gaps.find_gaps(graph)
+    gaps.load_drafts(graph, HERE / "seed" / "drafts.json")
 
 
 GRAPH, STORAGE = make_graph()
 _load_artifacts(GRAPH)
 threading.Thread(target=voice.ensure_webhook, args=(GRAPH,), daemon=True).start()
 threading.Thread(target=gaps.redraft_templates, args=(GRAPH,), daemon=True).start()
+_LAST_REDRAFT = [time.time()]
 app = FastAPI(title="knowledge-graph")
 
 
@@ -182,14 +185,22 @@ def post_scan(claude: int = Query(0, ge=0, le=50)) -> dict:
     """Find gaps. With claude=N, also ask Claude to draft the N riskiest that still have a template draft."""
     found = gaps.find_gaps(GRAPH)
     drafted = 0
-    for gap in [g for g in found if g.get("draft_source") != "claude"][:claude]:
-        drafted += gaps.draft_gap(GRAPH, gap["id"])["draft_source"] == "claude"
+    for gap in [g for g in found if g.get("draft_source") not in gaps.AI_SOURCES][:claude]:
+        drafted += gaps.draft_gap(GRAPH, gap["id"])["draft_source"] in gaps.AI_SOURCES
     return {"open": len(found), "claude_drafts": drafted}
 
 
+class Draft(BaseModel):
+    draft: str = Field(min_length=1, max_length=400, pattern=r"\S")
+    check_question: str = Field(min_length=1, max_length=200, pattern=r"\S")
+
+
 @app.post("/gaps/{gap_id}/draft", dependencies=[Depends(admin)])
-def post_draft(gap_id: str) -> dict:
+def post_draft(gap_id: str, body: Draft | None = None) -> dict:
+    """No body: ask Claude (template fallback). With {draft, check_question}: store that draft as given."""
     _gap(gap_id)
+    if body is not None:
+        return gaps.public(gaps.set_draft(GRAPH, gap_id, body.draft, body.check_question))
     return gaps.public(gaps.draft_gap(GRAPH, gap_id))
 
 
@@ -210,12 +221,20 @@ def _callable(owners: set[str]) -> set[str]:
     return {o for o in owners if o and voice.phone_number(o)}
 
 
+def _redraft_soon() -> None:
+    """At most every 5 minutes, let a model replace a few template drafts in the background (e.g. once Vertex access lands)."""
+    if time.time() - _LAST_REDRAFT[0] > 300:
+        _LAST_REDRAFT[0] = time.time()
+        threading.Thread(target=gaps.redraft_templates, args=(GRAPH, 3), daemon=True).start()
+
+
 @app.get("/gaps/board", response_class=HTMLResponse)
 def get_board() -> str:
+    _redraft_soon()
     found = gaps.all_gaps(GRAPH)
     answered = sorted((g for g in found if g["status"] == "answered"), key=lambda g: g["answered_at"] or "", reverse=True)
     waiting = [g for g in found if g["status"] in gaps.UNANSWERED]
-    return pages.board(waiting, answered, phone=_callable({g["owner"] for g in waiting}), claude=bool(os.environ.get("ANTHROPIC_API_KEY")))
+    return pages.board(waiting, answered, phone=_callable({g["owner"] for g in waiting}), drafters={g.get("draft_source") for g in waiting} & gaps.AI_SOURCES)
 
 
 @app.get("/gaps/{gap_id}/talk", response_class=HTMLResponse)

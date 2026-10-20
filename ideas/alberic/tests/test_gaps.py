@@ -185,3 +185,14 @@ def test_startup_redraft_only_with_a_key(tmp_path, monkeypatch):
     monkeypatch.setattr(gaps, "ask_json", lambda *a, **k: {"draft": "We did it because of the bank.", "check_question": "Still true?"})
     assert gaps.redraft_templates(graph, limit=2) == 2
     assert sum(g["draft_source"] == "claude" for g in gaps.open_gaps(graph)) == 2
+
+
+def test_seed_and_supplied_drafts(client):
+    board = client.get("/gaps/board").text
+    assert "the Aikido scan had to run on the repo we actually publish" in board
+    gap = client.get("/gaps", params={"status": "open"}).json()[-1]
+    body = {"draft": "We did it because the bank closes at 18:00.", "check_question": "Still 18:00?"}
+    assert client.post(f"/gaps/{gap['id']}/draft", json=body).status_code == 401
+    stored = client.post(f"/gaps/{gap['id']}/draft", json=body, headers={"Authorization": f"Bearer {ADMIN}"}).json()
+    assert stored["draft"] == body["draft"] and stored["draft_source"] == "claude"
+    assert not any("18:00" in str(r) for r in client.get("/rows").json())

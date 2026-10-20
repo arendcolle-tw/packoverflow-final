@@ -1,6 +1,6 @@
 // Voice: call the knowledge base. An ElevenLabs agent holds the voice; its two server tools call the endpoints below.
-// The answers come from the shared knowledge graph (graph.js). A few common SD Worx topics are seeded, labeled demo data
-// with made-up colleagues, scored offline by the same ranking (app/voice/build-demo writes voice/demo-answer.json).
+// The agent explains what Nobikos does. When a caller asks who knows something, its tools answer from the shared
+// knowledge graph (graph.js), live data only.
 // The API key and agent id live only in env vars on Cloud Run; the browser gets a short-lived signed URL.
 
 const fs = require("fs");
@@ -10,7 +10,6 @@ const graph = require("./graph");
 const API = "https://api.elevenlabs.io";
 const KEY = process.env.ELEVENLABS_API_KEY || "";
 const AGENT_ID = process.env.ELEVENLABS_AGENT_ID || "";
-const DEMO = JSON.parse(fs.readFileSync(path.join(__dirname, "voice", "demo-answer.json"), "utf8"));
 const SDK = path.join(__dirname, "node_modules", "@elevenlabs", "client", "dist", "lib.iife.js");
 const RECORDING = path.join(__dirname, "voice", "recorded-call.mp3");
 const RECORDING_TIMES = path.join(__dirname, "voice", "recorded-call.json");
@@ -22,30 +21,12 @@ const ago = (iso) => {
   return d <= 0 ? "today" : d === 1 ? "yesterday" : `${d} days ago`;
 };
 
-// The seeded demo topic that best matches the caller's words, or null.
-function demoTopic(text) {
-  const t = ` ${String(text).toLowerCase()} `;
-  let best = null, hits = 0;
-  for (const d of DEMO.topics) {
-    const n = d.keywords.filter((k) => t.includes(k)).length;
-    if (n > hits) { best = d; hits = n; }
-  }
-  return best;
-}
-
 async function lookup(topic) {
-  const d = demoTopic(topic);
-  if (d) {
-    const rows = DEMO.rows.filter((r) => r.topic === d.id);
-    const answer = graph.shape(d.question, d.who_knows, rows);
-    if (answer.source) answer.source.topic = d.label;
-    return { demo: true, answer, rows, risks: [d.risk] };
-  }
   const answer = await graph.ask(topic);
   const [rows, risks] = answer.live
     ? await Promise.all([graph.rows(), graph.risks()]).catch(() => [[], []])
     : [[], []];
-  return { demo: false, answer, rows, risks };
+  return { answer, rows, risks };
 }
 
 const rawTopic = (found) => (found.answer.source && found.answer.source.id) || null;
@@ -53,8 +34,7 @@ const rawTopic = (found) => (found.answer.source && found.answer.source.id) || n
 async function whoKnows(topic) {
   const found = await lookup(topic);
   const a = found.answer;
-  const note = found.demo ? "Demo data: a seeded example topic, not a real colleague."
-    : a.live === false ? "Sample data: the live knowledge base was unreachable." : "Live data from the team's real work.";
+  const note = a.live === false ? "Sample data: the live knowledge base was unreachable." : "Live data from the team's real work.";
   if (!a.person || a.live === false) return { topic, data: note, nobody_knows: true, say: "There is nothing in the knowledge base on this yet." };
   return {
     topic: a.source.topic,
@@ -78,7 +58,7 @@ async function goingDark(topic) {
   const label = (graph.STATUS[status] || graph.STATUS.dark);
   return {
     topic: a.source ? a.source.topic : topic,
-    data: found.demo ? "Demo data: a seeded example topic." : "Live data.",
+    data: "Live data.",
     going_dark: status !== "healthy",
     in_one_sentence: label.reason,
     people_who_still_reason: risk ? risk.people.length : (a.person ? 1 + (a.others || 0) : 0),
@@ -164,26 +144,26 @@ const STYLE = `
   #captions .line { margin: 6px 0; font-size: 1.05rem; color: var(--muted); }
   #captions .line.agent { color: var(--text); }
   #captions .line.you::before { content: "You: "; color: var(--sky-300); font-weight: 600; }
-  #captions .line.agent::before { content: "Knowledge base: "; color: var(--amber); font-weight: 600; }
+  #captions .line.agent::before { content: "Nobikos: "; color: var(--amber); font-weight: 600; }
   #datatag[hidden] { display: none; }
   #callnames .knows { max-width: 760px; margin: 0 auto; }
   #callnames .label { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
   #callnames .name { font: 800 2.4rem/1.1 var(--display); margin: 8px 0 12px; }
-  #callnames { opacity: 0.25; transition: opacity 0.6s; margin-top: 18px; }
-  #callnames.on { opacity: 1; }
+  #callnames { display: none; margin-top: 18px; }
+  #callnames.on { display: block; }
 `;
 
 const SECTION = `
   <section id="call" hidden>
     <div class="card glass call">
-      <div class="kicker">In a rush? Call it.</div>
-      <h2>"What do I need to know before my meeting about the nightly payroll export?"</h2>
+      <div class="kicker">Call Nobikos</div>
+      <h2>Ask what it can do for your team.</h2>
       <div class="callbtns">
         <button class="btn" id="callbtn">Call</button>
         <button class="btn ghost" id="playbtn">Play recorded call</button>
       </div>
       <p id="callstate">Press Call and ask out loud. You can interrupt it any time.</p>
-      <p class="meta">Try: the nightly payroll export, the PC 200 indexation, sick leave, onboarding a new hire, the DmfA filing, contract changes or pay transparency. Demo data with made-up colleagues.</p>
+      <p class="meta">Try: "What can you do for my team?", "How do you learn without anyone writing docs?" or "What happens when nobody knows the answer?"</p>
       <audio id="recorded" src="/voice/recorded-call.mp3" preload="auto"></audio>
     </div>
     <div id="callnames">

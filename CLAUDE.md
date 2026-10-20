@@ -15,6 +15,7 @@ Tectonic Hackathon final, SD Worx track. A team of four, each with their own Cla
 - `ideas/<name>/` is one person's experiments. Push to branch `idea/<name>`, or straight to `main` if you touch only your own folder. Stay in your own folder.
 - `scripts/first-use.sh` checks that this Mac can work here.
 - `context/` holds background on the hackathon and SD Worx.
+- `.github/workflows/deploy.yml` deploys `app/` to Cloud Run on every merge to `main` that changes it. `app/` must build from source with Google buildpacks and listen on `$PORT`.
 
 ## First time in this repo
 

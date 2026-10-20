@@ -6,47 +6,57 @@
   {
    "at": 0.6,
    "who": "agent",
-   "text": "Hi, this is Nobikos, your team's knowledge base. Ask me anything about what I can do."
+   "text": "Hi, this is Nobikos. Ask me what I can do for your team."
   },
   {
-   "at": 5.25,
+   "at": 4.41,
    "who": "you",
-   "text": "Hi. What can you actually do for my team?"
+   "text": "Hi. What is Nobikos?"
   },
   {
-   "at": 8.52,
+   "at": 7.17,
    "who": "agent",
-   "text": "I help your team find the right person and their reasoning in seconds instead of a day of asking around. Here's how: I pick up the decisions people make in their AI sessions, like Claude or Copilot, and keep only what matters: the choice they made and why, in their own words. Then when someone asks a question in Slack, I tell them who knows it and their reason, so you get answers fast and your team learns from each other without writing documentation."
+   "text": "Hi there. Nobikos keeps the reasoning behind decisions, not just the facts. When your team uses AI to write code or draft text, we capture the moments where a person actually thinks it through, corrects the AI, or explains why something matters. We store that with the person's name and their reason in their own words. So when someone asks who knows something, they get a real colleague and why they know it, instead of just asking how it was done. It's less about asking how, more about talking why."
   },
   {
-   "at": 39.4,
+   "at": 35.83,
    "who": "you",
-   "text": "And how do you learn all that without anyone writing documentation?"
+   "text": "What would my team actually use it for?"
   },
   {
-   "at": 43.88,
+   "at": 39.19,
    "who": "agent",
-   "text": "I work from the work people already do. When someone uses Claude or Copilot, I capture their AI sessions in the background, just the decisions and reasoning, never the raw chat. Then when a colleague corrects something, decides on an approach, or explains why in a thread, that counts as knowledge. If nobody's written an answer down, I show the closest related facts and tag the person most likely to know, so their reply becomes the answer for next time. Nobody has to sit down and document anything."
+   "text": "Let me give you two quick ones. First, your people can ask in Slack or through an AI assistant \"who knows this topic\" and get back the colleague who actually worked it out, with their reason in their own words, and a way to chat with them. That's live today. Second, you as a leader can see which topics are going dark,  where only one person knows something, or nobody has explained it lately. That's live too, and it helps you spot where knowledge is at risk before someone leaves. What matters most to your team right now?"
   },
   {
-   "at": 74.16,
+   "at": 71.23,
    "who": "you",
-   "text": "What happens when nobody knows the answer?"
+   "text": "And as a manager, what do I get?"
   },
   {
-   "at": 77.29,
+   "at": 74.27,
    "who": "agent",
-   "text": "I show the closest related facts and tag the colleague most likely to know based on what's nearby in the knowledge base. Their reply in the thread becomes a fact under their name, so the next person who asks gets the answer straight away. It's how gaps turn into learning moments for your whole team."
+   "text": "As a manager, you see where knowledge is at risk. We show you topics that only one person understands, or nobody has reasoned about in a while, we call that going dark. You get the topic names, never who knows what, so there's no scoring people. It helps you plan handovers and spot gaps before they become problems when someone leaves or moves to a new role."
   },
   {
-   "at": 94.06,
+   "at": 95.54,
    "who": "you",
-   "text": "Nice, thanks."
+   "text": "Is the onboarding path live already?"
   },
   {
-   "at": 96.03,
+   "at": 98.72,
    "who": "agent",
-   "text": "You're welcome! Feel free to reach out anytime you want to know more about how Nobikos can help your team. Take care!"
+   "text": "No, that's on the roadmap. Right now we have who knows and going dark live for you. The onboarding path,  building a learning route around what a newcomer already knows, that's an idea we're working toward, not built yet."
+  },
+  {
+   "at": 111.03,
+   "who": "you",
+   "text": "Great, thanks."
+  },
+  {
+   "at": 113.14,
+   "who": "agent",
+   "text": "You're welcome. Feel free to reach out anytime you want to know more. Take care."
   }
  ]
 }

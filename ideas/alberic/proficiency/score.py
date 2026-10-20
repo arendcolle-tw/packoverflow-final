@@ -37,20 +37,23 @@ def row_weight(row: dict) -> float:
 
 
 def build_tasks(signals: list[dict], at: datetime) -> list[dict]:
-    """Group rows into tasks by session. Subagent rows (`<session>:<agent>`) belong to their parent."""
-    by_session: dict[str, list[dict]] = {}
+    """Group rows into tasks by (person, session). Subagent rows (`<session>:<agent>`) belong to their parent.
+
+    Keying on the person too means a row posted under a colleague's session id cannot change their task.
+    """
+    by_session: dict[tuple[str, str], list[dict]] = {}
     for row in signals:
         if parse_at(row["at"]) <= at:
-            by_session.setdefault(row["source_id"].split(":")[0], []).append(row)
+            by_session.setdefault((row["person"], row["source_id"].split(":")[0]), []).append(row)
 
     tasks = []
-    for source_id, rows in by_session.items():
+    for (person, source_id), rows in by_session.items():
         rows.sort(key=lambda r: r["at"])
         summary = next((r["task"] for r in rows if r.get("task")), None)
         text = summary or " ".join([rows[0].get("topic", "").replace("-", " ")] + [r["why"] for r in rows if r["why"]])
         tasks.append({
             "source_id": source_id,
-            "person": Counter(r["person"] for r in rows).most_common(1)[0][0],
+            "person": person,
             "at": parse_at(rows[-1]["at"]),
             "text": text,
             "rows": rows,

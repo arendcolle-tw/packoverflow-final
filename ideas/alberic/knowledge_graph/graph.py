@@ -5,17 +5,24 @@ reads through who_knows, person_view and risks. Nodes are people, tasks (one Cla
 and evidence (one signal row). Proficiency is the computed person -> task edge, see proficiency.score.
 """
 
+import hashlib
 import json
+import secrets
+import sqlite3
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
 from proficiency.score import OWNER_THRESHOLD, build_tasks, parse_at, rank, row_weight, who_knows
 
-FIELDS = {"id", "person", "topic", "source", "source_id", "at", "human_role", "why", "actor"}
+REQUIRED = ("id", "person", "topic", "source", "source_id", "at", "human_role", "actor")
+LIMITS = {"why": 200, "task": 80, "app": 300}  # optional fields and their max length
+FIELDS = REQUIRED + tuple(LIMITS)
+MAX_STRING = 300
 ROLES = {"decided", "corrected", "explained_why", "answered_question", "accepted_as_is"}
-SOURCES = {"claude_session", "meeting"}
+SOURCES = {"claude_session", "meeting", "copilot_chat", "copilot_cli", "m365_copilot", "screenshot", "mcp_record"}
 ACTORS = {"human", "agent", "unknown"}
+SQLITE_HEADER = b"SQLite format 3\x00"
 
 _LOCK = threading.Lock()
 
@@ -24,15 +31,20 @@ def validate(row: dict) -> str | None:
     """Return why a row is rejected, or None when it is a valid signal."""
     if not isinstance(row, dict):
         return "not an object"
-    missing = FIELDS - row.keys()
+    missing = set(REQUIRED) - row.keys()
     if missing:
         return f"missing {', '.join(sorted(missing))}"
-    if not all(isinstance(row[f], str) and row[f] for f in FIELDS - {"why"}):
+    if not all(isinstance(row[f], str) and row[f] for f in REQUIRED):
         return "empty field"
     if row["human_role"] not in ROLES or row["source"] not in SOURCES or row["actor"] not in ACTORS:
         return "unknown human_role, source or actor"
-    if row["why"] is not None and not isinstance(row["why"], str):
-        return "why is not text"
+    for field, limit in LIMITS.items():
+        if row.get(field) is not None and not isinstance(row[field], str):
+            return f"{field} is not text"
+        if len(row.get(field) or "") > limit:
+            return f"{field} longer than {limit} characters"
+    if any(len(row[f]) > MAX_STRING for f in REQUIRED):
+        return f"field longer than {MAX_STRING} characters"
     try:
         parse_at(row["at"])
     except ValueError:
@@ -40,47 +52,112 @@ def validate(row: dict) -> str | None:
     return None
 
 
+def _clean(row: dict) -> dict:
+    """Known fields only; `why` is always present (None when missing), task and app only when set."""
+    out = {f: row[f] for f in REQUIRED}
+    out["why"] = row.get("why")
+    out.update({f: row[f] for f in ("task", "app") if row.get(f) is not None})
+    return out
+
+
+def _hash(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
 class KnowledgeGraph:
-    """Rows live in one JSONL file (later lines win per id). `mirror` is anything with upload(path), e.g. a GCS mirror."""
+    """Rows live in one SQLite file at `path`. `mirror` is anything with upload(path), e.g. a GCS mirror.
+
+    A JSONL file at `path` (the old format) is imported once and kept next to it as `<path>.imported`.
+    If `mirror` also has download(path), a missing file is restored from it first.
+    Each row id belongs to the first person who wrote it; later writes by someone else are refused.
+    """
 
     def __init__(self, path: Path, seed_paths: list[Path] = (), mirror=None):
         self.path = Path(path)
         self.mirror = mirror
-        self._rows: dict[str, dict] = {}
-        for seed in seed_paths:
-            for row in json.loads(Path(seed).read_text()):
-                if validate(row) is None:
-                    self._rows[row["id"]] = row
-        if self.path.exists():
-            for line in self.path.read_text().splitlines():
-                try:
-                    row = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                if validate(row) is None:
-                    self._rows[row["id"]] = row
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        if not self.path.exists() and hasattr(mirror, "download"):
+            mirror.download(self.path)
+
+        legacy = []
+        if self.path.exists() and not self.path.read_bytes()[:16] == SQLITE_HEADER:
+            legacy = self.path.read_text().splitlines()
+            self.path.rename(self.path.with_name(self.path.name + ".imported"))
+
+        self._db = sqlite3.connect(self.path, check_same_thread=False)
+        self._db.executescript(
+            "CREATE TABLE IF NOT EXISTS signals (id TEXT PRIMARY KEY, person TEXT NOT NULL, row TEXT NOT NULL);"
+            "CREATE TABLE IF NOT EXISTS members (token TEXT PRIMARY KEY, person TEXT NOT NULL);"
+        )
+        self._rows: dict[str, dict] = {
+            id_: json.loads(row) for id_, row in self._db.execute("SELECT id, row FROM signals ORDER BY rowid")
+        }
+
+        seeded = [row for seed in seed_paths for row in json.loads(Path(seed).read_text())]
+        imported = []
+        for line in legacy:
+            try:
+                imported.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+        # Seeds only fill ids the database does not have; the old JSONL file wins over seeds, later lines win.
+        fresh = {r["id"]: r for r in seeded if validate(r) is None and r["id"] not in self._rows}
+        fresh.update({r["id"]: r for r in imported if validate(r) is None})
+        if fresh:
+            with _LOCK:
+                self._write(list(fresh.values()), person=None)
 
     def rows(self) -> list[dict]:
         return list(self._rows.values())
 
-    def add_signals(self, rows: list[dict]) -> dict:
+    def add_signals(self, rows: list[dict], person: str | None = None) -> dict:
+        """Store valid rows. `person` (from a member token) overrides each row's person."""
         valid, rejected = [], []
         for i, row in enumerate(rows):
             reason = validate(row)
             if reason:
                 rejected.append(f"row {i}: {reason}")
+            elif row["id"] in self._rows and self._rows[row["id"]]["person"] != (person or row["person"]):
+                rejected.append(f"row {i}: id belongs to someone else")
             else:
                 valid.append(row)
         with _LOCK:
             updated = sum(1 for row in valid if row["id"] in self._rows)
-            self.path.parent.mkdir(parents=True, exist_ok=True)
-            with self.path.open("a") as out:
-                for row in valid:
-                    out.write(json.dumps(row, ensure_ascii=False) + "\n")
-                    self._rows[row["id"]] = row
-            if self.mirror and valid:
-                self.mirror.upload(self.path)
+            self._write(valid, person)
         return {"added": len(valid) - updated, "updated": updated, "rejected": rejected}
+
+    def _write(self, rows: list[dict], person: str | None) -> None:
+        if not rows:
+            return
+        for row in rows:
+            row = _clean({**row, "person": person or row["person"]})
+            owner = self._rows.get(row["id"], row)["person"]
+            if owner != row["person"]:
+                continue
+            self._db.execute(
+                "INSERT INTO signals (id, person, row) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET row = excluded.row",
+                (row["id"], owner, json.dumps(row, ensure_ascii=False)),
+            )
+            self._rows[row["id"]] = row
+        self._commit()
+
+    def _commit(self) -> None:
+        self._db.commit()
+        if self.mirror:
+            self.mirror.upload(self.path)
+
+    def add_member(self, person: str) -> str:
+        """Create a member token for `person`. Only its hash is stored, so the token is shown once."""
+        token = secrets.token_urlsafe(32)
+        with _LOCK:
+            self._db.execute("INSERT INTO members (token, person) VALUES (?, ?)", (_hash(token), person))
+            self._commit()
+        return token
+
+    def member(self, token: str) -> str | None:
+        """The person a member token belongs to, or None."""
+        found = self._db.execute("SELECT person FROM members WHERE token = ?", (_hash(token),)).fetchone()
+        return found[0] if found else None
 
     def who_knows(self, question: str, at: datetime | None = None) -> dict:
         return who_knows(question, self.rows(), at)

@@ -1,8 +1,8 @@
 # Knowledge clock and connector
 
-**Live:** https://knowledge-mcp-323892475788.us-central1.run.app/join gives you a personal connector URL for Claude (claude.ai, Claude desktop or Claude Code). Ask Claude "Map my knowledge with Packoverflow", then "Who knows ...?". Tools: `record_signals`, `what_i_know`, `who_knows` (Albéric's ranking, vendored in `vendor/`), `knowledge_risks`, `list_topics`, prompt `map_my_knowledge`. The person always comes from the token in the URL. Design: [docs/2026-10-20-knowledge-connector-design.md](docs/2026-10-20-knowledge-connector-design.md).
+**Live:** https://knowledge-mcp-323892475788.us-central1.run.app/join has an *Add to Claude* button (claude.ai opens with the connector filled in, click Add). Shared, read-only connector URL: `https://knowledge-mcp-323892475788.us-central1.run.app/mcp`. Ask Claude "Who knows how our Aikido scan was set up?" or "What is going dark in our team?". Tools: `who_knows`, `person_profile`, `knowledge_risks`, `list_topics`, and `what_i_know` on a personal URL (`/u/<token>/mcp`, from the same page). It reads Albéric's knowledge graph (copied into `vendor/` by `vendor/sync.sh`) and records nothing. Design: [docs/2026-10-20-knowledge-connector-design.md](docs/2026-10-20-knowledge-connector-design.md) (written before the switch to read-only).
 
-Deploy: `gh workflow run deploy.yml --ref main -f source=ideas/wout -f service=knowledge-mcp`. On Cloud Run live rows and tokens live in `/tmp/kc`, so they are lost when the instance stops, unless the service runs with `--min-instances 1 --max-instances 1`.
+Deploy: `gh workflow run deploy.yml --ref main -f source=ideas/wout -f service=knowledge-mcp`. On Cloud Run the graph file and personal tokens live in `/tmp/kc` and are mirrored to a Cloud Storage bucket, so they survive restarts (`/api/summary` shows `"storage": "gcs"`).
 
 
 For every critical system or topic: how often AI handled it, how often a human actually reasoned about it (decided, corrected Claude, explained why), who did, and why. Only human reasoning resets the clock, so AI-written text never counts as knowledge.
@@ -42,4 +42,5 @@ Only the extracted rows are committed, never raw sessions.
 - Meeting notes as a second source: the row shape supports `source: meeting`, nothing reads meetings yet.
 - No login on the clock page. Anyone who can reach the server can answer an open question for anyone (`POST /api/why`).
 - The connector's identity is a bearer URL, not a password login. OAuth is a stretch.
-- Live rows are lost on Cloud Run restarts until min/max instances are 1 or Firestore is added.
+- Two Cloud Run instances could overwrite each other's mirrored files; `--max-instances 1` avoids it.
+- Tristan's rows reach the hosted graph only once they are copied into `data/` or the bucket.

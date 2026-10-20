@@ -53,6 +53,24 @@ How might we turn fragmented organisational knowledge into a trusted shared reso
 - Inspiration areas: **Trust** (is it reliable?), **Capture** (knowledge out of inboxes and heads), **Detect** (conflicting, duplicated, missing, outdated), **Connect** (find the right expert when documents aren't enough).
 - SD Worx may use solutions in their own work.
 
+## Finals case: keep it trusted without extra work
+From the finals guide. Take the round-1 solution one step further, so it stays **useful, reliable and up to date without people documenting or maintaining it by hand**.
+
+- Automate what can happen in the background. Ask a human only where their judgement adds real value.
+- Fit into existing ways of working with little effort or attention. Invisible when things work, clear when someone has to decide or act.
+- **Think beyond documents.** Often the answer is a person: who dealt with this before, who knows this customer or topic, who knows how and why it is done here.
+- Learn from **signals that everyday work already creates**, instead of asking people to feed another knowledge system.
+- Their examples, labelled inspiration, not requirements:
+  1. A new developer at SD Worx can look up how a build pipeline works. The harder questions are "How do we do this here?" and "Who should I talk to?".
+  2. Someone launching a marketing campaign needs to know who did one before, who understands the audience and what worked.
+- The jury's five questions, so the pitch answers each one:
+  1. What happens automatically?
+  2. When is human verification genuinely valuable?
+  3. How do you keep maintenance from becoming a burden?
+  4. How does it fit naturally into the user's workflow?
+  5. How does it stay understandable without demanding constant attention?
+- Their line: the goal is not zero human involvement, it is zero unnecessary effort.
+
 ## What this means for us
 - Build **on top of** what they already run (agentic payroll, Legal Watch, mysdworx), not a competitor to it. Example phrasing: "a trust layer your 500 consultants' agents can call".
 - Show the human in the loop clearly, with sources a consultant can check. That's their stated principle.

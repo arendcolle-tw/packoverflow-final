@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=1920, height=1080" />
-    <title>Who knows</title>
+    <title>Knowly</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -21,7 +21,6 @@
         --gray: #565955;
         --muted: #8e9893;
         --ink2: #3a403c;
-        --amber: #e6a23c;
         --mono: "IBM Plex Mono", ui-monospace, monospace;
       }
       * {
@@ -116,9 +115,9 @@
       }
       #ha-scrim {
         position: absolute;
-        left: 160px;
+        left: 60px;
         top: 330px;
-        width: 1600px;
+        width: 1800px;
         height: 400px;
         background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(14, 23, 20, 0.96) 0%, rgba(14, 23, 20, 0.9) 60%, rgba(14, 23, 20, 0) 100%);
       }
@@ -171,9 +170,9 @@
       .hl {
         position: absolute;
         left: 150px;
-        width: 900px;
+        width: 960px;
         font-weight: 900;
-        font-size: 92px;
+        font-size: 84px;
         line-height: 1.02;
         letter-spacing: -0.03em;
       }
@@ -183,14 +182,14 @@
         color: #727873;
       }
       #h2 {
-        top: 213.84px;
+        top: 205.68px;
         transform-origin: 0 0;
       }
       #problem {
         position: absolute;
         left: 150px;
-        top: 444px;
-        width: 880px;
+        top: 420px;
+        width: 900px;
         font-size: 28px;
         line-height: 1.45;
         color: var(--ink2);
@@ -205,7 +204,7 @@
         left: 1150px;
         top: 132px;
         width: 620px;
-        height: 402px;
+        height: 412px;
         color: var(--cream);
       }
       #chat-fill {
@@ -257,7 +256,7 @@
         margin-left: 14px;
         color: var(--muted);
       }
-      #chat-mcp {
+      #chat-kb {
         margin-left: auto;
         display: flex;
         align-items: center;
@@ -270,7 +269,7 @@
         background: var(--green);
       }
       #q {
-        margin: 22px 0 0 auto;
+        margin: 20px 0 0 auto;
         width: fit-content;
         white-space: nowrap;
         background: #1c2924;
@@ -279,50 +278,40 @@
         font-size: 22px;
         line-height: 1.36;
       }
-      #tool {
+      #a1 {
+        margin-top: 16px;
+        font-size: 21px;
+        line-height: 1.4;
+      }
+      #a1 span {
+        display: block;
+      }
+      #a1 b {
+        font-weight: 700;
+      }
+      #a1 u {
+        color: var(--mint);
+        text-decoration-color: rgba(126, 211, 166, 0.45);
+        text-underline-offset: 4px;
+      }
+      #later {
         margin-top: 20px;
         display: flex;
         align-items: center;
         gap: 10px;
         color: var(--mint);
       }
-      #tool span {
-        color: var(--muted);
-        letter-spacing: 0.08em;
-        text-transform: none;
-      }
-      #ans-row {
-        margin-top: 16px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        font-size: 22px;
-      }
-      #ans-row b {
-        font-weight: 700;
-      }
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 10px 5px;
-        border: 1.5px solid var(--amber);
-        color: var(--amber);
-        font-family: var(--mono);
-        font-size: 14px;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-      }
-      .pill i {
-        width: 8px;
-        height: 8px;
-        background: var(--amber);
+      #later-line {
+        flex: 1;
+        height: 1px;
+        background: rgba(243, 240, 229, 0.1);
+        transform-origin: 0 50%;
       }
       #quote {
         position: relative;
-        margin-top: 18px;
+        margin-top: 14px;
         padding-left: 20px;
-        font-size: 24px;
+        font-size: 23px;
         line-height: 1.36;
       }
       #quote-bar {
@@ -335,48 +324,19 @@
         transform-origin: 50% 0;
       }
       #meta {
-        margin-top: 12px;
+        margin-top: 10px;
+        padding-left: 20px;
         font-size: 17px;
         color: var(--muted);
       }
-      #meta u {
-        color: var(--mint);
-        text-decoration-color: rgba(126, 211, 166, 0.45);
-        text-underline-offset: 4px;
-      }
-      #counts {
-        margin-top: 18px;
-        display: flex;
-        align-items: center;
-        gap: 16px;
-      }
-      .sqs {
-        display: flex;
-        gap: 3px;
-      }
-      .sqs i {
-        width: 12px;
-        height: 12px;
-        border: 1.5px solid rgba(243, 240, 229, 0.32);
-      }
-      .sqs i.h {
-        background: var(--green);
-        border-color: var(--green);
-      }
-      #counts-txt {
-        font-family: var(--mono);
-        font-size: 14px;
-        white-space: nowrap;
-        color: var(--muted);
-      }
-      #counts-txt em {
-        font-style: normal;
-        color: var(--mint);
+      #meta b {
+        font-weight: 600;
+        color: var(--cream);
       }
       #chat-note {
         position: absolute;
         left: 1150px;
-        top: 548px;
+        top: 560px;
         font-family: var(--mono);
         font-size: 15px;
         letter-spacing: 0.03em;
@@ -386,9 +346,9 @@
       #steps {
         position: absolute;
         left: 150px;
-        top: 624px;
+        top: 616px;
         width: 1620px;
-        height: 270px;
+        height: 280px;
       }
       #steps-line {
         position: absolute;
@@ -408,11 +368,14 @@
         left: 0;
       }
       #step-2 {
-        left: 500px;
+        left: 540px;
       }
       #step-3 {
-        left: 1000px;
-        width: 620px;
+        left: 1080px;
+        width: 540px;
+      }
+      #step-3 .body {
+        width: 540px;
       }
       .node {
         position: relative;
@@ -447,81 +410,44 @@
       }
       .viz {
         margin-top: 18px;
-      }
-      .tags {
-        display: grid;
-        grid-template-columns: repeat(2, max-content);
-        gap: 8px;
-      }
-      .tag {
-        padding: 5px 9px 4px;
-        border: 1.5px solid var(--dark);
         font-family: var(--mono);
         font-size: 15px;
         letter-spacing: 0.02em;
+      }
+      .fact {
+        display: grid;
+        grid-template-columns: max-content max-content;
+        column-gap: 18px;
+        row-gap: 5px;
+        width: fit-content;
+        padding: 10px 14px 9px;
+        border: 1.5px solid var(--dark);
         white-space: nowrap;
       }
-      .tag.ai {
-        border-style: dashed;
-        border-color: rgba(86, 89, 85, 0.55);
-        color: var(--gray);
-        text-decoration: line-through;
-      }
-      .fade .sqs i {
-        width: 11px;
-        height: 11px;
-        border: none;
-        background: var(--green);
-      }
-      .fade .sqs {
-        gap: 4px;
-      }
-      .fade-ticks {
-        margin-top: 8px;
-        width: 446px;
-        display: flex;
-        justify-content: space-between;
-        font-family: var(--mono);
-        font-size: 14px;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
+      .fact em,
+      .chip em {
+        font-style: normal;
         color: var(--gray);
       }
-      .states {
+      .flow,
+      .chips {
         display: flex;
-        gap: 8px;
-      }
-      .st {
-        display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 5px 10px 4px;
-        border: 1.5px solid transparent;
-        font-family: var(--mono);
-        font-size: 15px;
-        letter-spacing: 0.04em;
-        color: var(--ink2);
+        gap: 10px;
+      }
+      .chip {
+        padding: 5px 9px 4px;
+        border: 1.5px solid var(--dark);
         white-space: nowrap;
       }
-      .st i {
-        width: 10px;
-        height: 10px;
+      .chip.on {
+        background: var(--forest);
+        border-color: var(--forest);
+        color: var(--cream);
       }
-      .st.on {
-        border-color: var(--amber);
-        color: var(--dark);
-      }
-      .s-healthy {
-        background: var(--green);
-      }
-      .s-single {
-        background: var(--amber);
-      }
-      .s-fading {
-        background: rgba(24, 167, 87, 0.35);
-      }
-      .s-dark {
-        border: 1.5px solid var(--gray);
+      .arrow {
+        font-size: 19px;
+        color: var(--gray);
       }
 
       #foot-rule {
@@ -566,10 +492,9 @@
         <div data-hf-id="hf-tzus" id="wall-dark" class="wall" data-layout-ignore></div>
         <div data-hf-id="hf-nvz1" id="ha-scrim"></div>
         <div data-hf-id="hf-6kkx" id="ha" data-layout-allow-overflow>
-          <span data-hf-id="hf-7yfe" class="m"><span data-hf-id="hf-civn" class="w">Your</span></span>
-          <span data-hf-id="hf-48ge" class="m"><span data-hf-id="hf-hlbq" class="w">AI</span></span>
-          <span data-hf-id="hf-4mrf" class="m"><span data-hf-id="hf-5oju" class="w">can</span></span>
-          <span data-hf-id="hf-512g" class="m"><span data-hf-id="hf-rnsi" class="w">answer<span data-hf-id="hf-6jgg" class="dot">.</span></span></span>
+          <span data-hf-id="hf-7yfe" class="m"><span data-hf-id="hf-civn" class="w">Knowledge</span></span>
+          <span data-hf-id="hf-48ge" class="m"><span data-hf-id="hf-hlbq" class="w">is</span></span>
+          <span data-hf-id="hf-512g" class="m"><span data-hf-id="hf-rnsi" class="w">everywhere<span data-hf-id="hf-6jgg" class="dot">.</span></span></span>
         </div>
       </div>
 
@@ -584,32 +509,34 @@
       </div>
 
       <div data-hf-id="hf-eymi" id="page" class="layer clip" data-start="0" data-duration="11.5" data-label="Page" data-track-index="4">
-        <div data-hf-id="hf-21i8" id="logo"><div data-hf-id="hf-soed" id="logo-node"></div>who knows</div>
-        <div data-hf-id="hf-f2sx" id="top-right">Claude · Copilot · MCP</div>
+        <div data-hf-id="hf-21i8" id="logo"><div data-hf-id="hf-soed" id="logo-node"></div>knowly</div>
+        <div data-hf-id="hf-f2sx" id="top-right">Fact · person · reason</div>
 
         <div data-hf-id="hf-7cdq" id="h1" class="hl" data-layout-allow-overflow>
-          <span data-hf-id="hf-28x9" class="m"><span data-hf-id="hf-6v3n" class="w">Your</span></span>
-          <span data-hf-id="hf-2n8a" class="m"><span data-hf-id="hf-tva2" class="w">AI</span></span>
-          <span data-hf-id="hf-31jb" class="m"><span data-hf-id="hf-s026" class="w">can</span></span>
-          <span data-hf-id="hf-3fuc" class="m"><span data-hf-id="hf-tm2e" class="w">answer<span data-hf-id="hf-3zzs" class="dot">.</span></span></span>
+          <span data-hf-id="hf-28x9" class="m"><span data-hf-id="hf-6v3n" class="w">One</span></span>
+          <span data-hf-id="hf-2n8a" class="m"><span data-hf-id="hf-tva2" class="w">knowledge</span></span>
+          <span data-hf-id="hf-3fuc" class="m"><span data-hf-id="hf-tm2e" class="w">base<span data-hf-id="hf-3zzs" class="dot">.</span></span></span>
         </div>
         <div data-hf-id="hf-3e9p" id="h2" class="hl" data-layout-allow-overflow>
-          <span data-hf-id="hf-70ll" class="m"><span data-hf-id="hf-te2w" class="w">We</span></span>
-          <span data-hf-id="hf-7ewm" class="m"><span data-hf-id="hf-e9jl" class="w">show</span></span>
-          <span data-hf-id="hf-ydwa" class="m"><span data-hf-id="hf-mh6o" class="w">who</span></span>
-          <span data-hf-id="hf-xzl9" class="m"><span data-hf-id="hf-w89e" class="w">still</span></span>
-          <span data-hf-id="hf-z6ic" class="m"><span data-hf-id="hf-l5ab" class="w">understands<span data-hf-id="hf-2t2p" class="dot">.</span></span></span>
+          <span data-hf-id="hf-70ll" class="m"><span data-hf-id="hf-te2w" class="w">Every</span></span>
+          <span data-hf-id="hf-7ewm" class="m"><span data-hf-id="hf-e9jl" class="w">fact</span></span>
+          <span data-hf-id="hf-ydwa" class="m"><span data-hf-id="hf-mh6o" class="w">has</span></span>
+          <span data-hf-id="hf-xzl9" class="m"><span data-hf-id="hf-w89e" class="w">a</span></span>
+          <span data-hf-id="hf-kn01" class="m"><span data-hf-id="hf-kn02" class="w">person</span></span>
+          <span data-hf-id="hf-kn03" class="m"><span data-hf-id="hf-kn04" class="w">and</span></span>
+          <span data-hf-id="hf-kn05" class="m"><span data-hf-id="hf-kn06" class="w">a</span></span>
+          <span data-hf-id="hf-z6ic" class="m"><span data-hf-id="hf-l5ab" class="w">reason<span data-hf-id="hf-2t2p" class="dot">.</span></span></span>
         </div>
 
         <p data-hf-id="hf-l6us" id="problem">
-          When work runs through Claude and Copilot, nobody can tell who still understands it.
-          <b data-hf-id="hf-lua4">AI-written text never counts as knowledge.</b>
+          So much knowledge is in people's heads, and as much again in documents, tickets, chats and AI sessions.
+          <b data-hf-id="hf-lua4">Nobody can find it or trust it.</b>
         </p>
 
         <div data-hf-id="hf-rwxf" id="chat">
           <div data-hf-id="hf-0exj" id="chat-fill"></div>
-          <svg data-hf-id="hf-r3g8" id="chat-outline" viewBox="0 0 620 402" preserveAspectRatio="none">
-            <rect data-hf-id="hf-zo3d" x="0" y="0" width="620" height="402" rx="18" pathLength="1" />
+          <svg data-hf-id="hf-r3g8" id="chat-outline" viewBox="0 0 620 412" preserveAspectRatio="none">
+            <rect data-hf-id="hf-zo3d" x="0" y="0" width="620" height="412" rx="18" pathLength="1" />
           </svg>
           <div data-hf-id="hf-qi1w" id="chat-inner">
             <div data-hf-id="hf-9xfu" id="chat-head">
@@ -617,76 +544,74 @@
               <div data-hf-id="hf-illc" class="sq"></div>
               <div data-hf-id="hf-heo9" class="sq"></div>
               <div data-hf-id="hf-lut3" id="chat-title" class="mono-label">Assistant</div>
-              <div data-hf-id="hf-xhv8" id="chat-mcp" class="mono-label"><div data-hf-id="hf-p03s" class="node-s"></div>who knows · MCP</div>
+              <div data-hf-id="hf-xhv8" id="chat-kb" class="mono-label"><div data-hf-id="hf-p03s" class="node-s"></div>knowly</div>
             </div>
-            <div data-hf-id="hf-8g24" id="q">Who knows how to set up the aikido security scan?</div>
-            <div data-hf-id="hf-enw8" id="tool" class="mono-label"><div data-hf-id="hf-jxa8" class="node-s"></div>who_knows.ask <span data-hf-id="hf-8r7i">called over MCP</span></div>
-            <div data-hf-id="hf-ddlw" id="ans-row">
-              <div data-hf-id="hf-qu6v" class="pill"><i data-hf-id="hf-wt6k"></i>single point</div>
-              <div data-hf-id="hf-me04" id="ans-who"><b data-hf-id="hf-u2nu">Wout</b> · last reasoned 19 days ago</div>
+            <div data-hf-id="hf-8g24" id="q">What time does the nightly payroll export start?</div>
+            <div data-hf-id="hf-ddlw" id="a1">
+              <span data-hf-id="hf-kn10"><b data-hf-id="hf-kn11">Not recorded yet.</b></span>
+              <span data-hf-id="hf-kn12">Related: <u data-hf-id="hf-kn13">Tristan's fact on payroll retries</u>.</span>
+              <span data-hf-id="hf-kn14">I asked Tristan.</span>
             </div>
+            <div data-hf-id="hf-enw8" id="later" class="mono-label"><div data-hf-id="hf-jxa8" class="node-s"></div>Later · Tristan answered<div data-hf-id="hf-kn15" id="later-line"></div></div>
             <div data-hf-id="hf-gaij" id="quote">
               <div data-hf-id="hf-lpjn" id="quote-bar"></div>
-              <div data-hf-id="hf-ni7t" id="quote-txt">“so someone who checks our screenshots sees how we used Aikido”</div>
+              <div data-hf-id="hf-ni7t" id="quote-txt">Starts at 16:00, so three retries finish before the bank's 18:00 cutoff.</div>
             </div>
-            <div data-hf-id="hf-thgo" id="meta">Their own words, in <u data-hf-id="hf-7xif">a Claude session on 30 Sep</u></div>
-            <div data-hf-id="hf-08ml" id="counts">
-              <div data-hf-id="hf-jfvy" class="sqs" id="count-sqs">
-                <i data-hf-id="hf-zeb8"></i><i data-hf-id="hf-y7e5"></i><i data-hf-id="hf-ylp6"></i><i data-hf-id="hf-0l8b"></i><i data-hf-id="hf-0zjc"></i><i data-hf-id="hf-zsm9"></i><i data-hf-id="hf-06xa"></i><i data-hf-id="hf-26gf"></i><i data-hf-id="hf-2krg"></i><i data-hf-id="hf-oz7w"></i><i data-hf-id="hf-okwv"></i><i data-hf-id="hf-o6lu"></i>
-                <i data-hf-id="hf-xw24" class="h"></i><i data-hf-id="hf-0nms" class="h"></i><i data-hf-id="hf-zgpp" class="h"></i><i data-hf-id="hf-zv0q" class="h"></i>
-              </div>
-              <div data-hf-id="hf-rhfb" id="counts-txt">Claude alone 12 · <em data-hf-id="hf-gdp8">human reasoning 4</em></div>
-            </div>
+            <div data-hf-id="hf-thgo" id="meta"><b data-hf-id="hf-7xif">Tristan</b>, 20 Oct</div>
           </div>
         </div>
-        <div data-hf-id="hf-at0a" id="chat-note">Illustration. Names and numbers are examples.</div>
+        <div data-hf-id="hf-at0a" id="chat-note">Illustration. Names and times are examples.</div>
 
         <div data-hf-id="hf-djjy" id="steps">
           <div data-hf-id="hf-9x51" id="steps-line"></div>
           <div data-hf-id="hf-1kgw" id="step-1" class="step">
             <div data-hf-id="hf-cdek" class="node"><i data-hf-id="hf-jqbp"></i></div>
-            <div data-hf-id="hf-0y79" class="label mono-label">01 · Per human turn</div>
-            <div data-hf-id="hf-1l5z" class="title">Record<span data-hf-id="hf-37dq" class="dot">.</span></div>
-            <p data-hf-id="hf-i6c7" class="body">Reads every Claude and Copilot conversation and sorts each human turn into one of four.</p>
-            <div data-hf-id="hf-0kv6" class="viz tags">
-              <span data-hf-id="hf-zxt5" class="tag">decided</span>
-              <span data-hf-id="hf-1vpl" class="tag">corrected the AI</span>
-              <span data-hf-id="hf-0fvt" class="tag">explained why</span>
-              <span data-hf-id="hf-gejq" class="tag ai">accepted as is</span>
+            <div data-hf-id="hf-0y79" class="label mono-label">01 · After each session</div>
+            <div data-hf-id="hf-1l5z" class="title">From sessions<span data-hf-id="hf-37dq" class="dot">.</span></div>
+            <p data-hf-id="hf-i6c7" class="body">Each Claude session is summarised around the decisions the person made and why.</p>
+            <div data-hf-id="hf-0kv6" class="viz fact">
+              <em data-hf-id="hf-zxt5">decided</em><span data-hf-id="hf-kn20">retry the payroll export 3 times</span>
+              <em data-hf-id="hf-1vpl">why</em><span data-hf-id="hf-kn21">one failed run must not miss the bank</span>
+              <em data-hf-id="hf-0fvt">person</em><span data-hf-id="hf-kn22">Tristan · Claude session, 14 Oct</span>
             </div>
           </div>
           <div data-hf-id="hf-cfyj" id="step-2" class="step">
             <div data-hf-id="hf-7gt0" class="node"><i data-hf-id="hf-qkg0"></i></div>
-            <div data-hf-id="hf-2qwh" class="label mono-label">02 · One central store</div>
-            <div data-hf-id="hf-b8eb" class="title">Store<span data-hf-id="hf-20gn" class="dot">.</span></div>
-            <p data-hf-id="hf-w0xd" class="body">Keeps person, task and their own words. Only human reasoning counts, and it fades over 90 days.</p>
-            <div data-hf-id="hf-ee1r" class="viz fade">
-              <div data-hf-id="hf-iwdz" class="sqs" id="fade-sqs"></div>
-              <div data-hf-id="hf-7zt7" class="fade-ticks"><span data-hf-id="hf-4kdt">Day 0</span><span data-hf-id="hf-jvx4">Day 45</span><span data-hf-id="hf-v4si">Day 90</span></div>
+            <div data-hf-id="hf-2qwh" class="label mono-label">02 · When Knowly does not know</div>
+            <div data-hf-id="hf-b8eb" class="title">From questions<span data-hf-id="hf-20gn" class="dot">.</span></div>
+            <p data-hf-id="hf-w0xd" class="body">Knowly finds the related facts and asks the person who has the knowledge. Their answer becomes a fact.</p>
+            <div data-hf-id="hf-ee1r" class="viz flow">
+              <span data-hf-id="hf-kn30" class="chip">related facts</span>
+              <span data-hf-id="hf-kn31" class="arrow">→</span>
+              <span data-hf-id="hf-kn32" class="chip">asks Tristan</span>
+              <span data-hf-id="hf-kn33" class="arrow">→</span>
+              <span data-hf-id="hf-kn34" class="chip on">new fact</span>
             </div>
           </div>
           <div data-hf-id="hf-8hui" id="step-3" class="step">
             <div data-hf-id="hf-69vx" class="node"><i data-hf-id="hf-q64z"></i></div>
-            <div data-hf-id="hf-xt70" class="label mono-label">03 · From any assistant</div>
+            <div data-hf-id="hf-xt70" class="label mono-label">03 · In one reply</div>
             <div data-hf-id="hf-2bf3" class="title">Ask<span data-hf-id="hf-2ero" class="dot">.</span></div>
-            <p data-hf-id="hf-cs1n" class="body">Asks over MCP and returns the person, their own words, the source conversation and a status.</p>
-            <div data-hf-id="hf-ey9j" class="viz states">
-              <span data-hf-id="hf-a53p" class="st"><i data-hf-id="hf-62r3" class="s-healthy"></i>healthy</span>
-              <span data-hf-id="hf-mcnp" class="st on"><i data-hf-id="hf-xzu4" class="s-single"></i>single point</span>
-              <span data-hf-id="hf-rzrt" class="st"><i data-hf-id="hf-3ctf" class="s-fading"></i>fading</span>
-              <span data-hf-id="hf-bm9w" class="st"><i data-hf-id="hf-bk50" class="s-dark"></i>dark</span>
+            <p data-hf-id="hf-cs1n" class="body">You get the answer, the person it comes from and their reason.</p>
+            <div data-hf-id="hf-ey9j" class="viz chips">
+              <span data-hf-id="hf-a53p" class="chip"><em data-hf-id="hf-62r3">answer</em> 16:00</span>
+              <span data-hf-id="hf-mcnp" class="chip"><em data-hf-id="hf-xzu4">person</em> Tristan</span>
+              <span data-hf-id="hf-rzrt" class="chip"><em data-hf-id="hf-3ctf">reason</em> 18:00 cutoff</span>
             </div>
           </div>
         </div>
 
         <div data-hf-id="hf-jdd4" id="foot-rule"></div>
-        <div data-hf-id="hf-rro0" id="closing"><i data-hf-id="hf-prty"></i>Raw conversations never leave the laptop. Only scrubbed rows do.</div>
+        <div data-hf-id="hf-rro0" id="closing"><i data-hf-id="hf-prty"></i>Raw sessions stay on the laptop. Only the summarised facts leave it.</div>
         <div data-hf-id="hf-iiqt" id="credit">Tectonic Hackathon final · SD Worx track</div>
       </div>
     </div>
 
     <script>
-      const WORDS = ["DECIDED", "CORRECTED THE AI", "EXPLAINED WHY", "ACCEPTED AS IS"];
+      const WALLS = {
+        "wall-dark": ["IN PEOPLE'S HEADS", "DOCUMENTS", "TICKETS", "CHATS", "AI SESSIONS"],
+        "wall-cream": ["FACT", "PERSON", "REASON"],
+      };
       const ROWS = [
         { y: 30, size: 34, op: 0.1, dop: 0.07, dir: -1, speed: 70 },
         { y: 128, size: 36, op: 0.17, dop: 0.11, dir: 1, speed: 92 },
@@ -700,7 +625,7 @@
       ];
       const SCROLL = 6.6;
 
-      for (const wall of ["wall-dark", "wall-cream"]) {
+      for (const [wall, words] of Object.entries(WALLS)) {
         const el = document.getElementById(wall);
         ROWS.forEach((r, i) => {
           const row = document.createElement("div");
@@ -708,29 +633,23 @@
           row.style.top = `${r.y}px`;
           row.style.fontSize = `${r.size}px`;
           row.style.opacity = wall === "wall-dark" ? r.dop : Math.min(1, r.op * 3.2);
-          for (let k = 0; k < 14; k++) {
-            const idx = (k + i) % 4;
+          // Short cream words need more repeats to cover the frame while rows scroll.
+          for (let k = 0; k < 24; k++) {
             const s = document.createElement("span");
-            s.textContent = WORDS[idx];
-            s.className = (idx === 3 ? "w-ai" : "w-human") + ((k * 3 + i) % 5 === 0 ? " it" : "");
+            s.textContent = words[(k + i) % words.length];
+            s.className = (k + i) % words.length === 0 ? "w-fact" : "w-link";
+            if ((k * 3 + i) % 5 === 0) s.classList.add("it");
             row.appendChild(s);
           }
           el.appendChild(row);
         });
       }
 
-      const fade = document.getElementById("fade-sqs");
-      for (let i = 0; i < 30; i++) {
-        const s = document.createElement("i");
-        s.style.opacity = (1 - (i / 29) * 0.92).toFixed(3);
-        fade.appendChild(s);
-      }
-
       window.__timelines = window.__timelines || {};
       const tl = gsap.timeline({ paused: true });
       tl.to({}, { duration: 11.5 }, 0);
 
-      // Scene A: word wall on dark, headline lands, underline appears.
+      // Scene A: wall of places knowledge is kept, headline lands, underline appears.
       ROWS.forEach((r, i) => {
         const start = r.dir < 0 ? -120 - i * 37 : -900 - i * 41;
         tl.fromTo(`.row-${i}`, { x: start }, { x: start + r.dir * r.speed * SCROLL, duration: SCROLL, ease: "none" }, 0);
@@ -758,17 +677,17 @@
       tl.to("#rule-bottom", { y: 1080, duration: 0.8, ease: "power2.inOut" }, 2.6);
       tl.to(".rule", { opacity: 0, duration: 0.25 }, 3.3);
 
-      // In the cream band only human reasoning stays.
-      tl.to("#wall-cream .w-ai", { opacity: 0.1, duration: 0.45, ease: "power1.out" }, 2.95);
-      tl.to("#wall-cream .w-human", { color: "#18A757", duration: 0.45, ease: "power1.out" }, 3.05);
+      // In the cream band the scattered sources become fact, person and reason.
+      tl.to("#wall-cream .w-link", { color: "#18A757", duration: 0.45, ease: "power1.out" }, 2.95);
+      tl.to("#wall-cream .w-fact", { color: "#063E33", duration: 0.45, ease: "power1.out" }, 3.05);
 
       // Scene B: rows recede, the second headline lands big and centred.
       tl.to("#wall-cream", { opacity: 0.28, scale: 0.97, duration: 0.9, ease: "power2.out" }, 3.45);
       gsap.set("#hb-scrim", { opacity: 0 });
       tl.to("#hb-scrim", { opacity: 1, duration: 0.7, ease: "power2.out" }, 3.4);
-      const H2_FROM = { x: 224, y: 190, scale: 1.45 };
+      const H2_FROM = { x: 117, y: 198, scale: 1.59 };
       gsap.set("#h2", H2_FROM);
-      tl.from("#h2 .w", { yPercent: 110, duration: 0.7, ease: "power3.out", stagger: 0.07 }, 3.6);
+      tl.from("#h2 .w", { yPercent: 110, duration: 0.7, ease: "power3.out", stagger: 0.06 }, 3.6);
 
       // Scene B becomes the page: the headline settles into the hero.
       tl.to(["#wall-cream", "#hb-scrim"], { opacity: 0, duration: 0.6, ease: "power1.in" }, 5.8);
@@ -779,24 +698,24 @@
       tl.from(["#logo", "#top-right"], { opacity: 0, duration: 0.5, ease: "power1.out" }, 6.35);
       tl.from("#problem", { opacity: 0, y: 24, duration: 0.6, ease: "power3.out" }, 6.5);
 
-      // Assistant window draws on, then fills.
+      // Assistant window draws on, then the first exchange plays.
       tl.fromTo("#chat-outline rect", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.7, ease: "power2.inOut" }, 6.45);
       tl.from("#chat-fill", { opacity: 0, duration: 0.35, ease: "power1.out" }, 6.95);
       tl.to("#chat-outline", { opacity: 0.35, duration: 0.4 }, 7.1);
       tl.from("#chat-head", { opacity: 0, duration: 0.35 }, 7.0);
       tl.from("#q", { opacity: 0, x: 40, duration: 0.45, ease: "power3.out" }, 7.1);
-      tl.from("#tool", { opacity: 0, x: -16, duration: 0.35, ease: "power2.out" }, 7.4);
-      tl.from(".pill", { opacity: 0, scale: 0.6, duration: 0.4, ease: "back.out(2.2)" }, 7.6);
-      tl.from("#ans-who", { opacity: 0, x: -12, duration: 0.4, ease: "power2.out" }, 7.66);
-      tl.from("#quote-bar", { scaleY: 0, duration: 0.4, ease: "power2.out" }, 7.74);
-      tl.from("#quote-txt", { opacity: 0, y: 12, duration: 0.45, ease: "power2.out" }, 7.8);
-      tl.from("#meta", { opacity: 0, duration: 0.35 }, 7.92);
-      tl.from("#count-sqs i", { opacity: 0, scale: 0.4, duration: 0.2, ease: "power2.out", stagger: 0.025 }, 7.98);
-      tl.from("#counts-txt", { opacity: 0, duration: 0.35 }, 8.35);
-      tl.from("#chat-note", { opacity: 0, duration: 0.4 }, 8.4);
+      tl.from("#a1 span", { opacity: 0, x: -12, duration: 0.4, ease: "power2.out", stagger: 0.14 }, 7.5);
+
+      // A beat later the answer comes back as a fact with a person and a reason.
+      tl.from("#later", { opacity: 0, duration: 0.35 }, 8.3);
+      tl.from("#later-line", { scaleX: 0, duration: 0.5, ease: "power2.out" }, 8.35);
+      tl.from("#quote-bar", { scaleY: 0, duration: 0.4, ease: "power2.out" }, 8.45);
+      tl.from("#quote-txt", { opacity: 0, y: 12, duration: 0.45, ease: "power2.out" }, 8.5);
+      tl.from("#meta", { opacity: 0, duration: 0.35 }, 8.7);
+      tl.from("#chat-note", { opacity: 0, duration: 0.4 }, 8.8);
 
       // Steps: a green connector draws through three nodes once the answer has landed.
-      const STEPS_AT = 8.2;
+      const STEPS_AT = 8.6;
       tl.from("#steps-line", { scaleX: 0, duration: 1.0, ease: "power1.inOut" }, STEPS_AT);
       [0, 0.32, 0.64].forEach((dt, i) => {
         const s = `#step-${i + 1}`;
@@ -806,9 +725,9 @@
         tl.from([`${s} .label`, `${s} .title`, `${s} .body`, `${s} .viz`], { opacity: 0, y: 18, duration: 0.5, ease: "power3.out", stagger: 0.08 }, t + 0.06);
       });
 
-      tl.from("#foot-rule", { scaleX: 0, duration: 0.6, ease: "power2.inOut" }, 9.4);
-      tl.from("#closing", { opacity: 0, y: 14, duration: 0.5, ease: "power3.out" }, 9.55);
-      tl.from("#credit", { opacity: 0, duration: 0.5 }, 9.7);
+      tl.from("#foot-rule", { scaleX: 0, duration: 0.6, ease: "power2.inOut" }, 9.8);
+      tl.from("#closing", { opacity: 0, y: 14, duration: 0.5, ease: "power3.out" }, 9.95);
+      tl.from("#credit", { opacity: 0, duration: 0.5 }, 10.1);
 
       window.__timelines["root"] = tl;
     </script>

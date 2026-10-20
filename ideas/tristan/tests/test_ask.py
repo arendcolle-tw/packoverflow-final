@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from whoknows.ask import Asker
+from knowly.ask import Asker
 
 ALB = Path(__file__).resolve().parents[2] / "alberic"
 QUESTION = "What time does the nightly payroll export start?"

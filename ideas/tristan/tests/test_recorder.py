@@ -13,10 +13,10 @@ from types import SimpleNamespace
 
 import pytest
 
-import recorder.hook as hook
-import recorder.install as install
-import recorder.run as run
-from recorder.sessions import human_turns, scrub, session_items
+import knowly.recorder.hook as hook
+import knowly.recorder.install as install
+import knowly.recorder.run as run
+from knowly.recorder.sessions import human_turns, scrub, session_items
 
 EVENT = {
     "session_id": "s1",
@@ -152,17 +152,15 @@ def test_record_only_labels_new_turns(session, tmp_path, monkeypatch):
 
 @pytest.fixture
 def store_server():
-    received, reply = [], {"status": 200, "graph": True}
+    received, reply = [], {"status": 200}
 
     class Handler(BaseHTTPRequestHandler):
         def do_POST(self):
             rows = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
             received.append({"path": self.path, "auth": self.headers["Authorization"], "rows": rows})
-            # /signals answers like the knowledge graph, /api/signals like the whoknows server.
-            ok = {"added": len(rows), "updated": 0, "rejected": []} if self.path == "/signals" else {"stored": len(rows), "skipped": 0}
-            status = 404 if reply["status"] == 200 and not reply["graph"] and self.path == "/signals" else reply["status"]
-            body = json.dumps(ok if status == 200 else {"detail": "missing or unknown token"}).encode()
-            self.send_response(status)
+            ok = {"added": len(rows), "updated": 0, "rejected": []}
+            body = json.dumps(ok if reply["status"] == 200 else {"detail": "missing or unknown token"}).encode()
+            self.send_response(reply["status"])
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
@@ -185,17 +183,6 @@ def test_push_sends_chunks_with_bearer_token(store_server):
     assert {(r["path"], r["auth"]) for r in store_server.received} == {("/signals", "Bearer tok")}
 
 
-def test_push_falls_back_to_the_old_store(store_server):
-    store_server.reply["graph"] = False
-    assert run.push([{"id": str(n)} for n in range(1500)], store_server.url, "tok") == (1500, 0)
-    assert [r["path"] for r in store_server.received] == ["/signals", "/api/signals", "/api/signals"]
-
-
-def test_push_path_selects_the_endpoint(store_server):
-    assert run.push([{"id": "1"}], store_server.url, "tok", "api/signals") == (1, 0)
-    assert store_server.received[0]["path"] == "/api/signals"
-
-
 def test_main_pushes_rows_and_failed_push_exits_nonzero_keeping_rows(store_server, tmp_path, monkeypatch, capsys):
     rows = [{"id": "s1:u1"}]
     out = tmp_path / "rows.json"
@@ -205,7 +192,7 @@ def test_main_pushes_rows_and_failed_push_exits_nonzero_keeping_rows(store_serve
         return rows
 
     monkeypatch.setattr(run, "record_summaries", fake_record)
-    monkeypatch.setenv("WHOKNOWS_TOKEN", "envtok")
+    monkeypatch.setenv("KNOWLY_TOKEN", "envtok")
     argv = ["run", "--person", "tristan", "--projects-dir", str(tmp_path), "--out", str(out), "--push", store_server.url]
     monkeypatch.setattr(sys, "argv", argv)
     run.main()
@@ -224,7 +211,7 @@ def test_main_pushes_rows_and_failed_push_exits_nonzero_keeping_rows(store_serve
 def hook_env(tmp_path, monkeypatch):
     config = tmp_path / "recorder.json"
     config.write_text(json.dumps({"person": "tristan", "push_url": "http://store", "token": "tok"}))
-    monkeypatch.setenv("WHOKNOWS_RECORDER_CONFIG", str(config))
+    monkeypatch.setenv("KNOWLY_RECORDER_CONFIG", str(config))
     monkeypatch.delenv("RECORDER_CHILD", raising=False)
     monkeypatch.setattr(hook, "STATE", tmp_path / "state")
     monkeypatch.setattr(hook, "LOG", tmp_path / "state" / "hook.log")
@@ -259,16 +246,16 @@ def test_main_turns_mode_keeps_one_row_per_turn(store_server, tmp_path, monkeypa
     monkeypatch.setattr(run, "record", lambda files, person, out, workers: calls.append("turns") or [{"id": "s1:u1"}])
     monkeypatch.setattr(run, "record_summaries", lambda files, person, out, workers: calls.append("summary") or [])
     monkeypatch.setattr(sys, "argv", ["run", "--person", "tristan", "--projects-dir", str(tmp_path), "--mode", "turns",
-                                      "--push", store_server.url, "--push-path", "/api/signals", "--token", "tok"])
+                                      "--push", store_server.url, "--token", "tok"])
     run.main()
-    assert calls == ["turns"] and store_server.received[0]["path"] == "/api/signals"
+    assert calls == ["turns"] and store_server.received[0]["path"] == "/signals"
 
 
 def test_hook_spawns_detached_worker_without_waiting(hook_env):
     hook.hook({**EVENT, "hook_event_name": "SessionEnd"})
     [(args, kwargs)] = hook_env.spawned
-    assert args == [sys.executable, "-m", "recorder.hook", "--worker", EVENT["transcript_path"], "SessionEnd"]
-    assert kwargs["start_new_session"] is True and kwargs["cwd"] == hook.ROOT
+    assert args == [sys.executable, "-m", "knowly.recorder.hook", "--worker", EVENT["transcript_path"], "SessionEnd"]
+    assert kwargs["start_new_session"] is True and kwargs["cwd"] == hook.STATE
     assert kwargs["stdout"].name == kwargs["stderr"].name == str(hook.LOG)
     assert kwargs["stdin"] == subprocess.DEVNULL
 
@@ -284,7 +271,7 @@ def test_worker_waits_while_another_worker_holds_the_session_lock(hook_env, sess
     calls = []
     monkeypatch.setattr(run, "record_summaries",
                         lambda files, person, out, cache_path: calls.append((files, person, out)) or [{"id": "s1:summary"}])
-    monkeypatch.setattr(run, "push", lambda rows, url, token, path: calls.append((rows, url, token, path)) or (1, 0))
+    monkeypatch.setattr(run, "push", lambda rows, url, token: calls.append((rows, url, token)) or (1, 0))
     transcript = session
     (hook.STATE / "locks").mkdir(parents=True)
     with open(hook.STATE / "locks" / "s1.lock", "w") as held:
@@ -297,7 +284,7 @@ def test_worker_waits_while_another_worker_holds_the_session_lock(hook_env, sess
     assert not waiting.is_alive()
     assert calls == [
         ([transcript], "tristan", hook.STATE / "sessions" / "s1.json"),
-        ([{"id": "s1:summary"}], "http://store", "tok", "/signals"),
+        ([{"id": "s1:summary"}], "http://store", "tok"),
     ]
 
 
@@ -308,7 +295,7 @@ def test_worker_forgets_the_session_when_the_push_fails_so_the_next_stop_resends
         run.locked_update(cache_path, lambda path: {"s1": {"sha256": "x", "summarised_at": 0, "row": {}}})
         return [{"id": "s1:summary"}]
 
-    def failing_push(rows, url, token, path):
+    def failing_push(rows, url, token):
         raise OSError("store down")
 
     monkeypatch.setattr(run, "record_summaries", summarise)
@@ -333,19 +320,19 @@ def test_hook_end_to_end_summarises_and_pushes_in_the_background(session, store_
     fake_claude.write_text(f'#!/bin/sh\ncat > /dev/null\n[ "$RECORDER_CHILD" = 1 ] || exit 1\n'
                            f"echo '{json.dumps({'structured_output': summary})}'\n")
     fake_claude.chmod(0o755)
-    env = {**os.environ, "HOME": str(home), "WHOKNOWS_RECORDER_CONFIG": str(config),
+    env = {**os.environ, "HOME": str(home), "KNOWLY_RECORDER_CONFIG": str(config),
            "PATH": f"{fake_claude.parent}:{os.environ['PATH']}"}
     env.pop("RECORDER_CHILD", None)
 
     started = time.monotonic()
-    subprocess.run([sys.executable, "-m", "recorder.hook"], input=json.dumps({**EVENT, "transcript_path": str(transcript)}),
-                   text=True, cwd=hook.ROOT, env=env, check=True, timeout=5)
+    subprocess.run([sys.executable, "-m", "knowly.recorder.hook"], input=json.dumps({**EVENT, "transcript_path": str(transcript)}),
+                   text=True, cwd=tmp_path, env=env, check=True, timeout=5)
     assert time.monotonic() - started < 1
     deadline = time.monotonic() + 10
     while not store_server.received and time.monotonic() < deadline:
         time.sleep(0.05)
 
-    log = home / ".cache" / "packoverflow-recorder" / "hook.log"
+    log = home / ".cache" / "knowly" / "hook.log"
     assert store_server.received, log.read_text() if log.exists() else "no hook log"
     [request] = store_server.received
     assert (request["path"], request["auth"]) == ("/signals", "Bearer tok")
@@ -357,15 +344,9 @@ def test_hook_end_to_end_summarises_and_pushes_in_the_background(session, store_
 def test_install_writes_private_config_and_merges_the_hook_once(tmp_path, monkeypatch, capsys):
     config = tmp_path / "cfg" / "recorder.json"
     settings = tmp_path / "settings.json"
-    # A uv that fails like uv does without Python 3.13 offline: exit 2, which would keep Claude from stopping.
-    fake_uv = tmp_path / "bin" / "uv"
-    fake_uv.parent.mkdir()
-    fake_uv.write_text("#!/bin/sh\nexit 2\n")
-    fake_uv.chmod(0o755)
-    monkeypatch.setenv("PATH", f"{fake_uv.parent}:{os.environ['PATH']}")
     original = {"model": "opus", "hooks": {"Stop": [{"hooks": [{"type": "command", "command": "echo done"}]}]}}
     settings.write_text(json.dumps(original))
-    monkeypatch.setenv("WHOKNOWS_RECORDER_CONFIG", str(config))
+    monkeypatch.setenv("KNOWLY_RECORDER_CONFIG", str(config))
     argv = ["install", "--person", " Tristan ", "--push", "http://store/", "--token", "tok", "--settings", str(settings)]
 
     monkeypatch.setattr(sys, "argv", argv)
@@ -376,23 +357,14 @@ def test_install_writes_private_config_and_merges_the_hook_once(tmp_path, monkey
     install.main()
     install.main()
     assert stat.S_IMODE(config.stat().st_mode) == 0o600
-    assert json.loads(config.read_text()) == {"person": "tristan", "push_url": "http://store", "push_path": "/signals",
-                                              "token": "tok", "match": "packoverflow"}
+    assert json.loads(config.read_text()) == {"person": "tristan", "push_url": "http://store", "token": "tok",
+                                              "match": "packoverflow"}
     merged = json.loads(settings.read_text())
     commands = [h["command"] for group in merged["hooks"]["Stop"] for h in group["hooks"]]
     assert merged["model"] == "opus" and len(commands) == 2 and commands[0] == "echo done"
-    assert commands[1].startswith(f"cd {install.ROOT} && ") and commands[1].endswith("python -m recorder.hook || true")
+    assert commands[1] == f"{install.BIN / 'knowly-hook'} || true"
     assert [h["command"] for group in merged["hooks"]["SessionEnd"] for h in group["hooks"]] == [commands[1]]
     subprocess.run(["sh", "-c", commands[1]], input="{}", text=True, check=True)
     [backup] = tmp_path.glob("settings.json.bak-*")
     assert json.loads(backup.read_text()) == original
     assert "already has the Stop and SessionEnd hooks" in capsys.readouterr().out
-
-
-def test_install_replaces_a_hook_from_before_the_exit_guard(tmp_path):
-    settings = tmp_path / "settings.json"
-    entry = {"type": "command", "command": "cd /r && uv run python -m recorder.hook || true", "timeout": 10}
-    settings.write_text(json.dumps({"hooks": {"Stop": [{"hooks": [{**entry, "command": "cd /r && uv run python -m recorder.hook"}]}]}}))
-    assert install.merge_hooks(settings, entry).startswith("updated the Stop hook and added the SessionEnd hook")
-    hooks = json.loads(settings.read_text())["hooks"]
-    assert hooks == {"Stop": [{"hooks": [entry]}], "SessionEnd": [{"hooks": [entry]}]}

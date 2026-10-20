@@ -1,3 +1,4 @@
+# The dependencies of pyproject.toml, pinned, for the Cloud Run buildpack.
 fastapi==0.151.0
 uvicorn==0.54.0
 slack_bolt==1.30.0

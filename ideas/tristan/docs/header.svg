@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 560" width="1600" height="560" font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="title desc">
+  <title id="title">knowly</title>
+  <desc id="desc">Knowledge from heads, AI sessions and docs is summarised around decisions into one knowledge base where every fact has a person and a reason. Ask a question and get the answer with the person and the reason. If nobody recorded it yet, Knowly asks the person and their answer becomes a fact.</desc>
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="9"/>
+      <feOffset dy="6" result="blur"/>
+      <feFlood flood-color="#0E1714" flood-opacity="0.12"/>
+      <feComposite in2="blur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M2,2 L10,6 L2,10" fill="none" stroke="#0E1714" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M2,2 L10,6 L2,10" fill="none" stroke="#18A757" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="560" fill="#F3F0E5"/>
+
+  <!-- title -->
+  <text x="62" y="100" font-size="80" font-weight="900" letter-spacing="-3.2" fill="#0E1714">knowly<tspan fill="#18A757">.</tspan></text>
+  <text x="64" y="143" font-size="22" fill="#0E1714" fill-opacity="0.72">One central, fact-based knowledge base. <tspan font-weight="700" fill-opacity="1">Every fact has a person and a reason.</tspan></text>
+
+  <!-- column headings -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" letter-spacing="1.6" fill="#0E1714" fill-opacity="0.55">
+    <text x="64" y="213">SOURCES</text>
+    <text x="1150" y="213">ASK</text>
+  </g>
+
+  <!-- sources -->
+  <g filter="url(#shadow)">
+    <rect x="64" y="245" width="224" height="58" rx="14" fill="#FBFAF6" stroke="#0E1714" stroke-opacity="0.08"/>
+    <rect x="64" y="317" width="224" height="58" rx="14" fill="#FBFAF6" stroke="#0E1714" stroke-opacity="0.08"/>
+    <rect x="64" y="389" width="224" height="58" rx="14" fill="#FBFAF6" stroke="#0E1714" stroke-opacity="0.08"/>
+  </g>
+  <g fill="#063E33" fill-opacity="0.08">
+    <rect x="77" y="256" width="36" height="36" rx="10"/>
+    <rect x="77" y="328" width="36" height="36" rx="10"/>
+    <rect x="77" y="400" width="36" height="36" rx="10"/>
+  </g>
+  <g fill="none" stroke="#063E33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="95" cy="269" r="5.5"/>
+    <path d="M85,284 a10,8.5 0 0 1 20,0"/>
+    <path d="M95,336 C96,342 98,344 104,346 C98,348 96,350 95,356 C94,350 92,348 86,346 C92,344 94,342 95,336 Z"/>
+    <path d="M88,408 h10 l5,5 v15 h-15 z"/>
+    <path d="M98,408 v5 h5"/>
+    <path d="M91.5,419 h8 M91.5,423.5 h8"/>
+  </g>
+  <g font-size="18" font-weight="600" fill="#0E1714">
+    <text x="126" y="280.5">heads</text>
+    <text x="126" y="352.5">AI sessions</text>
+    <text x="126" y="424.5">docs &amp; tickets</text>
+  </g>
+
+  <!-- sources to knowledge base -->
+  <g fill="none" stroke="#0E1714" stroke-width="2" stroke-linecap="round">
+    <path d="M288,274 C314,274 306,346 332,346"/>
+    <path d="M288,346 H332"/>
+    <path d="M288,418 C314,418 306,346 332,346"/>
+    <path d="M332,346 H476" marker-end="url(#arrow)"/>
+  </g>
+  <circle cx="332" cy="346" r="4" fill="#0E1714"/>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" fill="#0E1714" fill-opacity="0.75" text-anchor="middle">
+    <text x="405" y="310">summarised</text>
+    <text x="405" y="329">around decisions</text>
+  </g>
+
+  <!-- knowledge base -->
+  <rect x="484" y="180" width="586" height="332" rx="24" fill="#063E33" filter="url(#shadow)"/>
+  <text x="512" y="213" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" letter-spacing="1.6" fill="#F3F0E5" fill-opacity="0.6">KNOWLEDGE BASE</text>
+
+  <!-- graph edges -->
+  <g fill="none" stroke="#F3F0E5" stroke-opacity="0.35" stroke-width="2">
+    <path d="M632,254 H700"/>
+    <path d="M828,254 H900"/>
+    <path d="M572,272 V304"/>
+    <path d="M954,440 V408"/>
+    <path d="M1004,458 H1030"/>
+  </g>
+  <path d="M948,272 V312" fill="none" stroke="#18A757" stroke-width="2" stroke-dasharray="5 5"/>
+
+  <!-- people -->
+  <g>
+    <rect x="512" y="236" width="124" height="36" rx="18" fill="#F3F0E5"/>
+    <rect x="900" y="236" width="98" height="36" rx="18" fill="#F3F0E5"/>
+    <rect x="904" y="440" width="102" height="36" rx="18" fill="#F3F0E5"/>
+    <circle cx="531" cy="254" r="12" fill="#063E33"/>
+    <circle cx="919" cy="254" r="12" fill="#063E33"/>
+    <circle cx="923" cy="458" r="12" fill="#063E33"/>
+    <g font-size="12" font-weight="700" fill="#F3F0E5" text-anchor="middle">
+      <text x="531" y="258.5">T</text>
+      <text x="919" y="258.5">L</text>
+      <text x="923" y="462.5">J</text>
+    </g>
+    <g font-size="16" font-weight="700" fill="#063E33">
+      <text x="550" y="259.5">Tristan</text>
+      <text x="938" y="259.5">Lies</text>
+      <text x="942" y="463.5">Joris</text>
+    </g>
+  </g>
+
+  <!-- small facts -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" fill="#F3F0E5" text-anchor="middle">
+    <rect x="700" y="239" width="128" height="30" rx="15" fill="#F3F0E5" fill-opacity="0.06" stroke="#F3F0E5" stroke-opacity="0.45" stroke-width="1.5"/>
+    <text x="764" y="258.5" fill-opacity="0.85">on-call rota</text>
+    <rect x="888" y="378" width="128" height="30" rx="15" fill="#F3F0E5" fill-opacity="0.06" stroke="#F3F0E5" stroke-opacity="0.45" stroke-width="1.5"/>
+    <text x="952" y="397.5" fill-opacity="0.85">VAT rounding</text>
+    <rect x="884" y="312" width="128" height="30" rx="15" fill="#18A757" fill-opacity="0.16" stroke="#18A757" stroke-width="2" stroke-dasharray="5 4"/>
+    <text x="948" y="331.5">+ new fact</text>
+  </g>
+  <circle cx="1034" cy="458" r="5" fill="#F3F0E5" fill-opacity="0.55"/>
+
+  <!-- fact card -->
+  <g filter="url(#shadow)">
+    <rect x="512" y="304" width="320" height="160" rx="16" fill="#FBFAF6"/>
+  </g>
+  <circle cx="536" cy="327" r="4" fill="#18A757"/>
+  <text x="546" y="331.5" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" letter-spacing="1.4" fill="#0E1714" fill-opacity="0.55">FACT</text>
+  <text x="532" y="361" font-size="19" font-weight="700" fill="#0E1714">Payroll export retries 3×</text>
+  <g font-size="16" fill="#0E1714" fill-opacity="0.72">
+    <text x="532" y="387">because the bank closes the SFTP</text>
+    <text x="532" y="407">window at 18:00</text>
+  </g>
+  <path d="M532,422 H812" stroke="#0E1714" stroke-opacity="0.1" stroke-width="1"/>
+  <circle cx="542" cy="442" r="10" fill="#063E33"/>
+  <text x="542" y="446" font-size="11" font-weight="700" fill="#F3F0E5" text-anchor="middle">T</text>
+  <text x="560" y="447" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" fill="#0E1714" fill-opacity="0.75">Tristan · 20 Oct</text>
+
+  <!-- knowledge base to ask -->
+  <path d="M1078,346 H1142" fill="none" stroke="#0E1714" stroke-width="2" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <!-- ask: question -->
+  <path d="M1238,232 H1518 A18,18 0 0 1 1536,250 V280 A4,4 0 0 1 1532,284 H1238 A18,18 0 0 1 1220,266 V250 A18,18 0 0 1 1238,232 Z" fill="#0E1714"/>
+  <text x="1378" y="264" font-size="17" font-weight="500" fill="#F3F0E5" text-anchor="middle">Why does payroll export retry 3×?</text>
+
+  <!-- ask: answer -->
+  <g filter="url(#shadow)">
+    <path d="M1154,300 H1492 A18,18 0 0 1 1510,318 V438 A18,18 0 0 1 1492,456 H1168 A18,18 0 0 1 1150,438 V304 A4,4 0 0 1 1154,300 Z" fill="#FBFAF6"/>
+  </g>
+  <circle cx="1176" cy="324" r="4" fill="#18A757"/>
+  <text x="1186" y="328.5" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" letter-spacing="1.4" fill="#0E1714" fill-opacity="0.55">ANSWER</text>
+  <text x="1172" y="357" font-size="19" font-weight="700" fill="#0E1714">It retries 3× on purpose,</text>
+  <g font-size="16" fill="#0E1714" fill-opacity="0.72">
+    <text x="1172" y="383">because the bank closes the SFTP</text>
+    <text x="1172" y="403">window at 18:00.</text>
+  </g>
+  <path d="M1172,417 H1488" stroke="#0E1714" stroke-opacity="0.1" stroke-width="1"/>
+  <circle cx="1182" cy="436" r="10" fill="#063E33"/>
+  <text x="1182" y="440" font-size="11" font-weight="700" fill="#F3F0E5" text-anchor="middle">T</text>
+  <text x="1200" y="441" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" fill="#0E1714" fill-opacity="0.75">Tristan · 20 Oct</text>
+
+  <!-- loop: ask the person -->
+  <path d="M1400,230 C1400,150 1000,150 958,230" fill="none" stroke="#18A757" stroke-width="2" stroke-dasharray="7 6" stroke-linecap="round" marker-end="url(#arrow-green)"/>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" fill="#0E1714" text-anchor="middle">
+    <text x="1196" y="128"><tspan fill="#18A757" font-weight="700">not known yet?</tspan> Knowly asks the person;</text>
+    <text x="1196" y="149" fill-opacity="0.75">their answer becomes a fact</text>
+  </g>
+</svg>

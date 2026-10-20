@@ -7,7 +7,7 @@ from slack_bolt.request.async_request import AsyncBoltRequest
 from slack_sdk.web.async_client import AsyncWebClient
 from slack_sdk.web.async_slack_response import AsyncSlackResponse
 
-import whoknows.slack as slack
+import knowly.slack as slack
 
 QUESTION = "What time does the nightly payroll export start?"
 PAYROLL = {"person": "tristan", "task": "Payroll SFTP export", "at": "2026-10-19T15:00:00+00:00",
@@ -174,12 +174,12 @@ def test_unmapped_slack_user_asks_as_their_user_id_and_errors_show_in_the_reply(
 def test_command_acks_looking_then_answers_in_channel(fake_slack):
     _, sent = fake_slack
     asker = FakeAsker()
-    body = {"command": "/whoknows", "text": QUESTION, "team_id": "T1", "user_id": "UTRISTAN", "channel_id": "C1",
+    body = {"command": "/knowly", "text": QUESTION, "team_id": "T1", "user_id": "UTRISTAN", "channel_id": "C1",
             "response_url": "https://hooks.slack.test/x", "trigger_id": "t", "api_app_id": "A1"}
     response = dispatch(make_bot(asker), body)
     assert "Looking it up..." in response.body
     assert asker.asked == [(QUESTION, "tristan")]
-    assert sent[0]["response_type"] == "in_channel" and sent[0]["blocks"][0]["text"]["text"] == f"*Who knows:* _{QUESTION}_"
+    assert sent[0]["response_type"] == "in_channel" and sent[0]["blocks"][0]["text"]["text"] == f"*Knowly:* _{QUESTION}_"
 
 
 def test_notify_dms_the_target_with_the_question_related_facts_and_an_answer_button(fake_slack):

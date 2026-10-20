@@ -5,9 +5,9 @@ import urllib.error
 
 import pytest
 
-from whoknows import answer, graph
-from whoknows.answer import compose
-from whoknows.graph import GraphClient, GraphError
+from knowly import answer, graph
+from knowly.answer import compose
+from knowly.graph import GraphClient, GraphError
 
 PAYROLL_WHY = 'Chose 3 retries over 5 "because the bank closes the SFTP window at 18:00"'
 WHO_KNOWS = {

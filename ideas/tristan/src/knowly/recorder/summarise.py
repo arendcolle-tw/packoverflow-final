@@ -5,8 +5,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from recorder.classify import ROLES, TOPICS, parse_output
-from recorder.sessions import _records, _text, human_text, human_turns, scrub
+from knowly.recorder.classify import ROLES, TOPICS, parse_output
+from knowly.recorder.sessions import _records, _text, human_text, human_turns, scrub
 
 LIMIT = 60_000
 QUOTE = re.compile(r'["“]([^"“”]*)["”]')

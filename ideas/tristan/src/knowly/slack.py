@@ -14,12 +14,12 @@ from slack_bolt.async_app import AsyncApp
 from slack_sdk.errors import SlackApiError
 
 if TYPE_CHECKING:
-    from whoknows.ask import Asker
+    from knowly.ask import Asker
 
 ESCAPE = str.maketrans({"&": "&amp;", "<": "&lt;", ">": "&gt;"})
 SLACK_MARKUP = re.compile(r"<@[A-Z0-9]+(?:\|[^<>]*)?>|<([^<>|]*)(?:\|([^<>]*))?>")
 SLACK_ID = re.compile(r"[UW][A-Z0-9]{6,}")
-HELP = "Ask me a question about the team's work, for example `@whoknows what time does the nightly payroll export start?`."
+HELP = "Ask me a question about the team's work, for example `@knowly what time does the nightly payroll export start?`."
 LOOKING = "Looking it up..."
 log = logging.getLogger(__name__)
 _people_cache: dict = {"at": 0.0, "ids": {}}
@@ -101,7 +101,7 @@ def fact(source: dict) -> str:
 
 def answer_blocks(question: str, result: dict, people: dict[str, str]) -> list[dict]:
     out = [
-        {"type": "section", "text": {"type": "mrkdwn", "text": f"*Who knows:* _{oneline(question, 300).translate(ESCAPE)}_"}},
+        {"type": "section", "text": {"type": "mrkdwn", "text": f"*Knowly:* _{oneline(question, 300).translate(ESCAPE)}_"}},
         {"type": "section", "text": {"type": "mrkdwn", "text": fit((result.get("text") or "").replace("**", "*"), 3000) or "No answer."}},
     ]
     if sources := result.get("sources") or []:
@@ -179,7 +179,7 @@ def register(app: AsyncApp, asker: Asker) -> None:
             return
         await reply(plain(event.get("text", "")), event.get("user", ""), say, client)
 
-    @app.command("/whoknows")
+    @app.command("/knowly")
     async def on_command(ack, command, respond, client):
         question = plain(command.get("text", ""))
         if len(question) < 2:

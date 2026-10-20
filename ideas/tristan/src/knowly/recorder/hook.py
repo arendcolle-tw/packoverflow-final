@@ -9,21 +9,20 @@ import traceback
 from datetime import datetime
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-STATE = Path.home() / ".cache" / "packoverflow-recorder"
+STATE = Path.home() / ".cache" / "knowly"
 LOG = STATE / "hook.log"
-DEFAULT_CONFIG = Path.home() / ".config" / "whoknows" / "recorder.json"
+DEFAULT_CONFIG = Path.home() / ".config" / "knowly" / "recorder.json"
 MIN_INTERVAL = 60
 
 
 def load_config() -> dict | None:
     try:
-        config = json.loads(Path(os.environ.get("WHOKNOWS_RECORDER_CONFIG") or DEFAULT_CONFIG).read_text())
+        config = json.loads(Path(os.environ.get("KNOWLY_RECORDER_CONFIG") or DEFAULT_CONFIG).read_text())
     except (OSError, ValueError):
         return None
     if not isinstance(config, dict) or not all(isinstance(config.get(k), str) and config[k] for k in ("person", "push_url", "token")):
         return None
-    return {**config, "match": config.get("match") or "packoverflow", "push_path": config.get("push_path") or "/signals"}
+    return {**config, "match": config.get("match") or "packoverflow"}
 
 
 def hook(event: dict) -> None:
@@ -36,8 +35,8 @@ def hook(event: dict) -> None:
     LOG.parent.mkdir(parents=True, exist_ok=True)
     with open(LOG, "a", encoding="utf-8") as log:
         subprocess.Popen(
-            [sys.executable, "-m", "recorder.hook", "--worker", transcript, event.get("hook_event_name") or "Stop"],
-            cwd=ROOT, stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True,
+            [sys.executable, "-m", "knowly.recorder.hook", "--worker", transcript, event.get("hook_event_name") or "Stop"],
+            cwd=STATE, stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True,
         )
 
 
@@ -47,8 +46,8 @@ def work(transcript: Path, event: str = "Stop") -> None:
     if not config or transcript.suffix != ".jsonl" or not transcript.is_file():
         return
     # Imported here so the hook itself stays fast: run.py pulls in urllib, ssl and the summariser.
-    from recorder.run import load_summaries, locked_update, push, record_summaries
-    from recorder.summarise import compact
+    from knowly.recorder.run import load_summaries, locked_update, push, record_summaries
+    from knowly.recorder.summarise import compact
 
     session = transcript.stem
     summaries = STATE / "summaries.json"
@@ -67,7 +66,7 @@ def work(transcript: Path, event: str = "Stop") -> None:
             time.sleep(wait)
         rows = record_summaries([transcript], config["person"], STATE / "sessions" / f"{session}.json", cache_path=summaries)
         try:
-            stored, skipped = push(rows, config["push_url"], config["token"], config["push_path"])
+            stored, skipped = push(rows, config["push_url"], config["token"])
         except Exception:
             # Forget this session's hash so the next Stop resends instead of skipping unchanged text.
             locked_update(summaries, lambda path: {s: v for s, v in load_summaries(path).items() if s != session})

@@ -1,0 +1,46 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+    paths: ["app/**"]
+  workflow_dispatch:
+    inputs:
+      source:
+        description: Folder to deploy
+        default: app
+      service:
+        description: Cloud Run service name
+        default: packoverflow
+
+env:
+  PROJECT_ID: qwiklabs-gcp-04-61c2ca7d9c86
+  REGION: us-central1
+  WIF_PROVIDER: projects/323892475788/locations/global/workloadIdentityPools/github/providers/github-oidc
+  DEPLOY_SA: github-deployer@qwiklabs-gcp-04-61c2ca7d9c86.iam.gserviceaccount.com
+
+concurrency:
+  group: deploy-${{ inputs.service || 'packoverflow' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Deploy from source
+        run: |
+          gcloud run deploy "${{ inputs.service || 'packoverflow' }}" \
+            --source "${{ inputs.source || 'app' }}" \
+            --project "$PROJECT_ID" --region "$REGION" \
+            --allow-unauthenticated --quiet
+      - name: Print URL
+        run: gcloud run services describe "${{ inputs.service || 'packoverflow' }}" --project "$PROJECT_ID" --region "$REGION" --format='value(status.url)' | tee -a "$GITHUB_STEP_SUMMARY"

@@ -14,9 +14,18 @@ class GraphError(Exception):
     pass
 
 
+def check_base_url(url: str) -> str:
+    """Only talk to the graph over HTTPS, or plain HTTP on this machine, so a bad KG_URL cannot make urlopen read file:// or other schemes."""
+    parts = urllib.parse.urlsplit(url)
+    local = parts.hostname in ("localhost", "127.0.0.1", "::1")
+    if not parts.hostname or parts.username or not (parts.scheme == "https" or (parts.scheme == "http" and local)):
+        raise ValueError(f"refusing graph URL {url!r}: use an https:// URL")
+    return url.rstrip("/")
+
+
 class GraphClient:
     def __init__(self, base_url: str | None = None):
-        self.base_url = (base_url or os.environ.get("KG_URL") or "http://127.0.0.1:8770").rstrip("/")
+        self.base_url = check_base_url(base_url or os.environ.get("KG_URL") or "http://127.0.0.1:8770")
         self._rows: list[dict] | None = None
         self._rows_at = 0.0
 
@@ -26,7 +35,8 @@ class GraphClient:
             headers["Authorization"] = f"Bearer {token}"
         data = None if body is None else json.dumps(body, ensure_ascii=False).encode()
         try:
-            with urllib.request.urlopen(urllib.request.Request(self.base_url + path, data, headers), timeout=15) as response:
+            # base_url is validated by check_base_url; path is a fixed endpoint with url-encoded query values.
+            with urllib.request.urlopen(urllib.request.Request(self.base_url + path, data, headers), timeout=15) as response:  # nosec B310
                 return json.load(response)
         except urllib.error.HTTPError as error:
             detail = error.read()[:300].decode(errors="replace")

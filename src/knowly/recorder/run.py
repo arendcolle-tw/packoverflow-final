@@ -156,7 +156,8 @@ def push(rows: list[dict], url: str, token: str, chunk: int = 1000) -> tuple[int
     for start in range(0, len(rows), chunk):
         batch = json.dumps(rows[start:start + chunk], ensure_ascii=False).encode()
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-        with urllib.request.urlopen(urllib.request.Request(url.rstrip("/") + "/signals", batch, headers), timeout=30) as response:
+        # url passed check_url above: https only, or http to localhost.
+        with urllib.request.urlopen(urllib.request.Request(url.rstrip("/") + "/signals", batch, headers), timeout=30) as response:  # nosec B310
             result = json.load(response)
         stored += result["added"] + result["updated"]
         skipped += len(result["rejected"])

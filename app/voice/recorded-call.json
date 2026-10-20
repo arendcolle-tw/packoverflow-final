@@ -9,54 +9,54 @@
    "text": "Hi, this is Nobikos. Ask me what I can do for your team."
   },
   {
-   "at": 4.04,
+   "at": 4.27,
    "who": "you",
    "text": "Hi. What is Nobikos?"
   },
   {
-   "at": 6.7,
+   "at": 6.94,
    "who": "agent",
-   "text": "Hi there. Nobikos keeps the reasoning behind your team's work and who it lives with. Facts are not knowledge, a system can tell you what was done and how, but only a person knows why, and the why is what matters. So instead of asking how, we're talking why. We find who actually worked something out, keep their reason in their own words, and reach out when nobody's explained it yet."
+   "text": "Nobikos keeps the human why behind a team's work, and who it lives with. When it is missing, it goes and asks the right person. Want to hear what that looks like?"
   },
   {
-   "at": 28.26,
+   "at": 15.9,
    "who": "you",
    "text": "Where does it get its knowledge from?"
   },
   {
-   "at": 31.06,
+   "at": 18.66,
    "who": "agent",
-   "text": "We learn from the work itself, documents and code changes with who owns them, and the moments people decide or explain why in AI sessions like Claude, Copilot or ChatGPT. Each reason stays with the person, in their own words. We also ask in Slack or reach out directly when something's not recorded yet, and their reply becomes the next answer for everyone. Right now, finding who knows and reaching out in Slack are live today."
+   "text": "Nobikos learns from the work itself, documents and code changes with who owns them, and the moments people decide or explain why in AI sessions like Claude or ChatGPT. It also reaches out when something is not recorded yet, and the person's reply becomes the next answer for everyone. Want to know more about how it stays current?"
   },
   {
-   "at": 57.77,
+   "at": 38.03,
    "who": "you",
    "text": "And what if the answer is not in there?"
   },
   {
-   "at": 60.66,
+   "at": 40.97,
    "who": "agent",
-   "text": "If nobody's recorded it yet, our bot messages the person most likely to know, and their reply becomes the next answer for everyone. So the gap gets filled, and the next person who asks gets a real answer instead of silence. That's how knowledge stays current and doesn't get lost when people move on."
+   "text": "If nobody has recorded it yet, Nobikos messages the person most likely to know, and their reply becomes the next answer for everyone. So the knowledge gets captured the first time someone explains it, and then it is there for the whole team."
   },
   {
-   "at": 79.57,
+   "at": 55.28,
    "who": "you",
    "text": "Can I call you before a meeting to get briefed?"
   },
   {
-   "at": 82.88,
+   "at": 58.59,
    "who": "agent",
-   "text": "That's on the roadmap. Right now you can call me to ask questions like this, and I'll find who knows or pull what we have. But calling for a briefing on what was decided and who to ask before a meeting, that's the idea we're building toward. For now, you can ask me anything and I'll connect you with the colleague who actually worked it out."
+   "text": "That is on the roadmap. Right now you can ask me by voice like this call, and I can tell you what Nobikos knows. Once it is connected to your data, you could call before a meeting to hear what was decided and who to ask. Does that help?"
   },
   {
-   "at": 100.95,
+   "at": 72.07,
    "who": "you",
    "text": "Great, thanks."
   },
   {
-   "at": 103.06,
+   "at": 74.08,
    "who": "agent",
-   "text": "You're welcome. Good luck with your team."
+   "text": "You're welcome. Good luck with your team!"
   }
  ]
 }

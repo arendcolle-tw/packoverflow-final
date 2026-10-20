@@ -60,15 +60,9 @@ Only rows where a human decided, corrected Claude or explained why count. Each r
 uv run --python 3.13 python -m recorder.run --person tristan --push https://knowledge-graph-323892475788.us-central1.run.app --token <member token>
 ```
 
-<<<<<<< Updated upstream
-Labels every turn missing from the cache, writes `data/signals-tristan.json` and, with `--push`, posts the rows to the store.
+Summarises every session whose compacted text changed since the last run, writes `data/signals-tristan.json` and, with `--push`, posts the rows in chunks of 1000 to `<url>/signals`. `--mode turns` labels each human turn instead. `WHOKNOWS_TOKEN` can replace `--token`.
 
-The team's one store is the knowledge graph (`ideas/alberic`, https://knowledge-graph-323892475788.us-central1.run.app). Pass that as `--push` with your graph member token: the recorder, the hook and the screenshot watcher post to `POST /signals`, and fall back to `POST /api/signals` only for the old Who knows store. `WHOKNOWS_TOKEN` can replace `--token`.
-||||||| Stash base
-Labels every turn missing from the cache, writes `data/signals-tristan.json` and, with `--push`, posts the rows to the store. `WHOKNOWS_TOKEN` can replace `--token`.
-=======
-Summarises every session whose compacted text changed since the last run, writes `data/signals-tristan.json` and, with `--push`, posts the rows in chunks of 1000 to `<url>/signals`. `--push-path /api/signals` posts to the whoknows server instead. `WHOKNOWS_TOKEN` can replace `--token`. `--mode turns` labels each human turn instead.
->>>>>>> Stashed changes
+The team's one store is the knowledge graph (`ideas/alberic`, https://knowledge-graph-323892475788.us-central1.run.app). Pass that as `--push` with your graph member token. The recorder, the hook and the screenshot watcher post to `POST /signals` and fall back to `POST /api/signals` only for the old Who knows store; `--push-path /api/signals` picks that store directly.
 
 ## Live capture
 

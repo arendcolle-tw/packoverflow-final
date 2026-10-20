@@ -158,28 +158,11 @@ def store_server():
         def do_POST(self):
             rows = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
             received.append({"path": self.path, "auth": self.headers["Authorization"], "rows": rows})
-<<<<<<< Updated upstream
-            status = reply["status"]
-            if status == 200 and not reply["graph"] and self.path == "/signals":
-                status = 404
-            if status != 200:
-                body = {"detail": "missing or unknown token"}
-            elif self.path == "/signals":
-                body = {"added": len(rows) - 1, "updated": 1, "rejected": []}
-            else:
-                body = {"stored": len(rows), "skipped": 0}
-            body = json.dumps(body).encode()
-            self.send_response(status)
-||||||| Stash base
-            ok = reply["status"] == 200
-            body = json.dumps({"stored": len(rows), "skipped": 0} if ok else {"detail": "missing or unknown token"}).encode()
-            self.send_response(reply["status"])
-=======
             # /signals answers like the knowledge graph, /api/signals like the whoknows server.
             ok = {"added": len(rows), "updated": 0, "rejected": []} if self.path == "/signals" else {"stored": len(rows), "skipped": 0}
-            body = json.dumps(ok if reply["status"] == 200 else {"detail": "missing or unknown token"}).encode()
-            self.send_response(reply["status"])
->>>>>>> Stashed changes
+            status = 404 if reply["status"] == 200 and not reply["graph"] and self.path == "/signals" else reply["status"]
+            body = json.dumps(ok if status == 200 else {"detail": "missing or unknown token"}).encode()
+            self.send_response(status)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
@@ -202,18 +185,15 @@ def test_push_sends_chunks_with_bearer_token(store_server):
     assert {(r["path"], r["auth"]) for r in store_server.received} == {("/signals", "Bearer tok")}
 
 
-<<<<<<< Updated upstream
 def test_push_falls_back_to_the_old_store(store_server):
     store_server.reply["graph"] = False
     assert run.push([{"id": str(n)} for n in range(1500)], store_server.url, "tok") == (1500, 0)
     assert [r["path"] for r in store_server.received] == ["/signals", "/api/signals", "/api/signals"]
-||||||| Stash base
-    assert {(r["path"], r["auth"]) for r in store_server.received} == {("/api/signals", "Bearer tok")}
-=======
+
+
 def test_push_path_selects_the_endpoint(store_server):
     assert run.push([{"id": "1"}], store_server.url, "tok", "api/signals") == (1, 0)
     assert store_server.received[0]["path"] == "/api/signals"
->>>>>>> Stashed changes
 
 
 def test_main_pushes_rows_and_failed_push_exits_nonzero_keeping_rows(store_server, tmp_path, monkeypatch, capsys):

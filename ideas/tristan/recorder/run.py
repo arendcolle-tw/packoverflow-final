@@ -111,23 +111,6 @@ def record(files: list[Path], person: str, out: Path, cache_path: Path = CACHE, 
     return rows
 
 
-<<<<<<< Updated upstream
-def _post(url: str, rows: list[dict], token: str) -> dict:
-    request = urllib.request.Request(
-        url,
-        data=json.dumps(rows, ensure_ascii=False).encode(),
-        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
-        method="POST",
-    )
-    with urllib.request.urlopen(request, timeout=30) as response:
-        return json.load(response)
-
-
-def push(rows: list[dict], url: str, token: str, chunk: int = 1000) -> tuple[int, int]:
-    """Send rows to the shared knowledge graph (POST /signals), or to an old Who knows store (POST /api/signals)."""
-||||||| Stash base
-def push(rows: list[dict], url: str, token: str, chunk: int = 1000) -> tuple[int, int]:
-=======
 def record_summaries(files: list[Path], person: str, out: Path, cache_path: Path = SUMMARIES, workers: int = 4) -> list[dict]:
     """One row per session. A session is summarised again only when its compacted text changed."""
     cache = load_summaries(cache_path)
@@ -160,42 +143,21 @@ def record_summaries(files: list[Path], person: str, out: Path, cache_path: Path
 
 
 def push(rows: list[dict], url: str, token: str, path: str = "/signals", chunk: int = 1000) -> tuple[int, int]:
->>>>>>> Stashed changes
     stored = skipped = 0
-    base, path = url.rstrip("/"), "/signals"
+    path = "/" + path.lstrip("/")
     for start in range(0, len(rows), chunk):
-<<<<<<< Updated upstream
-        batch = rows[start:start + chunk]
+        batch = json.dumps(rows[start:start + chunk], ensure_ascii=False).encode()
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
         try:
-            result = _post(base + path, batch, token)
+            with urllib.request.urlopen(urllib.request.Request(url.rstrip("/") + path, batch, headers), timeout=30) as response:
+                result = json.load(response)
         except urllib.error.HTTPError as error:
+            # An old Who knows store has no /signals, only /api/signals.
             if path != "/signals" or error.code not in (404, 405):
                 raise
             path = "/api/signals"
-            result = _post(base + path, batch, token)
-        # The graph answers {added, updated, rejected: [...]}, the old store {stored, skipped}.
-        stored += result.get("stored", result.get("added", 0) + result.get("updated", 0))
-        skipped += result.get("skipped", len(result.get("rejected", [])))
-||||||| Stash base
-        request = urllib.request.Request(
-            url.rstrip("/") + "/api/signals",
-            data=json.dumps(rows[start:start + chunk], ensure_ascii=False).encode(),
-            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(request, timeout=30) as response:
-            result = json.load(response)
-        stored += result["stored"]
-        skipped += result["skipped"]
-=======
-        request = urllib.request.Request(
-            url.rstrip("/") + "/" + path.lstrip("/"),
-            data=json.dumps(rows[start:start + chunk], ensure_ascii=False).encode(),
-            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(request, timeout=30) as response:
-            result = json.load(response)
+            with urllib.request.urlopen(urllib.request.Request(url.rstrip("/") + path, batch, headers), timeout=30) as response:
+                result = json.load(response)
         # The knowledge graph answers {added, updated, rejected}, the whoknows server {stored, skipped}.
         if "rejected" in result:
             stored += result["added"] + result["updated"]
@@ -205,7 +167,6 @@ def push(rows: list[dict], url: str, token: str, path: str = "/signals", chunk: 
         else:
             stored += result["stored"]
             skipped += result["skipped"]
->>>>>>> Stashed changes
     return stored, skipped
 
 
@@ -219,18 +180,10 @@ def main() -> None:
                              "turns: one row per human turn")
     parser.add_argument("--out", type=Path)
     parser.add_argument("--workers", type=int, default=4)
-<<<<<<< Updated upstream
-    parser.add_argument("--push", metavar="URL", help="also send the rows to this knowledge graph (or Who knows store) URL")
-    parser.add_argument("--token", default=os.environ.get("WHOKNOWS_TOKEN"), help="store token, default $WHOKNOWS_TOKEN")
-||||||| Stash base
-    parser.add_argument("--push", metavar="URL", help="also send the rows to this Who knows store")
-    parser.add_argument("--token", default=os.environ.get("WHOKNOWS_TOKEN"), help="store token, default $WHOKNOWS_TOKEN")
-=======
     parser.add_argument("--push", metavar="URL", help="also send the rows to this store, e.g. the knowledge graph")
     parser.add_argument("--push-path", default="/signals",
                         help="the store's endpoint for rows: /signals for the knowledge graph (default), /api/signals for the whoknows server")
     parser.add_argument("--token", default=os.environ.get("WHOKNOWS_TOKEN"), help="member token, default $WHOKNOWS_TOKEN")
->>>>>>> Stashed changes
     args = parser.parse_args()
     if args.push and not args.token:
         parser.error("--push needs --token or WHOKNOWS_TOKEN")

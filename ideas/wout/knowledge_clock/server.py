@@ -1,18 +1,22 @@
 import os
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from knowledge_clock.clock import compute_topics, parse_at, summarize, topic_detail
-from knowledge_clock.store import apply_whys, load_aliases, load_signals, load_whys, save_why
+from knowledge_clock.connector import PersonGate, build_mcp
+from knowledge_clock.live_store import LiveStore
+from knowledge_clock.store import apply_whys, load_aliases, load_whys, save_why
 
 BASE = Path(__file__).resolve().parents[1]
+STATIC = BASE / "knowledge_clock" / "static"
 DEMO_NOW = "2026-10-20T16:15:00+02:00"
-
-app = FastAPI(title="Knowledge clock")
+# Cloud Run sets K_SERVICE: use real time and its writable /tmp there.
+ON_CLOUD_RUN = "K_SERVICE" in os.environ
 
 
 class WhyAnswer(BaseModel):
@@ -20,38 +24,55 @@ class WhyAnswer(BaseModel):
     why: str = Field(max_length=200, pattern=r"\S")
 
 
+class JoinRequest(BaseModel):
+    name: str = Field(max_length=100)
+
+
 def _whys_path() -> Path:
     return BASE / os.environ.get("KC_WHYS", "data/whys.json")
 
 
+def _store() -> LiveStore:
+    seeds = [BASE / p.strip() for p in os.environ.get("KC_SIGNALS", "data/signals.json").split(",")]
+    return LiveStore(seeds, Path(os.environ.get("KC_DATA_DIR") or ("/tmp/kc" if ON_CLOUD_RUN else BASE / "data/live")))
+
+
+def _now() -> datetime:
+    now = os.environ.get("KC_NOW") or ("live" if ON_CLOUD_RUN else DEMO_NOW)
+    return datetime.now(timezone.utc) if now == "live" else parse_at(now)
+
+
 def _config() -> dict:
-    now = os.environ.get("KC_NOW") or DEMO_NOW
-    signals, skipped = load_signals([BASE / p.strip() for p in os.environ.get("KC_SIGNALS", "data/signals.json").split(",")])
+    store = _store()
+    signals = store.rows()
     return {
         "signals": apply_whys(signals, load_whys(_whys_path())),
-        "skipped": skipped,
+        "skipped": store.skipped,
         "aliases": load_aliases(BASE / os.environ.get("KC_ALIASES", "data/aliases.json")),
         "fading_days": int(os.environ.get("KC_FADING_DAYS", "14")),
-        "now": datetime.now(timezone.utc) if now == "live" else parse_at(now),
+        "now": _now(),
     }
+
+
+router = APIRouter()
 
 
 def _topics(cfg: dict) -> list[dict]:
     return compute_topics(cfg["signals"], cfg["now"], cfg["fading_days"], cfg["aliases"])
 
 
-@app.get("/api/summary")
+@router.get("/api/summary")
 def get_summary() -> dict:
     cfg = _config()
     return {**summarize(_topics(cfg)), "skipped": cfg["skipped"], "now": cfg["now"].astimezone(timezone.utc).isoformat()}
 
 
-@app.get("/api/topics")
+@router.get("/api/topics")
 def get_topics() -> list[dict]:
     return _topics(_config())
 
 
-@app.get("/api/topics/{topic}")
+@router.get("/api/topics/{topic}")
 def get_topic(topic: str) -> dict:
     cfg = _config()
     detail = topic_detail(cfg["signals"], topic, cfg["now"], cfg["fading_days"], cfg["aliases"])
@@ -67,7 +88,7 @@ def _is_open_question(signal: dict) -> bool:
     )
 
 
-@app.get("/api/questions")
+@router.get("/api/questions")
 def get_questions(person: str) -> list[dict]:
     return [
         {"id": s["id"], "topic": s["topic"], "at": s["at"], "human_role": s["human_role"]}
@@ -76,7 +97,7 @@ def get_questions(person: str) -> list[dict]:
     ]
 
 
-@app.post("/api/why", status_code=204)
+@router.post("/api/why", status_code=204)
 def post_why(answer: WhyAnswer) -> Response:
     # Only open questions, so nobody can overwrite a quote or put words on an AI-handled row.
     if not any(s["id"] == answer.id and _is_open_question(s) for s in _config()["signals"]):
@@ -85,6 +106,41 @@ def post_why(answer: WhyAnswer) -> Response:
     return Response(status_code=204)
 
 
-@app.get("/")
+@router.post("/api/join")
+def join(body: JoinRequest, request: Request) -> dict:
+    member = _store().create_member(body.name)
+    if member is None:
+        raise HTTPException(status_code=422, detail="Name must be 1 to 40 characters")
+    token, person = member
+    scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
+    url = f"{scheme}://{request.headers.get('host', request.url.netloc)}/u/{token}/mcp"
+    return {"person": person, "url": url, "claude_code": f"claude mcp add --transport http packoverflow {url}"}
+
+
+@router.get("/join")
+def join_page() -> FileResponse:
+    return FileResponse(STATIC / "join.html")
+
+
+@router.get("/")
 def index() -> FileResponse:
-    return FileResponse(BASE / "knowledge_clock" / "static" / "index.html")
+    return FileResponse(STATIC / "index.html")
+
+
+def create_app() -> FastAPI:
+    # The MCP session manager runs once per instance, so every app gets its own.
+    mcp = build_mcp(_store, _now)
+    mcp_app = mcp.streamable_http_app()
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI):
+        async with mcp.session_manager.run():
+            yield
+
+    app = FastAPI(title="Knowledge clock", lifespan=lifespan)
+    app.mount("/u/{token}", PersonGate(mcp_app, _store))
+    app.include_router(router)
+    return app
+
+
+app = create_app()

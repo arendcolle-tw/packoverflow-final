@@ -15,6 +15,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("KC_SIGNALS", str(signals))
     monkeypatch.setenv("KC_ALIASES", str(tmp_path / "none.json"))
     monkeypatch.setenv("KC_WHYS", str(tmp_path / "whys.json"))
+    monkeypatch.setenv("KC_DATA_DIR", str(tmp_path / "live"))
     from knowledge_clock.server import app
     return TestClient(app)
 
@@ -48,6 +49,7 @@ def qclient(tmp_path, monkeypatch):
     monkeypatch.setenv("KC_SIGNALS", str(signals))
     monkeypatch.setenv("KC_ALIASES", str(tmp_path / "none.json"))
     monkeypatch.setenv("KC_WHYS", str(tmp_path / "whys.json"))
+    monkeypatch.setenv("KC_DATA_DIR", str(tmp_path / "live"))
     from knowledge_clock.server import app
     return TestClient(app)
 

@@ -6,6 +6,9 @@ from pathlib import Path
 from knowledge_clock.people import person_key
 from knowledge_clock.store import load_signals, validate
 
+# Module-level because the server builds a store per request.
+_LOCK = threading.Lock()
+
 
 class LiveStore:
     def __init__(self, seed_paths: list[Path], data_dir: Path):
@@ -15,11 +18,14 @@ class LiveStore:
         self.live_path = data_dir / "live_signals.jsonl"
         self.members_path = data_dir / "members.json"
         self.skipped = 0
-        self._lock = threading.Lock()
+        self._members = self._load_members()
+
+    def _load_members(self) -> dict[str, str]:
         try:
-            self._members: dict[str, str] = json.loads(self.members_path.read_text())
+            members = json.loads(self.members_path.read_text())
         except (FileNotFoundError, json.JSONDecodeError):
-            self._members = {}
+            return {}
+        return members if isinstance(members, dict) else {}
 
     def rows(self) -> list[dict]:
         seed, skipped = load_signals(self.seed_paths)
@@ -38,7 +44,7 @@ class LiveStore:
         return seed + live
 
     def append(self, rows: list[dict]) -> None:
-        with self._lock, self.live_path.open("a") as out:
+        with _LOCK, self.live_path.open("a") as out:
             for row in rows:
                 out.write(json.dumps(row, ensure_ascii=False) + "\n")
 
@@ -47,8 +53,8 @@ class LiveStore:
         if person is None:
             return None
         token = secrets.token_urlsafe(16)
-        with self._lock:
-            self._members[token] = person
+        with _LOCK:
+            self._members = {**self._load_members(), token: person}
             self.members_path.write_text(json.dumps(self._members))
         return token, person
 

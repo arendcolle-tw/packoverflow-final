@@ -52,3 +52,5 @@ In cloud threads, ElevenLabs works through a network secret on the `default` env
 | `admin-call` | `call=add-member`, `person`, `pubkey` | Mints a member token with `POST /members`. The token is printed only encrypted (RSA-OAEP-SHA256) to `pubkey`, the base64 of an RSA public key PEM: `openssl genpkey -algorithm RSA -out k.pem; openssl pkey -in k.pem -pubout \| base64 -w0`. Decrypt with `base64 -d \| openssl pkeyutl -decrypt -inkey k.pem -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256`. |
 
 To redeploy a service, dispatch "Deploy to Cloud Run" (`deploy.yml`) the same way.
+
+Not possible from a thread: enabling a Google API or granting an IAM role. The deploy account has `serviceusage.serviceUsageConsumer`, not `serviceUsageAdmin`, and no `resourcemanager.projectIamAdmin`, so those still need the lab owner's login once.

@@ -6,3 +6,7 @@ data/*.db
 data/*.db-*
 site/.hyperframes/
 site/node_modules/
+data/graph_tokens.json
+data/demo-lies-mcp-token
+data/demo-rows.json
+data/slack-run.log

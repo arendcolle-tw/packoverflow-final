@@ -10,6 +10,8 @@ from fastapi.responses import JSONResponse
 from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 from slack_bolt.async_app import AsyncApp
 
+from whoknows.ask import Asker
+from whoknows.graph import GraphClient, GraphError
 from whoknows.mcp_server import MemberMCP
 from whoknows.rank import parse_at, who_knows
 from whoknows.slack import register
@@ -20,7 +22,10 @@ MAX_BODY = 4_000_000
 PERSONAL_URL = re.compile(r"/u/[^/]+/")
 FIXED_NOW = parse_at(os.environ["WHOKNOWS_NOW"]) if os.environ.get("WHOKNOWS_NOW") else None
 store = Store(Path(os.environ.get("WHOKNOWS_DB", DEFAULT_DB)))
-mcp = MemberMCP(store, FIXED_NOW)
+graph = GraphClient()
+asker = Asker(graph, Path(os.environ.get("WHOKNOWS_QUESTIONS_DB", DATA / "questions.db")),
+              Path(os.environ.get("WHOKNOWS_GRAPH_TOKENS", DATA / "graph_tokens.json")))
+mcp = MemberMCP(store, asker)
 
 
 def hide_token(record: logging.LogRecord) -> bool:
@@ -46,7 +51,7 @@ async def lifespan(_: FastAPI):
     handler = None
     if os.environ.get("SLACK_BOT_TOKEN") and os.environ.get("SLACK_APP_TOKEN"):
         bot = AsyncApp(token=os.environ["SLACK_BOT_TOKEN"])
-        register(bot, store.rows, FIXED_NOW)
+        register(bot, asker)
         handler = AsyncSocketModeHandler(bot, os.environ["SLACK_APP_TOKEN"])
         # The SDK retries a failed connect forever, and uvicorn binds the port only after startup returns.
         connecting = asyncio.create_task(handler.connect_async())
@@ -81,6 +86,14 @@ def post_signals(rows: list[dict] = Body(...), person: str = Depends(member)) ->
 @app.get("/api/who-knows")
 def get_who_knows(q: str = Query(min_length=2, max_length=300), _: str = Depends(member)) -> dict:
     return who_knows(q, store.rows(), FIXED_NOW)
+
+
+@app.post("/api/ask")
+async def post_ask(question: str = Body(embed=True, min_length=2, max_length=300), person: str = Depends(member)) -> dict:
+    try:
+        return await asker.ask(question.strip(), person)
+    except GraphError as error:
+        raise HTTPException(502, f"knowledge graph unreachable: {error}") from error
 
 
 @app.get("/healthz")

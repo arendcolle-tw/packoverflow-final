@@ -16,7 +16,7 @@
       {
         "command": "/whoknows",
         "description": "Who actually knows how to do this?",
-        "usage_hint": "set up the aikido security scan",
+        "usage_hint": "what time does the nightly payroll export start?",
         "should_escape": false
       }
     ]
@@ -30,7 +30,6 @@
         "im:history",
         "im:read",
         "im:write",
-        "mpim:write",
         "users:read"
       ]
     }

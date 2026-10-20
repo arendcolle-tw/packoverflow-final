@@ -13,7 +13,7 @@ features:
   slash_commands:
     - command: /whoknows
       description: Find who actually knows how to do a task
-      usage_hint: set up the aikido security scan
+      usage_hint: what time does the nightly payroll export start?
       should_escape: false
 oauth_config:
   scopes:
@@ -24,7 +24,6 @@ oauth_config:
       - im:history
       - im:read
       - im:write
-      - mpim:write
       - users:read
 settings:
   event_subscriptions:

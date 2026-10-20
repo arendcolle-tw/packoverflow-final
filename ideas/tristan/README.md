@@ -1,6 +1,8 @@
 # Who knows
 
-A Slack bot that answers "who actually knows how to do X". The recorder turns each Claude Code session into one row: Claude's summary of the decisions the person made, and whether they decided, corrected Claude, explained why, or accepted what Claude supplied. Alberic's knowledge graph (`ideas/alberic/knowledge_graph`) is the central store for these rows. A central FastAPI service stores the rows in SQLite. The bot ranks people by their own reasoning in similar sessions and replies with the person, a verbatim quote of their why, the source Claude session and a status.
+A Slack bot that answers "who actually knows how to do X". The recorder turns each Claude Code session into one row: Claude's summary of the decisions the person made, and whether they decided, corrected Claude, explained why, or accepted what Claude supplied. Alberic's knowledge graph (`ideas/alberic/knowledge_graph`) is the central store for these rows. The Who knows server answers questions from Slack, MCP and `POST /api/ask`: it looks the question up in the graph and has Haiku answer from the matching rows only, naming the person, their reason, the source task and the date. When no row answers the question, the server DMs the colleague with the closest related fact in Slack, and their answer goes into the graph as their own row.
+
+The four-step stage demo and its setup script are in `demo/README.md`.
 
 ## Row shape
 
@@ -31,7 +33,7 @@ Only rows where a human decided, corrected Claude or explained why count. Each r
 
 - The recorder reads `~/.claude/projects` on the laptop, only session folders whose name contains `packoverflow` (`--match` changes it).
 - Raw sessions stay on the laptop. Only rows leave it, with a why of at most 200 characters and a task of at most 80.
-- The recorder replaces pasted content with `[pasted]`, and tokens (`sk-`, `sk_live_`/`rk_test_`, `gh*_`, `github_pat_`, `glpat-`, `xox*`, `xapp-`, `AKIA`, `AIza`, `ATATT`, `npm_`, `hf_`, `ya29.`, JWTs, `Bearer` values, Slack webhook URLs, store tokens `wk_`, private keys), values after `password=`, `secret:`, `api_key=`, `token=` and similar, passwords in URLs and email addresses with `[redacted]`, before labelling. `record_signal` over MCP applies the same scrub. It skips the summary Claude writes on `/compact`.
+- The recorder replaces pasted content with `[pasted]`, and tokens (`sk-`, `sk_live_`/`rk_test_`, `gh*_`, `github_pat_`, `glpat-`, `xox*`, `xapp-`, `AKIA`, `AIza`, `ATATT`, `npm_`, `hf_`, `ya29.`, JWTs, `Bearer` values, Slack webhook URLs, store tokens `wk_`, private keys), values after `password=`, `secret:`, `api_key=`, `token=` and similar, passwords in URLs and email addresses with `[redacted]`, before labelling. `It skips the summary Claude writes on `/compact`.
 - Summarising runs `claude -p --model haiku` without tools under the person's own Claude Code login, on a compacted copy of the session: the human turns verbatim and Claude's text replies cut to about 1500 characters, without tool calls, tool output or subagent runs, at most about 60,000 characters. The summary cache is `~/.cache/packoverflow-recorder/summaries.json`, the turn label cache `cache.json` next to it.
 
 ## Run locally
@@ -42,12 +44,18 @@ Only rows where a human decided, corrected Claude or explained why count. Each r
    SLACK_BOT_TOKEN=xoxb-...
    SLACK_APP_TOKEN=xapp-...
    ```
-   Optional: `WHOKNOWS_NOW=2026-10-20T16:00:00Z` fixes "now" for the demo (rows captured later count as captured at that time), `WHOKNOWS_DB` sets the SQLite path (default `data/store.db`), `SLACK_PEOPLE=wout:U0123,alberic:U0456` maps person keys to Slack user ids where first names do not match.
+   Optional:
+   - `KG_URL`, the knowledge graph (default `http://127.0.0.1:8770`).
+   - `SLACK_PEOPLE=tristan:U0C9D2HJUA1,alberic:U0456` maps person keys to Slack user ids where first names do not match.
+   - `DEFAULT_EXPERT`, the person to ask when the graph has nothing related from anyone but the asker.
+   - `WHOKNOWS_DB`, the token store (default `data/store.db`). `WHOKNOWS_QUESTIONS_DB` (default `data/questions.db`) holds the questions sent to colleagues.
+   - `WHOKNOWS_GRAPH_TOKENS` (default `data/graph_tokens.json`) is `{"<person>": "<graph member token>"}`. The server posts a colleague's Slack answer to the graph with their token from this file, so every person who answers needs an entry.
+   - `WHOKNOWS_NOW=2026-10-20T16:00:00Z` fixes "now" for `/api/who-knows`.
 3. Start the server from `ideas/tristan/`:
    ```bash
    uv run --python 3.13 --with-requirements requirements.txt --env-file .env uvicorn whoknows.server:app --port 8090
    ```
-   On start the server loads every `data/signals-*.json` into the store. Without the Slack tokens it serves only the HTTP API.
+   On start the server loads every `data/signals-*.json` into the local store. Without the Slack tokens it serves only the HTTP API and MCP.
 4. Make a token per person:
    ```bash
    uv run --python 3.13 --with-requirements requirements.txt python -m whoknows.store tristan
@@ -88,24 +96,26 @@ uv run --python 3.13 python -m recorder.screenshots --person tristan --watch --p
 
 ## Asking in Slack
 
-- `@whoknows set up the aikido security scan` in a channel the bot is in. The bot replies in a thread.
-- A DM to the bot with the task.
-- `/whoknows set up the aikido security scan`, answered in the channel.
-- The "Ask <name>" button opens a group DM with the asker and that colleague, with the question and the colleague's earlier why. This needs the `mpim:write` scope, so reinstall an app created before it was in the manifest. Without it the button falls back to a 1:1 DM with the colleague.
+- `@whoknows what time does the nightly payroll export start?` in a channel the bot is in. The bot posts "Looking it up..." in a thread and replaces it with the answer.
+- A DM to the bot with the question.
+- `/whoknows <question>`, answered in the channel.
 
-The bot matches person keys to the first name in each full member's real name from `users.list`. Guests are skipped, and a first name that two members share matches nobody, so set `SLACK_PEOPLE` for them.
+Every question goes through the same ask as MCP. When the graph does not answer it, the bot DMs the colleague with the strongest related fact (not the asker, else `DEFAULT_EXPERT`) with the question, who asked, up to three related facts and an Answer button. A repeat of the same open question to the same colleague does not DM them again. Answer opens a modal for at most 200 characters. Only that colleague can submit it. The server then posts the answer to the graph as their row (`source` `gap_form`, `human_role` `answered_question`, task the question) and DMs the asker if the asker has a Slack account.
+
+The bot matches person keys to the first name in each full member's real name from `users.list`. Guests are skipped, and a first name that two members share matches nobody, so set `SLACK_PEOPLE` for them. `SLACK_PEOPLE` entries win over `users.list`.
 
 ## API
 
 `/api` calls need `Authorization: Bearer <token>`.
 
 - `POST /api/signals` takes a JSON list of at most 5000 rows in a body of at most 4 MB with a Content-Length, and returns `{"stored": n, "skipped": n}`.
-- `GET /api/who-knows?q=<task>` returns the ranking: status, people with score, roles and evidence, and session counts.
+- `POST /api/ask` with `{"question": "..."}` runs the same ask as the MCP tool for the token's person and returns `{known, text, question_id, pinged, sources}`. It returns 502 when the graph is unreachable.
+- `GET /api/who-knows?q=<task>` returns the ranking of the local store: status, people with score, roles and evidence, and session counts.
 - `GET /healthz` returns `{"ok": true}`.
 
 ## MCP
 
-The server exposes an MCP endpoint, so Claude Code, claude.ai or Copilot can ask the store and record signals. The person comes from the token only.
+The server exposes an MCP endpoint, so Claude Code, claude.ai or Copilot can ask questions. The person comes from the token only.
 
 - `<host>/mcp` with `Authorization: Bearer <token>`, for clients that can set headers. Use this one where possible.
 - `<host>/u/<token>/mcp`, the personal URL, for clients that cannot set headers, such as a claude.ai custom connector or Copilot Studio. The server's access log masks the token, but Cloud Run's request log keeps full URLs.
@@ -131,11 +141,7 @@ GitHub Copilot in VS Code, `.vscode/mcp.json`:
 }
 ```
 
-| Tool | Arguments | Returns |
-|---|---|---|
-| `who_knows` | `task` | the ranking as `/api/who-knows` returns it, with each colleague's quoted why, its task and date |
-| `record_signal` | `task`, `what_happened` (`decided`, `corrected`, `explained_why`), `why`, optional `topic` | the stored row, source `mcp_record`, actor `unknown` |
-| `my_knowledge` | none | the caller's tasks where they reasoned and the tasks where they only accepted AI output, with turn counts |
+The one tool is `ask(question)`, 2 to 300 characters. It returns the answer text, with the person, their reason, the source task and the date, and the same structured result as `POST /api/ask`. When the graph has no answer, the text says so, lists the closest related facts and names the colleague the bot asked in Slack.
 
 ## Deploy to Cloud Run
 
@@ -156,7 +162,7 @@ The service needs exactly one instance because the store is a SQLite file inside
 ## Tests
 
 ```bash
-uv run --python 3.13 --with pytest --with httpx --with fastapi --with uvicorn --with slack_bolt --with aiohttp pytest -q
+.venv/bin/python -m pytest -q
 ```
 
 ## Unfinished
@@ -164,4 +170,4 @@ uv run --python 3.13 --with pytest --with httpx --with fastapi --with uvicorn --
 - SQLite on Cloud Run is a file in the instance, so a redeploy or restart loses pushed rows and tokens. The server reseeds rows from `data/signals-*.json` on start.
 - `python -m whoknows.store` writes tokens to a local SQLite file, so it cannot make tokens for the deployed service.
 - Tokens are bearer tokens without login or expiry. Anyone holding one can query and can write rows as its person until `--revoke` deletes it.
-- Copilot sessions are not read directly yet, only through screenshots or MCP. The row's `source` field (`claude_session`, `screenshot` and `mcp_record` today) leaves room for them.
+- Copilot sessions are not read directly yet, only through screenshots. The row's `source` field (`claude_session`, `screenshot` and `gap_form` today) leaves room for them.

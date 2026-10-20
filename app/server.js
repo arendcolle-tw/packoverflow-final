@@ -11,6 +11,7 @@ const SLIDES_DIR = path.join(__dirname, "slides");
 const CONNECTOR = "https://knowledge-mcp-323892475788.us-central1.run.app";
 const graph = require("./graph");
 const GRAPH_BOARD = graph.GRAPH_URL + "/gaps/board";
+const voice = require("./voice");
 
 // Story wording in one place, so the headline and demo role are easy to flip.
 const HEADLINE = "Claude can tell you what. Your colleagues know why.";
@@ -120,6 +121,7 @@ function page() {
   .item .actions button { border: 0; cursor: pointer; font: inherit; font-weight: 600; }
   .item.done { opacity: 0.55; }
   .item .result { font-weight: 600; color: var(--sky-300); }
+${voice.STYLE}
   @media (max-width: 720px) { .who, .topic { grid-template-columns: 1fr; } }
 </style></head>
 <body>
@@ -128,7 +130,8 @@ function page() {
   <h1>Pack<span class="grad-human">Overflow</span></h1>
   <p class="tag">${esc(HEADLINE)}</p>
   <nav class="glass" role="tablist">
-    <button role="tab" data-tab="ask" aria-selected="true">Ask</button>
+    <button role="tab" data-tab="call" aria-selected="true">Call</button>
+    <button role="tab" data-tab="ask" aria-selected="false">Ask</button>
     <button role="tab" data-tab="map" aria-selected="false">Map</button>
     <button role="tab" data-tab="review" aria-selected="false">Review your day</button>
     <a class="navlink" href="${GRAPH_BOARD}" target="_blank" rel="noopener">Gaps board</a>
@@ -138,7 +141,8 @@ function page() {
   </nav>
 </header>
 <main>
-  <section id="ask">
+${voice.SECTION}
+  <section id="ask" hidden>
     <p class="role">${esc(ROLE)}</p>
     <form id="askform" class="glass askbar">
       <input id="q" name="q" value="${esc(ASK_DEFAULT)}" maxlength="300" aria-label="Your question" autocomplete="off">
@@ -186,7 +190,7 @@ function page() {
 <script>
   const tabs = document.querySelectorAll("nav button");
   function show(name) {
-    if (!document.getElementById(name)) name = "ask";
+    if (!document.getElementById(name)) name = "call";
     tabs.forEach((b) => b.setAttribute("aria-selected", b.dataset.tab === name));
     document.querySelectorAll("main section").forEach((s) => (s.hidden = s.id !== name));
   }
@@ -263,6 +267,7 @@ function page() {
     const t = c.textContent; c.textContent = "Copied"; setTimeout(() => (c.textContent = t), 900);
   }));
 </script>
+${voice.SCRIPTS}
 </body></html>`;
 }
 
@@ -293,6 +298,7 @@ const server = http.createServer((req, res) => {
       res.end(JSON.stringify(body));
     });
   }
+  if (voice.handle(req, res, urlPath)) return;
   if (urlPath === "/theme.css") {
     res.writeHead(200, { "Content-Type": TYPES[".css"] });
     return res.end(fs.readFileSync(path.join(__dirname, "theme.css")));

@@ -14,35 +14,50 @@
   h1 .human { color: var(--human); }
   p { margin: 0 0 16px; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin: 20px 0; }
-  form { display: flex; gap: 8px; flex-wrap: wrap; }
-  input { flex: 1 1 220px; font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; }
-  button { font: inherit; padding: 10px 16px; border: 0; border-radius: 8px; background: var(--human); color: #fff; cursor: pointer; }
-  button.secondary { background: var(--ink); }
-  code { display: block; background: #f1f0ec; border-radius: 8px; padding: 10px 12px; font-size: 14px; overflow-wrap: anywhere; margin: 6px 0 10px; }
-  ol { padding-left: 20px; margin: 8px 0 0; }
-  li { margin-bottom: 10px; }
-  .muted { color: var(--muted); font-size: 14px; }
-  .error { color: #c62828; }
   a { color: var(--human); }
   a.add { display: inline-block; background: var(--human); color: #fff; text-decoration: none; font-weight: 600; font-size: 18px; padding: 14px 22px; border-radius: 10px; margin: 4px 0 8px; }
+  ul { padding-left: 20px; margin: 8px 0 0; }
+  li { margin-bottom: 6px; }
+  code { display: block; background: #f1f0ec; border-radius: 8px; padding: 10px 12px; font-size: 14px; overflow-wrap: anywhere; margin: 6px 0 10px; }
+  details { margin-top: 8px; }
+  summary { cursor: pointer; color: var(--muted); }
+  form { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  input { flex: 1 1 220px; font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; }
+  button { font: inherit; padding: 10px 16px; border: 0; border-radius: 8px; background: var(--ink); color: #fff; cursor: pointer; }
+  .muted { color: var(--muted); font-size: 14px; }
+  .error { color: #c62828; }
 </style>
 </head>
 <body>
 <main>
   <p class="eyebrow">Packoverflow · knowledge connector for Claude</p>
-  <h1>What you actually know, <span class="human">and what you just prompt.</span></h1>
-  <p>Add this connector to your own Claude. It maps the decisions, corrections and reasons in your own work, and tells you who else actually knows something.</p>
+  <h1>Ask Claude who actually knows, <span class="human">not just who wrote it down.</span></h1>
+  <p>Our knowledge graph knows which people really reasoned about something (decided, corrected Claude, explained why) and which only prompted. Add it to your Claude and ask.</p>
 
   <div class="card">
+    <a class="add" id="add" href="#">Add to Claude</a>
+    <p class="muted">Opens claude.ai with everything filled in. Click Add, and it also shows up in the Claude app.</p>
+    <p><strong>Then ask Claude:</strong></p>
+    <ul>
+      <li>&ldquo;Who knows how our Aikido scan was set up?&rdquo;</li>
+      <li>&ldquo;What is going dark in our team?&rdquo;</li>
+      <li>&ldquo;What does Wout actually know, and what does he just prompt?&rdquo;</li>
+    </ul>
+    <p class="muted" style="margin-top:14px">Claude Code:</p>
+    <code id="cli"></code>
+  </div>
+
+  <details class="card">
+    <summary>Team member? Get a personal URL to see what you know</summary>
     <form id="join">
-      <input id="name" placeholder="Your name" maxlength="40" required autocomplete="name" autofocus>
-      <button>Get my connector</button>
+      <input id="name" placeholder="Your name" maxlength="40" required autocomplete="name">
+      <button>Get my URL</button>
     </form>
     <p id="error" class="error"></p>
     <div id="result"></div>
-  </div>
+  </details>
 
-  <p class="muted">What leaves your Claude: a topic, a short reason in your own words, and a time. Never your conversation. Every record is a visible tool call you can see in Claude.</p>
+  <p class="muted">Read-only: the connector answers from the team's knowledge graph and records nothing from your chats.</p>
   <p class="muted"><a href="/">See the live knowledge map</a></p>
 </main>
 <script>
@@ -53,14 +68,16 @@ function el(tag, className, text) {
   return node;
 }
 
-function copyButton(text) {
-  const button = el("button", "secondary", "Copy");
-  button.type = "button";
-  button.addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText(text); button.textContent = "Copied"; } catch { button.textContent = "Select and copy"; }
-  });
-  return button;
+function addLink(node, href) {
+  node.href = href;
+  node.target = "_blank";
+  node.rel = "noopener";
 }
+
+fetch("/api/connector").then(r => r.json()).then(body => {
+  addLink(document.getElementById("add"), body.claude_ai);
+  document.getElementById("cli").textContent = body.claude_code;
+});
 
 document.getElementById("join").addEventListener("submit", async event => {
   event.preventDefault();
@@ -71,30 +88,11 @@ document.getElementById("join").addEventListener("submit", async event => {
   if (!res.ok) { error.textContent = "Use a name of 1 to 40 characters."; return; }
   const body = await res.json();
   result.replaceChildren();
-  result.appendChild(el("p", null, `Welcome, ${body.person}.`));
-  const add = el("a", "add", "Add to Claude");
-  add.href = body.claude_ai;
-  add.target = "_blank";
-  add.rel = "noopener";
+  result.appendChild(el("p", null, `Personal URL for ${body.person} (keep it private). It adds "what do I know" for you:`));
+  const add = el("a", "add", "Add my personal connector");
+  addLink(add, body.claude_ai);
   result.appendChild(add);
-  result.appendChild(el("p", "muted", "Opens claude.ai in your browser with everything filled in. Click Add. It then also shows up in the Claude app. Ask: \u201cMap my knowledge with Packoverflow.\u201d"));
-
-  const steps = el("ol");
-  const web = el("li");
-  web.appendChild(el("strong", null, "Your personal URL (keep it private): "));
-  web.appendChild(el("code", null, body.url));
-  web.appendChild(copyButton(body.url));
-  steps.appendChild(web);
-  const cli = el("li");
-  cli.appendChild(el("strong", null, "Claude Code: "));
-  cli.appendChild(el("code", null, body.claude_code));
-  cli.appendChild(copyButton(body.claude_code));
-  steps.appendChild(cli);
-  const ask = el("li");
-  ask.appendChild(el("strong", null, "Then ask Claude: "));
-  ask.appendChild(document.createTextNode("“Map my knowledge with Packoverflow.” Afterwards try “Who knows how our Aikido scan was set up?”"));
-  steps.appendChild(ask);
-  result.appendChild(steps);
+  result.appendChild(el("code", null, body.claude_code));
 });
 </script>
 </body>

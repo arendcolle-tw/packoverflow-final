@@ -11,7 +11,8 @@ from pydantic import BaseModel, Field
 from knowledge_clock.clock import compute_topics, parse_at, summarize, topic_detail
 from knowledge_clock.connector import PersonGate, build_mcp
 from knowledge_clock.live_store import LiveStore
-from knowledge_clock.store import apply_whys, load_aliases, load_whys, save_why
+from knowledge_clock.store import apply_whys, load_aliases, load_signals, load_whys, save_why
+from vendor.knowledge_graph import KnowledgeGraph
 
 BASE = Path(__file__).resolve().parents[1]
 STATIC = BASE / "knowledge_clock" / "static"
@@ -54,10 +55,21 @@ def _make_mirror() -> tuple[object | None, str]:
 MIRROR, STORAGE = _make_mirror()
 
 
+def _seeds() -> list[Path]:
+    return [BASE / p.strip() for p in os.environ.get("KC_SIGNALS", "data/signals.json").split(",") if p.strip()]
+
+
+def _person_aliases() -> dict[str, str]:
+    return load_aliases(BASE / os.environ.get("KC_PERSON_ALIASES", "data/person_aliases.json"))
+
+
 def _store() -> LiveStore:
-    seeds = [BASE / p.strip() for p in os.environ.get("KC_SIGNALS", "data/signals.json").split(",")]
-    aliases = load_aliases(BASE / os.environ.get("KC_PERSON_ALIASES", "data/person_aliases.json"))
-    return LiveStore(seeds, _data_dir(), mirror=MIRROR, person_aliases=aliases)
+    return LiveStore([], _data_dir(), mirror=MIRROR, person_aliases=_person_aliases())
+
+
+def _graph() -> KnowledgeGraph:
+    # Albéric's graph is the single source of truth; the connector and the page only read it.
+    return KnowledgeGraph(_data_dir() / "graph.jsonl", seed_paths=[s for s in _seeds() if s.exists()], mirror=MIRROR)
 
 
 def _now() -> datetime:
@@ -66,11 +78,9 @@ def _now() -> datetime:
 
 
 def _config() -> dict:
-    store = _store()
-    signals = store.rows()
     return {
-        "signals": apply_whys(signals, load_whys(_whys_path())),
-        "skipped": store.skipped,
+        "signals": apply_whys(_graph().rows(), load_whys(_whys_path())),
+        "skipped": load_signals(_seeds())[1],
         "aliases": load_aliases(BASE / os.environ.get("KC_ALIASES", "data/aliases.json")),
         "fading_days": int(os.environ.get("KC_FADING_DAYS", "14")),
         "now": _now(),
@@ -134,20 +144,31 @@ def post_why(answer: WhyAnswer) -> Response:
     return Response(status_code=204)
 
 
+def _base(request: Request) -> str:
+    scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
+    return f"{scheme}://{request.headers.get('host', request.url.netloc)}"
+
+
+def _links(url: str) -> dict:
+    return {
+        "url": url,
+        "claude_ai": f"{CLAUDE_INSTALL}{quote(url, safe='')}",
+        "claude_code": f"claude mcp add --transport http packoverflow {url}",
+    }
+
+
+@router.get("/api/connector")
+def connector(request: Request) -> dict:
+    return _links(f"{_base(request)}/mcp")
+
+
 @router.post("/api/join")
 def join(body: JoinRequest, request: Request) -> dict:
     member = _store().create_member(body.name)
     if member is None:
         raise HTTPException(status_code=422, detail="Name must be 1 to 40 characters")
     token, person = member
-    scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
-    url = f"{scheme}://{request.headers.get('host', request.url.netloc)}/u/{token}/mcp"
-    return {
-        "person": person,
-        "url": url,
-        "claude_ai": f"{CLAUDE_INSTALL}{quote(url, safe='')}",
-        "claude_code": f"claude mcp add --transport http packoverflow {url}",
-    }
+    return {"person": person, **_links(f"{_base(request)}/u/{token}/mcp")}
 
 
 # The pages change during the day; a cached copy calls an API shape that no longer exists.
@@ -166,7 +187,7 @@ def index() -> FileResponse:
 
 def create_app() -> FastAPI:
     # The MCP session manager runs once per instance, so every app gets its own.
-    mcp = build_mcp(_store, _now)
+    mcp = build_mcp(_graph, _now, _person_aliases)
     mcp_app = mcp.streamable_http_app()
 
     @asynccontextmanager
@@ -177,6 +198,8 @@ def create_app() -> FastAPI:
     app = FastAPI(title="Knowledge clock", lifespan=lifespan)
     app.mount("/u/{token}", PersonGate(mcp_app, _store))
     app.include_router(router)
+    # Last, so it only catches /mcp: the shared, read-only connector that needs no name.
+    app.mount("/", mcp_app)
     return app
 
 

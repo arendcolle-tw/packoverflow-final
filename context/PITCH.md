@@ -133,6 +133,7 @@ Beats, not a script. We get cut off on time, so rehearse to 2:45.
 
 | They ask | We answer |
 |---|---|
+| How do you identify the gaps? (asked by someone at SD Worx today) | A gap is work the AI keeps doing that no human has reasoned about lately, or that only one person ever did. We count the human moments (decided, corrected, explained why) on similar past work, let them fade over 90 days, and flag what drops to zero or to one person. Then show it, don't explain it: the Aikido scan, 6 times Claude, 1 human, 19 days ago. |
 | How is this different from an expert finder, or from Vulcan Kinetics? | They find who wrote or who answered. In an AI company, that's often who prompted. We separate what the human brought from what the AI supplied. |
 | Is this surveillance? | Raw sessions never leave the laptop, only the reasoning rows. You install it yourself and see your own view first. Leads see what's going dark, not what a named colleague knows. |
 | What if Claude was right and I accepted it? | Fine. Accepting isn't punished, it just isn't evidence you could have done it without Claude. |

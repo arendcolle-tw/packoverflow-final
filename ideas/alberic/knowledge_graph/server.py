@@ -79,6 +79,7 @@ def _load_artifacts(graph: KnowledgeGraph) -> None:
 GRAPH, STORAGE = make_graph()
 _load_artifacts(GRAPH)
 threading.Thread(target=voice.ensure_webhook, args=(GRAPH,), daemon=True).start()
+threading.Thread(target=gaps.redraft_templates, args=(GRAPH,), daemon=True).start()
 app = FastAPI(title="knowledge-graph")
 
 

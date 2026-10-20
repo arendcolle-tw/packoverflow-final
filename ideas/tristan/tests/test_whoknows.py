@@ -1,6 +1,7 @@
 import asyncio
 import importlib
 import json
+import logging
 import re
 from datetime import datetime, timedelta, timezone
 
@@ -128,6 +129,8 @@ def test_member_tokens(store):
     assert store.person_for(token) == "alice"
     assert token.startswith("wk_") and scrub(f"my token is {token}") == "my token is [redacted]"
     assert store.person_for("nope") is None
+    other = store.add_member("bob")
+    assert store.revoke("alice") == 1 and store.person_for(token) is None and store.person_for(other) == "bob"
 
 
 @pytest.fixture
@@ -164,6 +167,13 @@ def test_api_stores_rows_under_the_token_person_and_answers(api):
     assert answer["status"] == "healthy"
     assert {p["person"] for p in answer["people"]} == {"alice", "carol"}
     assert client.get("/api/who-knows", params={"q": "x"}, headers=auth).status_code == 422
+
+
+def test_access_log_hides_the_token_in_a_personal_url(api):
+    record = logging.LogRecord("uvicorn.access", logging.INFO, "", 0, '%s - "%s %s HTTP/%s" %d',
+                               ("127.0.0.1:5000", "POST", "/u/wk_secret123/mcp", "1.1", 200), None)
+    assert logging.getLogger("uvicorn.access").filter(record)
+    assert record.getMessage() == '127.0.0.1:5000 - "POST /u/***/mcp HTTP/1.1" 200'
 
 
 def test_api_rejects_large_or_unsized_bodies_before_the_token_check(api):

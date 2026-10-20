@@ -81,12 +81,28 @@ def test_human_turns_skip_compact_summaries(tmp_path):
     ("postgres://admin:", "hunter2@localhost:5432/app"),
     ("wk_", "a1B2c3D4" * 4),
     ("-----BEGIN OPENSSH ", "PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjE\n-----END OPENSSH PRIVATE KEY-----"),
+    ("eyJhbGciOiJIUzI1NiJ9.", "eyJzdWIiOiJ0In0.c2lnbmF0dXJlZmFr"),
+    ("sk_live_", "4eC39HqLyjWD" * 2),
+    ("rk_test_", "4eC39HqLyjWD" * 2),
+    ("Authorization: Bearer ", "9f8e7d6c5b4a" * 3),
+    ("aws_secret_access_key=", "wJalrXUtnFEM" + "K7MDENG" * 4),
+    ("password=", "Tulip-Orbit-58"),
+    ("API_KEY: ", "Zq81Lp02Xc93"),
+    ("ATATT", "3xFfGF0" + "a1B2" * 8),
+    ("npm_", "a1B2c3" * 6),
+    ("hf_", "a1B2c3" * 6),
+    ("ya29.", "a0AfB_byC" + "x9" * 10),
 ])
 def test_scrub_redacts_tokens_before_they_reach_a_why(parts):
     secret = "".join(parts)
-    text = scrub(f"TOKEN={secret} because socket mode needs the app token")
+    text = scrub(f"use {secret} because socket mode needs the app token")
     assert "[redacted]" in text and parts[1][:12] not in text
-    assert parts[1][:12] not in (run.verbatim_why(f"TOKEN={secret} because socket mode", text) or "")
+    assert parts[1][:12] not in (run.verbatim_why(f"use {secret} because socket mode", text) or "")
+
+
+def test_scrub_keeps_prose_about_tokens_and_passwords():
+    text = "we use the bearer token approach because the password expired"
+    assert scrub(text) == text
 
 
 def test_verbatim_why_rejects_paraphrase():

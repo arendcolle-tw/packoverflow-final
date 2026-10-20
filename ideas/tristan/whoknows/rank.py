@@ -29,11 +29,12 @@ def row_weight(row: dict) -> float:
 
 
 def sessions(rows: list[dict]) -> list[dict]:
-    """One Claude session is one task. Subagent rows (`<session>:<agent>`) belong to their parent session."""
+    """One session is one task. Claude subagent rows (`<session>:<agent>`) belong to their parent session."""
     by_session: dict[tuple[str, str], list[dict]] = {}
     for row in rows:
+        source_id = row["source_id"].split(":")[0] if row["source"] == "claude_session" else row["source_id"]
         # Keyed by person too, so rows posted under a colleague's session id cannot change that session.
-        by_session.setdefault((row["person"], row["source_id"].split(":")[0]), []).append(row)
+        by_session.setdefault((row["person"], source_id), []).append(row)
     result = []
     for (person, source_id), session_rows in by_session.items():
         session_rows.sort(key=lambda r: r["at"])

@@ -91,9 +91,9 @@ def shown_at(shown, taken: datetime) -> str:
     return at.astimezone(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
-def transcript_items(turns: list, digest: str, taken: datetime) -> list[dict]:
+def transcript_items(turns: list, digest: str, taken: datetime, person: str) -> list[dict]:
     source_id = f"shot-{digest[:12]}"
-    items, context = [], ""
+    items, context = {}, ""
     for n, turn in enumerate(turns if isinstance(turns, list) else []):
         if not isinstance(turn, dict):
             continue
@@ -104,17 +104,22 @@ def transcript_items(turns: list, digest: str, taken: datetime) -> list[dict]:
             continue
         if turn.get("speaker") != "human" or not text:
             continue
-        items.append({
+        text = scrub(text)
+        # Keyed by the person and the turn's words only, so a retake or an overlapping scroll capture, where the
+        # assistant message before a turn can be out of frame, gives the same row id and the store merges it.
+        words = " ".join(re.findall(r"\w+", text.casefold()))
+        key = "shot-turn-" + hashlib.sha256(f"{person}\n{words}".encode()).hexdigest()[:16]
+        items.setdefault(key, {
             "source_id": source_id,
             "message_uuid": f"t{n}",
             "at": shown_at(turn.get("time"), taken),
-            "text": scrub(text),
+            "text": text,
             "context": context,
             "is_agent": False,
-            "key": f"{source_id}:t{n}",
+            "key": key,
             "session": source_id,
         })
-    return items
+    return list(items.values())
 
 
 def process(image: Path, digest: str, person: str, model: str) -> dict:
@@ -122,7 +127,7 @@ def process(image: Path, digest: str, person: str, model: str) -> dict:
     transcript = read_image(image, model)
     app = re.sub(r"[^a-z0-9]+", "-", str(transcript.get("app") or "").lower()).strip("-")[:40] or "unknown"
     title = str(transcript.get("title") or "").strip()
-    items = transcript_items(transcript.get("turns"), digest, taken)
+    items = transcript_items(transcript.get("turns"), digest, taken, person)
     labels, tasks = classify(items, source=f"{app} chat screenshot", assistant="the assistant") if items else ({}, {})
     if items and not labels:
         raise ValueError("the classifier returned no labels")
@@ -146,9 +151,13 @@ def record(folder: Path, person: str, out: Path, state_path: Path = STATE, model
     failed = set() if failed is None else failed
     found: dict[str, Path] = {}
     for image in sorted(folder.iterdir()):
-        if (image.suffix.lower() in IMAGES and not image.name.startswith(".") and image.is_file()
-                and time.time() - image.stat().st_mtime >= SETTLE_SECONDS):
-            found.setdefault(hashlib.sha256(image.read_bytes()).hexdigest(), image)
+        if image.suffix.lower() not in IMAGES or image.name.startswith("."):
+            continue
+        try:
+            if image.is_file() and time.time() - image.stat().st_mtime >= SETTLE_SECONDS:
+                found.setdefault(hashlib.sha256(image.read_bytes()).hexdigest(), image)
+        except OSError:
+            continue
     new = {digest: image for digest, image in found.items() if digest not in state and digest not in failed}
 
     done = 0
@@ -170,7 +179,8 @@ def record(folder: Path, person: str, out: Path, state_path: Path = STATE, model
             os.replace(tmp, state_path)
             print(f"{new[digest].name}: {state[digest]['app']}, {len(state[digest]['rows'])} rows", file=sys.stderr)
 
-    rows = sorted((r for entry in state.values() for r in entry["rows"] if r["person"] == person), key=lambda r: r["at"])
+    latest = {r["id"]: r for entry in state.values() for r in entry["rows"] if r["person"] == person}
+    rows = sorted(latest.values(), key=lambda r: r["at"])
     if done or not out.exists():
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(rows, indent=1, ensure_ascii=False) + "\n")

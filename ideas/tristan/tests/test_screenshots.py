@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import re
@@ -12,6 +13,7 @@ from types import SimpleNamespace
 import pytest
 
 from recorder import screenshots
+from whoknows.rank import who_knows
 from whoknows.store import FIELDS, Store, valid
 
 TRANSCRIPT = {
@@ -29,6 +31,10 @@ TRANSCRIPT = {
 TAKEN = datetime(2026, 10, 20, 15, 30, tzinfo=timezone(timedelta(hours=2)))
 
 
+def _variant(word):
+    return {**TRANSCRIPT, "turns": [{**t, "text": f"{t['text']} {word}" if t["text"].strip() else t["text"]} for t in TRANSCRIPT["turns"]]}
+
+
 @pytest.fixture(autouse=True)
 def brussels_time(monkeypatch):
     # Shown times combine with the file's local date, so pin the local zone.
@@ -40,11 +46,10 @@ def brussels_time(monkeypatch):
 
 
 def test_transcript_items_pair_human_turns_with_the_assistant_before():
-    items = screenshots.transcript_items(TRANSCRIPT["turns"], "ab" * 32, TAKEN)
-    assert [(i["key"], i["message_uuid"], i["session"]) for i in items] == [
-        ("shot-abababababab:t1", "t1", "shot-abababababab"),
-        ("shot-abababababab:t5", "t5", "shot-abababababab"),
-    ]
+    items = screenshots.transcript_items(TRANSCRIPT["turns"], "ab" * 32, TAKEN, "tristan")
+    assert [(i["message_uuid"], i["session"], i["source_id"]) for i in items] == [
+        ("t1", "shot-abababababab", "shot-abababababab"), ("t5", "shot-abababababab", "shot-abababababab")]
+    assert all(re.fullmatch(r"shot-turn-[0-9a-f]{16}", i["key"]) for i in items) and items[0]["key"] != items[1]["key"]
     assert items[0]["context"] == "Want me to set up Kafka for the events?" and items[1]["context"] == "Done, SQS it is."
     assert "a@b.com" not in items[0]["text"] and "[redacted]" in items[0]["text"]
     assert [i["at"] for i in items] == ["2026-10-20T12:05:00Z", "2026-10-20T13:30:00Z"]
@@ -58,7 +63,7 @@ def test_a_shown_time_later_than_the_screenshot_is_from_the_day_before():
 
 @pytest.fixture
 def fake_claude(monkeypatch):
-    calls = SimpleNamespace(reads=[], prompts=[], fail_reads=0)
+    calls = SimpleNamespace(reads=[], prompts=[], fail_reads=0, transcripts={})
 
     def run(args, input, cwd, env, **kwargs):
         assert env["RECORDER_CHILD"] == "1" and args[:2] == ["claude", "-p"]
@@ -71,11 +76,12 @@ def fake_claude(monkeypatch):
             if calls.fail_reads:
                 calls.fail_reads -= 1
                 raise subprocess.CalledProcessError(1, args)
-            return SimpleNamespace(stdout=json.dumps({"structured_output": TRANSCRIPT}))
+            transcript = calls.transcripts.get(image.read_bytes(), TRANSCRIPT)
+            return SimpleNamespace(stdout=json.dumps({"structured_output": transcript}))
         calls.prompts.append(input)
         items = [{"key": key, "topic": "Message Queue", "human_role": "explained_why", "actor": "human",
-                  "why": "because we already run everything on AWS" if key.endswith(":t1") else "because it is cheaper"}
-                 for key in re.findall(r"^key: (\S+)$", input, re.MULTILINE)]
+                  "why": "because we already run everything on AWS" if "AWS" in text else "because it is cheaper"}
+                 for key, text in re.findall(r"^key: (\S+)\n[^\n]*\nperson wrote: ([^\n]*)$", input, re.MULTILINE)]
         return SimpleNamespace(stdout=json.dumps({"structured_output": {"task": "pick a message queue", "items": items}}))
 
     monkeypatch.setattr(subprocess, "run", run)
@@ -98,6 +104,7 @@ def test_record_reads_each_image_once_by_content_hash(fake_claude, tmp_path):
     _image(shots, "b.webp", b"webp-two")
     _image(shots, "notes.txt", b"not an image")
     _image(shots, ".hidden.png", b"half written")
+    fake_claude.transcripts.update({b"webp-two": _variant("for billing"), b"jpeg-three": _variant("for payroll")})
     state, out = tmp_path / "state.json", tmp_path / "out.json"
 
     rows, done = screenshots.record(shots, "tristan", out, state_path=state)
@@ -107,19 +114,59 @@ def test_record_reads_each_image_once_by_content_hash(fake_claude, tmp_path):
     assert all("copilot chat screenshot" in p and "the assistant said before: Done, SQS it is." in p for p in fake_claude.prompts)
 
     assert json.loads(out.read_text()) == rows and len(rows) == 4
-    row = next(r for r in rows if r["id"].endswith(":t1"))
-    assert row == {
-        "id": row["source_id"] + ":t1", "person": "tristan", "topic": "message-queue", "source": "screenshot",
-        "source_id": row["source_id"], "at": "2026-10-01T12:05:00Z", "human_role": "explained_why",
+    first = sorted((r for r in rows if r["source_id"] == "shot-" + hashlib.sha256(b"png-one").hexdigest()[:12]), key=lambda r: r["at"])
+    assert [r["why"] for r in first] == ["because we already run everything on AWS", None]
+    assert first[0] == {
+        "id": first[0]["id"], "person": "tristan", "topic": "message-queue", "source": "screenshot",
+        "source_id": first[0]["source_id"], "at": "2026-10-01T12:05:00Z", "human_role": "explained_why",
         "why": "because we already run everything on AWS", "actor": "human", "task": "pick a message queue", "app": "copilot",
     }
-    assert re.fullmatch(r"shot-[0-9a-f]{12}", row["source_id"])
-    assert all(r["why"] is None for r in rows if r["id"].endswith(":t5"))
+    assert re.fullmatch(r"shot-turn-[0-9a-f]{16}", first[0]["id"])
 
     _image(shots, "c.jpeg", b"jpeg-three")
     rows, done = screenshots.record(shots, "tristan", out, state_path=state)
     assert done == 1 and len(fake_claude.reads) == 3 and len(rows) == 6
     assert screenshots.record(shots, "tristan", out, state_path=state)[1] == 0 and len(fake_claude.reads) == 3
+
+
+def test_a_retaken_or_overlapping_capture_does_not_duplicate_turns(fake_claude, tmp_path):
+    shots = tmp_path / "shots"
+    shots.mkdir()
+    _image(shots, "a.png", b"png-one")
+    _image(shots, "scrolled.png", b"png-scrolled")
+    # The scrolled capture starts at the human turn, so the assistant message before it is out of frame.
+    scrolled = TRANSCRIPT["turns"][1:] + [{"speaker": "human", "text": "Thanks, write the  terraform!", "time": None}]
+    fake_claude.transcripts[b"png-scrolled"] = {**TRANSCRIPT, "turns": scrolled}
+
+    rows, done = screenshots.record(shots, "tristan", tmp_path / "out.json", state_path=tmp_path / "state.json")
+    assert done == 2 and len(rows) == 2 and len({r["id"] for r in rows}) == 2
+
+    store = Store(tmp_path / "store.db")
+    store.upsert(rows, "tristan")
+    answer = who_knows("which message queue", store.rows(), datetime(2026, 10, 2, tzinfo=UTC))
+    [person] = answer["people"]
+    assert person["roles"] == {"explained_why": 2} and answer["human_reasoning"] == 2
+    assert [e["why"] for e in person["evidence"]] == ["because we already run everything on AWS"]
+
+    bob = screenshots.transcript_items(TRANSCRIPT["turns"], "ab" * 32, TAKEN, "bob")
+    assert {i["key"] for i in bob}.isdisjoint(r["id"] for r in rows)
+
+
+def test_an_unreadable_image_does_not_stop_the_scan(fake_claude, tmp_path, monkeypatch):
+    shots = tmp_path / "shots"
+    shots.mkdir()
+    _image(shots, "a.png", b"png-one")
+    _image(shots, "locked.png", b"png-locked")
+    read_bytes = Path.read_bytes
+
+    def locked(path):
+        if path.name == "locked.png":
+            raise PermissionError(13, "Permission denied", str(path))
+        return read_bytes(path)
+
+    monkeypatch.setattr(Path, "read_bytes", locked)
+    rows, done = screenshots.record(shots, "tristan", tmp_path / "out.json", state_path=tmp_path / "state.json")
+    assert done == 1 and len(rows) == 2 and [r["image"] for r in fake_claude.reads] == [b"png-one"]
 
 
 def test_a_failed_read_is_retried_on_the_next_run(fake_claude, tmp_path):

@@ -4,8 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=1920, height=1080" />
     <title>Who knows</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=IBM+Plex+Mono:wght@400;500&display=block"
+      rel="stylesheet"
+    />
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
     <style>
+      :root {
+        --dark: #0e1714;
+        --cream: #f3f0e5;
+        --forest: #063e33;
+        --green: #18a757;
+        --mint: #7ed3a6;
+        --gray: #565955;
+        --muted: #8e9893;
+        --ink2: #3a403c;
+        --amber: #e6a23c;
+        --mono: "IBM Plex Mono", ui-monospace, monospace;
+      }
       * {
         margin: 0;
         padding: 0;
@@ -16,355 +34,794 @@
         width: 1920px;
         height: 1080px;
         overflow: hidden;
-        background: #101318;
+        background: var(--dark);
       }
       #root {
         position: relative;
-        width: 100%;
-        height: 100%;
+        width: 1920px;
+        height: 1080px;
         overflow: hidden;
+        font-family: "Archivo", system-ui, sans-serif;
       }
-      .scene {
+      .layer {
         position: absolute;
         inset: 0;
         width: 1920px;
         height: 1080px;
         overflow: hidden;
-        background: #101318;
-        color: #f2eee5;
-        font-family: system-ui, sans-serif;
       }
-      .page {
+      #dark {
+        background: radial-gradient(ellipse 80% 70% at 50% 45%, #18251f 0%, #0e1714 62%, #0a100e 100%);
+      }
+      #cream {
+        background: radial-gradient(ellipse 80% 70% at 50% 42%, #f7f5ee 0%, #f3f0e5 55%, #e9e5d7 100%);
+        clip-path: inset(590px 0px 490px 0px);
+      }
+      .wall {
         position: absolute;
         inset: 0;
-        padding: 40px 110px 44px;
-        display: flex;
-        flex-direction: column;
+        transform-origin: 50% 50%;
       }
-      .human {
-        color: #ffc857;
+      .row {
+        position: absolute;
+        left: 0;
+        white-space: nowrap;
+        font-weight: 800;
+        font-stretch: 112%;
+        letter-spacing: 0.01em;
+        line-height: 1;
       }
-      .panel {
-        background: #1a1e26;
-        border: 2px solid #2c323d;
-        border-radius: 24px;
+      .row span {
+        display: inline-block;
+        margin-right: 1.5em;
+      }
+      .row .it {
+        font-style: italic;
+      }
+      #wall-dark .row {
+        color: var(--cream);
+      }
+      #wall-cream .row {
+        color: var(--dark);
       }
 
-      #nav {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+      .m {
+        display: inline-block;
+        overflow: hidden;
+        vertical-align: top;
+        padding: 0 0.03em 0.08em;
+        margin: 0 -0.03em -0.08em;
+      }
+      .w {
+        display: inline-block;
+      }
+      .dot {
+        color: var(--green);
+      }
+      #page .dot {
+        color: #138f4a;
+      }
+
+      #ha {
+        position: absolute;
+        left: 0;
+        top: 434px;
+        width: 1920px;
+        text-align: center;
+        font-weight: 900;
+        font-size: 124px;
+        line-height: 1.08;
+        letter-spacing: -0.03em;
+        color: var(--cream);
+      }
+      #ha-scrim {
+        position: absolute;
+        left: 160px;
+        top: 330px;
+        width: 1600px;
+        height: 400px;
+        background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(14, 23, 20, 0.92) 0%, rgba(14, 23, 20, 0.6) 55%, rgba(14, 23, 20, 0) 100%);
+      }
+      .rule {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 5px;
+        background: var(--green);
+      }
+
+      #page {
+        color: var(--dark);
       }
       #logo {
+        position: absolute;
+        left: 150px;
+        top: 48px;
         display: flex;
         align-items: center;
         gap: 14px;
-        font-size: 34px;
-        font-weight: 800;
-        letter-spacing: -0.01em;
+        font-weight: 900;
+        font-size: 30px;
+        letter-spacing: -0.015em;
       }
-      #logo-dot {
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: #ffc857;
+      #logo-node {
+        width: 18px;
+        height: 18px;
+        background: var(--green);
       }
-      #nav-right {
-        font-size: 22px;
-        color: #a9b0bc;
-      }
-
-      #hero {
-        margin-top: 28px;
-        display: flex;
-        gap: 72px;
-        align-items: flex-start;
-      }
-      #hero-copy {
-        width: 900px;
-        padding-top: 12px;
-      }
-      #eyebrow {
-        font-size: 22px;
-        font-weight: 700;
-        letter-spacing: 0.14em;
+      #top-right {
+        position: absolute;
+        right: 150px;
+        top: 58px;
+        font-family: var(--mono);
+        font-size: 15px;
+        letter-spacing: 0.2em;
         text-transform: uppercase;
-        color: #ffc857;
-        margin-bottom: 22px;
+        color: var(--gray);
       }
-      #tagline {
-        font-size: 66px;
-        font-weight: 800;
-        line-height: 1.05;
-        letter-spacing: -0.025em;
+      .hl {
+        position: absolute;
+        left: 150px;
+        width: 900px;
+        font-weight: 900;
+        font-size: 88px;
+        line-height: 1.02;
+        letter-spacing: -0.03em;
+      }
+      #h1 {
+        top: 122px;
+        white-space: nowrap;
+      }
+      #h2 {
+        top: 212px;
+        transform-origin: 0 0;
       }
       #problem {
-        margin-top: 22px;
-        font-size: 28px;
-        line-height: 1.35;
-        color: #a9b0bc;
+        position: absolute;
+        left: 150px;
+        top: 432px;
+        width: 840px;
+        font-size: 26px;
+        line-height: 1.46;
+        color: var(--ink2);
       }
-      #privacy {
-        margin-top: 30px;
-        display: inline-flex;
-        align-items: center;
-        gap: 14px;
-        font-size: 24px;
+      #problem b {
         font-weight: 600;
-        padding: 14px 24px;
-        border-radius: 999px;
-        border: 2px solid #ffc857;
-      }
-      #privacy-lock {
-        width: 14px;
-        height: 14px;
-        border-radius: 3px;
-        background: #ffc857;
+        color: var(--dark);
       }
 
-      #card-wrap {
-        width: 760px;
+      #chat {
+        position: absolute;
+        left: 1100px;
+        top: 122px;
+        width: 670px;
+        height: 500px;
+        color: var(--cream);
       }
-      #card {
-        padding: 28px 30px;
-        display: flex;
-        flex-direction: column;
-        gap: 22px;
+      #chat-fill {
+        position: absolute;
+        inset: 0;
+        background: var(--dark);
+        border-radius: 18px;
+        box-shadow:
+          0 40px 90px -40px rgba(14, 23, 20, 0.55),
+          0 8px 24px -12px rgba(14, 23, 20, 0.25);
       }
-      .msg {
-        display: flex;
-        gap: 16px;
+      #chat-outline {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
       }
-      .avatar {
-        flex: none;
-        width: 48px;
-        height: 48px;
-        border-radius: 10px;
+      #chat-outline rect {
+        fill: none;
+        stroke: var(--mint);
+        stroke-width: 2;
+        stroke-dasharray: 1;
+      }
+      #chat-inner {
+        position: absolute;
+        inset: 0;
+        padding: 0 34px;
+      }
+      #chat-head {
+        height: 58px;
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        font-weight: 800;
-        color: #101318;
+        gap: 8px;
+        border-bottom: 1px solid rgba(243, 240, 229, 0.1);
       }
-      .name {
-        font-size: 22px;
-        font-weight: 700;
+      #chat-head .sq {
+        width: 10px;
+        height: 10px;
+        border: 1.5px solid rgba(243, 240, 229, 0.35);
       }
-      .name span {
-        font-size: 17px;
-        font-weight: 500;
-        color: #8e9ab0;
-        margin-left: 8px;
+      .mono-label {
+        font-family: var(--mono);
+        font-size: 14px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
       }
-      .text {
-        margin-top: 4px;
-        font-size: 22px;
-        line-height: 1.4;
+      #chat-title {
+        margin-left: 14px;
+        color: var(--muted);
       }
-      .status {
+      #chat-mcp {
+        margin-left: auto;
         display: flex;
         align-items: center;
         gap: 10px;
+        color: var(--mint);
       }
-      .pill {
-        display: inline-block;
-        font-size: 18px;
-        font-weight: 800;
-        padding: 3px 14px;
-        border-radius: 999px;
-        color: #101318;
-        background: #ff8a3d;
+      .node-s {
+        width: 9px;
+        height: 9px;
+        background: var(--green);
       }
-      .quote {
-        margin: 10px 0 6px;
-        padding-left: 16px;
-        border-left: 4px solid #ffc857;
+      #q {
+        margin: 24px 0 0 auto;
+        width: fit-content;
+        max-width: 470px;
+        background: #1c2924;
+        border-radius: 16px 16px 4px 16px;
+        padding: 13px 20px;
+        font-size: 22px;
+        line-height: 1.36;
+      }
+      #tool {
+        margin-top: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--mint);
+      }
+      #tool span {
+        color: var(--muted);
+        letter-spacing: 0.08em;
+        text-transform: none;
+      }
+      #ans-row {
+        margin-top: 16px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
         font-size: 22px;
       }
-      .meta {
-        font-size: 18px;
-        font-style: italic;
-        color: #a9b0bc;
-      }
-      .counts {
-        margin-top: 10px;
-        font-size: 17px;
-        color: #8e9ab0;
-      }
-      .btn {
-        margin-top: 14px;
-        display: inline-block;
-        font-size: 19px;
+      #ans-row b {
         font-weight: 700;
-        padding: 8px 18px;
-        border-radius: 8px;
-        border: 2px solid #4a5263;
-        color: #f2eee5;
       }
-      #card-note {
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px 5px;
+        border: 1.5px solid var(--amber);
+        color: var(--amber);
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+      .pill i {
+        width: 8px;
+        height: 8px;
+        background: var(--amber);
+      }
+      #quote {
+        position: relative;
+        margin-top: 18px;
+        padding-left: 20px;
+        font-size: 24px;
+        line-height: 1.36;
+      }
+      #quote-bar {
+        position: absolute;
+        left: 0;
+        top: 4px;
+        bottom: 4px;
+        width: 3px;
+        background: var(--green);
+        transform-origin: 50% 0;
+      }
+      #meta {
         margin-top: 12px;
         font-size: 17px;
-        color: #8e9ab0;
-        text-align: right;
+        color: var(--muted);
+      }
+      #meta u {
+        color: var(--mint);
+        text-decoration-color: rgba(126, 211, 166, 0.45);
+        text-underline-offset: 4px;
+      }
+      #counts {
+        margin-top: 18px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .sqs {
+        display: flex;
+        gap: 4px;
+      }
+      .sqs i {
+        width: 12px;
+        height: 12px;
+        border: 1.5px solid rgba(243, 240, 229, 0.32);
+      }
+      .sqs i.h {
+        background: var(--green);
+        border-color: var(--green);
+      }
+      #counts-txt {
+        font-family: var(--mono);
+        font-size: 14px;
+        white-space: nowrap;
+        color: var(--muted);
+      }
+      #counts-txt em {
+        font-style: normal;
+        color: var(--mint);
+      }
+      #input {
+        position: absolute;
+        left: 34px;
+        right: 34px;
+        bottom: 22px;
+        height: 46px;
+        border: 1.5px solid rgba(243, 240, 229, 0.16);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 18px;
+      }
+      #input .bar {
+        height: 7px;
+        width: 150px;
+        background: rgba(243, 240, 229, 0.1);
+      }
+      #caret {
+        width: 3px;
+        height: 22px;
+        background: var(--green);
+      }
+      #chat-note {
+        position: absolute;
+        left: 1100px;
+        top: 636px;
+        font-family: var(--mono);
+        font-size: 14px;
+        letter-spacing: 0.03em;
+        color: var(--gray);
       }
 
       #steps {
-        margin-top: 30px;
-        display: flex;
-        gap: 32px;
+        position: absolute;
+        left: 150px;
+        top: 692px;
+        width: 1620px;
+        height: 250px;
+      }
+      #steps-line {
+        position: absolute;
+        left: 0;
+        top: 8px;
+        width: 1620px;
+        height: 2px;
+        background: var(--green);
+        transform-origin: 0 50%;
       }
       .step {
-        flex: 1;
-        padding: 26px 30px;
+        position: absolute;
+        top: 0;
+        width: 500px;
       }
-      .step-num {
+      #step-1 {
+        left: 0;
+      }
+      #step-2 {
+        left: 560px;
+      }
+      #step-3 {
+        left: 1120px;
+      }
+      .node {
+        position: relative;
+        width: 18px;
+        height: 18px;
+        border: 2px solid var(--forest);
+        background: var(--cream);
+      }
+      .node i {
+        position: absolute;
+        inset: 2px;
+        background: var(--green);
+      }
+      .label {
+        margin-top: 22px;
+        color: var(--gray);
+        font-size: 14px;
+      }
+      .title {
+        margin-top: 10px;
+        font-weight: 900;
+        font-size: 44px;
+        line-height: 1;
+        letter-spacing: -0.025em;
+      }
+      .body {
+        margin-top: 12px;
+        width: 485px;
         font-size: 20px;
-        font-weight: 700;
+        line-height: 1.42;
+        color: var(--ink2);
+      }
+      .viz {
+        margin-top: 16px;
+      }
+      .tags {
+        display: flex;
+        gap: 7px;
+      }
+      .tag {
+        padding: 5px 8px 4px;
+        border: 1.5px solid var(--dark);
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+      }
+      .tag.ai {
+        border-style: dashed;
+        border-color: rgba(86, 89, 85, 0.55);
+        color: var(--gray);
+        text-decoration: line-through;
+      }
+      .fade .sqs i {
+        width: 12px;
+        height: 12px;
+        border: none;
+        background: var(--green);
+      }
+      .fade .sqs {
+        gap: 4px;
+      }
+      .fade-ticks {
+        margin-top: 7px;
+        width: 476px;
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 12px;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: #ffc857;
+        color: var(--gray);
       }
-      .step-title {
-        margin-top: 8px;
-        font-size: 34px;
-        font-weight: 800;
+      .states {
+        display: flex;
+        gap: 8px;
       }
-      .step-text {
-        margin-top: 10px;
-        font-size: 21px;
-        line-height: 1.4;
-        color: #a9b0bc;
+      .st {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 9px 4px;
+        border: 1.5px solid transparent;
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        color: var(--ink2);
+        white-space: nowrap;
+      }
+      .st i {
+        width: 10px;
+        height: 10px;
+      }
+      .st.on {
+        border-color: var(--amber);
+        color: var(--dark);
+      }
+      .s-healthy {
+        background: var(--green);
+      }
+      .s-single {
+        background: var(--amber);
+      }
+      .s-fading {
+        background: rgba(24, 167, 87, 0.35);
+      }
+      .s-dark {
+        border: 1.5px solid var(--gray);
       }
 
-      #fit {
-        margin-top: auto;
+      #foot-rule {
+        position: absolute;
+        left: 150px;
+        top: 966px;
+        width: 1620px;
+        height: 1px;
+        background: rgba(14, 23, 20, 0.18);
+        transform-origin: 0 50%;
+      }
+      #closing {
+        position: absolute;
+        left: 150px;
+        top: 990px;
         display: flex;
         align-items: center;
-        gap: 36px;
-        padding-top: 20px;
-        border-top: 2px solid #2c323d;
+        gap: 14px;
+        font-size: 26px;
+        font-weight: 600;
+        letter-spacing: -0.005em;
       }
-      #fit-head {
-        width: 470px;
-        font-size: 24px;
-        font-weight: 700;
-        line-height: 1.3;
+      #closing i {
+        width: 12px;
+        height: 12px;
+        background: var(--green);
       }
-      .fit-item {
-        flex: 1;
-        font-size: 20px;
-        line-height: 1.4;
-        color: #a9b0bc;
-      }
-      .fit-item b {
-        display: block;
-        color: #f2eee5;
-        font-size: 21px;
+      #credit {
+        position: absolute;
+        right: 150px;
+        top: 997px;
+        font-family: var(--mono);
+        font-size: 15px;
+        letter-spacing: 0.04em;
+        color: var(--gray);
       }
     </style>
   </head>
   <body>
-    <div data-hf-id="hf-q73j" id="root" data-composition-id="root" data-start="0" data-duration="6" data-width="1920" data-height="1080">
-      <div data-hf-id="hf-eupu" id="landing" class="scene clip" data-start="0" data-duration="6" data-label="Landing page" data-track-index="1">
-        <main data-hf-id="hf-vhz5" class="page">
-          <header data-hf-id="hf-z17c" id="nav">
-            <div data-hf-id="hf-21i8" id="logo"><div data-hf-id="hf-3w32" id="logo-dot"></div>who knows</div>
-            <div data-hf-id="hf-58q6" id="nav-right">Tectonic Hackathon final · SD Worx track</div>
-          </header>
+    <div id="root" data-composition-id="root" data-start="0" data-duration="11.5" data-width="1920" data-height="1080">
+      <div id="dark" class="layer clip" data-start="0" data-duration="3.5" data-label="Dark scene" data-track-index="1">
+        <div id="wall-dark" class="wall" data-layout-ignore></div>
+        <div id="ha-scrim"></div>
+        <div id="ha" data-layout-allow-overflow>
+          <span class="m"><span class="w">Your</span></span>
+          <span class="m"><span class="w">AI</span></span>
+          <span class="m"><span class="w">can</span></span>
+          <span class="m"><span class="w">answer<span class="dot">.</span></span></span>
+        </div>
+      </div>
 
-          <section data-hf-id="hf-e3hp" id="hero">
-            <div data-hf-id="hf-vp5h" id="hero-copy">
-              <div data-hf-id="hf-ucru" id="eyebrow">Knowledge your AI didn't write</div>
-              <h1 data-hf-id="hf-pezc" id="tagline">Your AI can answer.<br data-hf-id="hf-x5px" /><span data-hf-id="hf-nps6" class="human">We show who still understands.</span></h1>
-              <p data-hf-id="hf-63zb" id="problem">
-                When work runs through Claude and copilots, documents and AI answers no longer tell you who
-                understands something. Who knows counts only what a person decided, corrected or explained.
-                AI-written text never counts as knowledge.
-              </p>
-              <div data-hf-id="hf-f2w5" id="privacy"><div data-hf-id="hf-a7ch" id="privacy-lock"></div>Stores no session text, only the sentence you approve.</div>
-            </div>
+      <div id="cream" class="layer clip" data-start="0" data-duration="11.5" data-label="Cream band" data-track-index="2">
+        <div id="wall-cream" class="wall" data-layout-ignore></div>
+      </div>
 
-            <div data-hf-id="hf-yty8" id="card-wrap">
-              <div data-hf-id="hf-5dve" id="card" class="panel">
-                <div data-hf-id="hf-rzw8" id="msg-ask" class="msg">
-                  <div data-hf-id="hf-zvox" class="avatar" style="background: #8e9ab0">T</div>
-                  <div data-hf-id="hf-yeow">
-                    <div data-hf-id="hf-2sa6" class="name">Tristan <span data-hf-id="hf-gchq">16:02</span></div>
-                    <div data-hf-id="hf-b7cd" class="text">@whoknows set up the aikido security scan</div>
-                  </div>
-                </div>
-                <div data-hf-id="hf-tycz" id="msg-answer" class="msg">
-                  <div data-hf-id="hf-td6s" class="avatar" style="background: #ffc857">W</div>
-                  <div data-hf-id="hf-y7yw">
-                    <div data-hf-id="hf-hhqh" class="name">whoknows <span data-hf-id="hf-thz8">APP · 16:02</span></div>
-                    <div data-hf-id="hf-3u6r" class="text status"><span data-hf-id="hf-cwye" class="pill">single point</span> Only Wout really knows this.</div>
-                    <div data-hf-id="hf-o201" class="text"><b data-hf-id="hf-u2nu">Wout</b> · last reasoned 19 days ago · 2× decided, 1× explained why</div>
-                    <div data-hf-id="hf-94zq" class="quote">"so someone who checks our screenshots sees how we used Aikido"</div>
-                    <div data-hf-id="hf-gndm" class="meta">Their own words, in the Claude session "Set up the Aikido security scan" on 30 Sep.</div>
-                    <div data-hf-id="hf-se0m" class="counts">3 similar Claude sessions · Claude alone 12 · human reasoning 4</div>
-                    <div data-hf-id="hf-ljt2" id="ask-btn" class="btn">Ask Wout</div>
-                  </div>
-                </div>
-              </div>
-              <div data-hf-id="hf-3ldu" id="card-note">Illustration. Names and numbers are examples.</div>
-            </div>
-          </section>
+      <div id="rules" class="layer clip" data-start="0" data-duration="3.6" data-label="Rules" data-track-index="3">
+        <div id="rule-top" class="rule"></div>
+        <div id="rule-bottom" class="rule"></div>
+      </div>
 
-          <section data-hf-id="hf-ckyi" id="steps">
-            <div data-hf-id="hf-bore" id="step-1" class="step panel">
-              <div data-hf-id="hf-uexi" class="step-num">1 · Record</div>
-              <div data-hf-id="hf-ixtw" class="step-title">Every Claude session</div>
-              <div data-hf-id="hf-p9zl" class="step-text">
-                Each human turn becomes decided, corrected Claude, explained why, or accepted as is. Raw sessions
-                stay on the laptop. Only scrubbed rows leave it.
-              </div>
-            </div>
-            <div data-hf-id="hf-7qnd" id="step-2" class="step panel">
-              <div data-hf-id="hf-i0q5" class="step-num">2 · Store</div>
-              <div data-hf-id="hf-guyx" class="step-title">One central store</div>
-              <div data-hf-id="hf-m5h8" class="step-text">
-                Person × task × their own words. Only human reasoning counts, and it fades over 90 days unless
-                someone reasons about it again.
-              </div>
-            </div>
-            <div data-hf-id="hf-6yzk" id="step-3" class="step panel">
-              <div data-hf-id="hf-eecq" class="step-num">3 · Ask</div>
-              <div data-hf-id="hf-rld7" class="step-title">Ask in Slack</div>
-              <div data-hf-id="hf-hvuy" class="step-text">
-                The bot names the person, quotes their why, links the session and says healthy, single point,
-                fading or dark. "Ask Wout" DMs them the question with their earlier reasoning.
-              </div>
-            </div>
-          </section>
+      <div id="page" class="layer clip" data-start="0" data-duration="11.5" data-label="Page" data-track-index="4">
+        <div id="logo"><div id="logo-node"></div>who knows</div>
+        <div id="top-right">Claude · Copilot · MCP</div>
 
-          <footer data-hf-id="hf-t3sg" id="fit">
-            <div data-hf-id="hf-en4c" id="fit-head">Built for SD Worx's finals case: knowledge stays trusted without extra work.</div>
-            <div data-hf-id="hf-rbcx" id="fit-1" class="fit-item"><b data-hf-id="hf-rrac">Automatic</b>Capture runs on sessions people already have.</div>
-            <div data-hf-id="hf-8ncx" id="fit-2" class="fit-item"><b data-hf-id="hf-l2o4">Human where it matters</b>A colleague answers only when the bot finds a gap.</div>
-            <div data-hf-id="hf-q2eq" id="fit-3" class="fit-item"><b data-hf-id="hf-7udo">Where people work</b>Slack today, Teams next.</div>
-          </footer>
-        </main>
+        <div id="h1" class="hl" data-layout-allow-overflow>
+          <span class="m"><span class="w">Your</span></span>
+          <span class="m"><span class="w">AI</span></span>
+          <span class="m"><span class="w">can</span></span>
+          <span class="m"><span class="w">answer<span class="dot">.</span></span></span>
+        </div>
+        <div id="h2" class="hl" data-layout-allow-overflow>
+          <span class="m"><span class="w">We</span></span>
+          <span class="m"><span class="w">show</span></span>
+          <span class="m"><span class="w">who</span></span>
+          <span class="m"><span class="w">still</span></span>
+          <span class="m"><span class="w">understands<span class="dot">.</span></span></span>
+        </div>
+
+        <p id="problem">
+          When work runs through Claude and Copilot, nobody can tell who still understands it. Who knows counts only
+          what a person <b>decided, corrected or explained</b>. AI-written text never counts as knowledge.
+        </p>
+
+        <div id="chat">
+          <div id="chat-fill"></div>
+          <svg id="chat-outline" viewBox="0 0 670 500" preserveAspectRatio="none">
+            <rect x="0" y="0" width="670" height="500" rx="18" pathLength="1" />
+          </svg>
+          <div id="chat-inner">
+            <div id="chat-head">
+              <div class="sq"></div>
+              <div class="sq"></div>
+              <div class="sq"></div>
+              <div id="chat-title" class="mono-label">Assistant</div>
+              <div id="chat-mcp" class="mono-label"><div class="node-s"></div>who knows · MCP</div>
+            </div>
+            <div id="q">Who knows how to set up the aikido security scan?</div>
+            <div id="tool" class="mono-label"><div class="node-s"></div>who_knows.ask <span>called over MCP</span></div>
+            <div id="ans-row">
+              <div class="pill"><i></i>single point</div>
+              <div id="ans-who"><b>Wout</b> · last reasoned 19 days ago</div>
+            </div>
+            <div id="quote">
+              <div id="quote-bar"></div>
+              <div id="quote-txt">“so someone who checks our screenshots sees how we used Aikido”</div>
+            </div>
+            <div id="meta">Their own words, in <u>a Claude session on 30 Sep</u></div>
+            <div id="counts">
+              <div class="sqs" id="count-sqs">
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                <i class="h"></i><i class="h"></i><i class="h"></i><i class="h"></i>
+              </div>
+              <div id="counts-txt">Claude alone 12 · <em>human reasoning 4</em></div>
+            </div>
+            <div id="input"><div class="bar"></div><div id="caret"></div></div>
+          </div>
+        </div>
+        <div id="chat-note">Illustration. Names and numbers are examples.</div>
+
+        <div id="steps">
+          <div id="steps-line"></div>
+          <div id="step-1" class="step">
+            <div class="node"><i></i></div>
+            <div class="label mono-label">01 · Per human turn</div>
+            <div class="title">Record<span class="dot">.</span></div>
+            <p class="body">Reads every Claude and Copilot conversation and sorts each human turn into one of four.</p>
+            <div class="viz tags">
+              <span class="tag">decided</span>
+              <span class="tag">corrected the AI</span>
+              <span class="tag">explained why</span>
+              <span class="tag ai">accepted as is</span>
+            </div>
+          </div>
+          <div id="step-2" class="step">
+            <div class="node"><i></i></div>
+            <div class="label mono-label">02 · One central store</div>
+            <div class="title">Store<span class="dot">.</span></div>
+            <p class="body">Keeps person, task and their own words. Only human reasoning counts, and it fades over 90 days.</p>
+            <div class="viz fade">
+              <div class="sqs" id="fade-sqs"></div>
+              <div class="fade-ticks"><span>Day 0</span><span>Day 45</span><span>Day 90</span></div>
+            </div>
+          </div>
+          <div id="step-3" class="step">
+            <div class="node"><i></i></div>
+            <div class="label mono-label">03 · From any assistant</div>
+            <div class="title">Ask<span class="dot">.</span></div>
+            <p class="body">Asks over MCP and returns the person, their own words, the source conversation and a status.</p>
+            <div class="viz states">
+              <span class="st"><i class="s-healthy"></i>healthy</span>
+              <span class="st on"><i class="s-single"></i>single point</span>
+              <span class="st"><i class="s-fading"></i>fading</span>
+              <span class="st"><i class="s-dark"></i>dark</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="foot-rule"></div>
+        <div id="closing"><i></i>Raw conversations never leave the laptop. Only scrubbed rows do.</div>
+        <div id="credit">Tectonic Hackathon final · SD Worx track</div>
       </div>
     </div>
 
     <script>
+      const WORDS = ["DECIDED", "CORRECTED THE AI", "EXPLAINED WHY", "ACCEPTED AS IS"];
+      const ROWS = [
+        { y: 30, size: 34, op: 0.1, dir: -1, speed: 70 },
+        { y: 128, size: 36, op: 0.17, dir: 1, speed: 92 },
+        { y: 228, size: 38, op: 0.12, dir: -1, speed: 60 },
+        { y: 330, size: 40, op: 0.2, dir: 1, speed: 82 },
+        { y: 446, size: 42, op: 0.08, dir: -1, speed: 70 },
+        { y: 565, size: 44, op: 0.1, dir: 1, speed: 86 },
+        { y: 680, size: 46, op: 0.22, dir: -1, speed: 64 },
+        { y: 800, size: 50, op: 0.16, dir: 1, speed: 90 },
+        { y: 932, size: 56, op: 0.26, dir: -1, speed: 74 },
+      ];
+      const SCROLL = 6.6;
+
+      for (const wall of ["wall-dark", "wall-cream"]) {
+        const el = document.getElementById(wall);
+        ROWS.forEach((r, i) => {
+          const row = document.createElement("div");
+          row.className = `row row-${i}`;
+          row.style.top = `${r.y}px`;
+          row.style.fontSize = `${r.size}px`;
+          row.style.opacity = wall === "wall-dark" ? r.op : Math.min(1, r.op * 3.2);
+          for (let k = 0; k < 14; k++) {
+            const idx = (k + i) % 4;
+            const s = document.createElement("span");
+            s.textContent = WORDS[idx];
+            s.className = (idx === 3 ? "w-ai" : "w-human") + ((k * 3 + i) % 5 === 0 ? " it" : "");
+            row.appendChild(s);
+          }
+          el.appendChild(row);
+        });
+      }
+
+      const fade = document.getElementById("fade-sqs");
+      for (let i = 0; i < 30; i++) {
+        const s = document.createElement("i");
+        s.style.opacity = (1 - (i / 29) * 0.92).toFixed(3);
+        fade.appendChild(s);
+      }
+
       window.__timelines = window.__timelines || {};
-
-      const rise = { opacity: 0, y: 30, duration: 0.6, ease: "power3.out" };
       const tl = gsap.timeline({ paused: true });
-      tl.to({}, { duration: 6 }, 0);
+      tl.to({}, { duration: 11.5 }, 0);
 
-      tl.from("#nav", { opacity: 0, duration: 0.5 }, 0)
-        .from("#eyebrow", rise, 0.2)
-        .from("#tagline", rise, 0.35)
-        .from("#problem", rise, 0.7)
-        .from("#privacy", rise, 0.95)
-        .from("#msg-ask", { opacity: 0, x: 40, duration: 0.6, ease: "power3.out" }, 1.2)
-        .from("#msg-answer", { opacity: 0, x: 40, duration: 0.6, ease: "power3.out" }, 1.9)
-        .from("#card-note", { opacity: 0, duration: 0.4 }, 2.4)
-        .from(["#step-1", "#step-2", "#step-3"], { ...rise, stagger: 0.15 }, 2.6)
-        .from(["#fit-head", "#fit-1", "#fit-2", "#fit-3"], { ...rise, stagger: 0.1 }, 3.2);
+      // Scene A: word wall on dark, headline lands, underline appears.
+      ROWS.forEach((r, i) => {
+        const start = r.dir < 0 ? -120 - i * 37 : -900 - i * 41;
+        tl.fromTo(`.row-${i}`, { x: start }, { x: start + r.dir * r.speed * SCROLL, duration: SCROLL, ease: "none" }, 0);
+      });
+      tl.from("#wall-dark", { opacity: 0, duration: 0.6, ease: "power1.out" }, 0);
+      tl.from("#ha .w", { yPercent: 110, duration: 0.7, ease: "power3.out", stagger: 0.08 }, 0.25);
+      gsap.set(".rule", { y: 588, scaleX: 0 });
+      tl.to(".rule", { scaleX: 0.034, duration: 0.4, ease: "power2.out" }, 1.05);
+
+      // Underline grows into a rule, then opens a band that wipes dark to cream.
+      tl.to(".rule", { scaleX: 1, duration: 0.45, ease: "power2.inOut" }, 2.2);
+      tl.to("#ha .w", { yPercent: -110, duration: 0.35, ease: "power2.in", stagger: 0.04 }, 2.45);
+      tl.to("#ha-scrim", { opacity: 0, duration: 0.4 }, 2.5);
+      tl.set("#ha", { autoAlpha: 0 }, 2.92);
+      gsap.set(["#h1", "#h2"], { autoAlpha: 0 });
+      tl.set("#h2", { autoAlpha: 1 }, 3.59);
+      tl.set("#h1", { autoAlpha: 1 }, 6.19);
+      tl.fromTo(
+        "#cream",
+        { clipPath: "inset(590px 0px 490px 0px)" },
+        { clipPath: "inset(0px 0px 0px 0px)", duration: 0.8, ease: "power2.inOut" },
+        2.6,
+      );
+      tl.to("#rule-top", { y: -5, duration: 0.8, ease: "power2.inOut" }, 2.6);
+      tl.to("#rule-bottom", { y: 1080, duration: 0.8, ease: "power2.inOut" }, 2.6);
+      tl.to(".rule", { opacity: 0, duration: 0.25 }, 3.3);
+
+      // In the cream band only human reasoning stays.
+      tl.to("#wall-cream .w-ai", { opacity: 0.1, duration: 0.45, ease: "power1.out" }, 2.95);
+      tl.to("#wall-cream .w-human", { color: "#18A757", duration: 0.45, ease: "power1.out" }, 3.05);
+
+      // Scene B: rows recede, the second headline lands big and centred.
+      tl.to("#wall-cream", { opacity: 0.32, scale: 0.97, duration: 0.9, ease: "power2.out" }, 3.45);
+      const H2_FROM = { x: 224, y: 193, scale: 1.5 };
+      gsap.set("#h2", H2_FROM);
+      tl.from("#h2 .w", { yPercent: 110, duration: 0.7, ease: "power3.out", stagger: 0.07 }, 3.6);
+
+      // Scene B becomes the page: the headline settles into the hero.
+      tl.to("#wall-cream", { opacity: 0, duration: 0.6, ease: "power1.in" }, 5.8);
+      tl.to("#h2", { x: 0, y: 0, scale: 1, duration: 0.9, ease: "power3.inOut" }, 5.8);
+      tl.to("#h2 .w", { color: "#063E33", duration: 0.6, ease: "power1.inOut" }, 6.0);
+      tl.from("#h1 .w", { yPercent: 110, duration: 0.6, ease: "power3.out", stagger: 0.06 }, 6.2);
+      tl.from("#logo-node", { scale: 0, duration: 0.4, ease: "back.out(2)" }, 6.3);
+      tl.from(["#logo", "#top-right"], { opacity: 0, duration: 0.5, ease: "power1.out" }, 6.35);
+      tl.from("#problem", { opacity: 0, y: 24, duration: 0.6, ease: "power3.out" }, 6.5);
+
+      // Assistant window draws on, then fills.
+      tl.fromTo("#chat-outline rect", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.75, ease: "power2.inOut" }, 6.5);
+      tl.from("#chat-fill", { opacity: 0, duration: 0.35, ease: "power1.out" }, 7.05);
+      tl.to("#chat-outline", { opacity: 0.35, duration: 0.4 }, 7.2);
+      tl.from("#chat-head", { opacity: 0, duration: 0.35 }, 7.15);
+      tl.from("#q", { opacity: 0, x: 40, duration: 0.45, ease: "power3.out" }, 7.25);
+      tl.from("#tool", { opacity: 0, x: -16, duration: 0.35, ease: "power2.out" }, 7.6);
+      tl.from(".pill", { opacity: 0, scale: 0.6, duration: 0.4, ease: "back.out(2.2)" }, 7.8);
+      tl.from("#ans-who", { opacity: 0, x: -12, duration: 0.4, ease: "power2.out" }, 7.88);
+      tl.from("#quote-bar", { scaleY: 0, duration: 0.4, ease: "power2.out" }, 7.96);
+      tl.from("#quote-txt", { opacity: 0, y: 12, duration: 0.45, ease: "power2.out" }, 8.04);
+      tl.from("#meta", { opacity: 0, duration: 0.35 }, 8.16);
+      tl.from("#count-sqs i", { opacity: 0, scale: 0.4, duration: 0.2, ease: "power2.out", stagger: 0.03 }, 8.24);
+      tl.from("#counts-txt", { opacity: 0, duration: 0.35 }, 8.7);
+      tl.from("#input", { opacity: 0, duration: 0.35 }, 8.75);
+      tl.from("#chat-note", { opacity: 0, duration: 0.4 }, 8.85);
+
+      // Steps: a green connector draws through three nodes.
+      const STEPS_AT = 7.9;
+      tl.from("#steps-line", { scaleX: 0, duration: 1.2, ease: "power1.inOut" }, STEPS_AT);
+      [0, 0.5, 0.73].forEach((dt, i) => {
+        const s = `#step-${i + 1}`;
+        const t = STEPS_AT + dt;
+        tl.from(`${s} .node`, { scale: 0, duration: 0.3, ease: "back.out(2.5)" }, t);
+        tl.from(`${s} .node i`, { scale: 0, duration: 0.25, ease: "power2.out" }, t + 0.12);
+        tl.from([`${s} .label`, `${s} .title`, `${s} .body`, `${s} .viz`], { opacity: 0, y: 18, duration: 0.5, ease: "power3.out", stagger: 0.08 }, t + 0.06);
+      });
+
+      tl.from("#foot-rule", { scaleX: 0, duration: 0.6, ease: "power2.inOut" }, 9.3);
+      tl.from("#closing", { opacity: 0, y: 14, duration: 0.5, ease: "power3.out" }, 9.45);
+      tl.from("#credit", { opacity: 0, duration: 0.5 }, 9.6);
+
+      [9.4, 9.9, 10.4, 10.9].forEach((t, i) => tl.set("#caret", { opacity: i % 2 === 0 ? 0 : 1 }, t));
 
       window.__timelines["root"] = tl;
     </script>

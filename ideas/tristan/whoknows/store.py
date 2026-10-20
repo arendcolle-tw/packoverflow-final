@@ -80,6 +80,10 @@ class Store:
             self._db.execute("INSERT INTO members VALUES (?, ?)", (token, person))
         return token
 
+    def revoke(self, person: str) -> int:
+        with self._lock, self._db:
+            return self._db.execute("DELETE FROM members WHERE person = ?", (person,)).rowcount
+
     def person_for(self, token: str) -> str | None:
         with self._lock:
             found = self._db.execute("SELECT person FROM members WHERE token = ?", (token,)).fetchone()
@@ -87,11 +91,13 @@ class Store:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Create an access token for one person.")
+    parser = argparse.ArgumentParser(description="Create an access token for one person, or revoke all of theirs.")
     parser.add_argument("person")
     parser.add_argument("--db", type=Path, default=DEFAULT_DB)
+    parser.add_argument("--revoke", action="store_true", help="delete every token of this person")
     args = parser.parse_args()
-    print(Store(args.db).add_member(" ".join(args.person.split()).lower()))
+    person, store = " ".join(args.person.split()).lower(), Store(args.db)
+    print(f"revoked {store.revoke(person)} tokens of {person}" if args.revoke else store.add_member(person))
 
 
 if __name__ == "__main__":

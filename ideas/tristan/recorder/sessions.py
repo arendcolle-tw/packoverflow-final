@@ -7,6 +7,9 @@ PASTED = re.compile(r"<pasted_content\b[^>]*>.*?</pasted_content>", re.DOTALL)
 SECRETS = re.compile(
     r"sk-[A-Za-z0-9_-]{10,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_\w{20,}|glpat-[\w-]{20,}"
     r"|xox[a-z]-[A-Za-z0-9-]+|xapp-[A-Za-z0-9-]+|AKIA[0-9A-Z]{16}|AIza[\w-]{35}|hooks\.slack\.com/services/\S+"
+    r"|eyJ[\w-]{8,}\.[\w-]{8,}\.[\w-]{8,}|[rs]k_(?:live|test)_\w{10,}|(?i:bearer)\s+[\w.~+/=-]{16,}"
+    r"|(?i:password|passwd|pwd|secret|api[_-]?key|access[_-]?key|token)\w*\s*[=:]\s*\S+"
+    r"|ATATT[\w-]{20,}|npm_\w{30,}|hf_\w{30,}|ya29\.[\w-]+"
     r"|wk_[\w-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(?:-----END [A-Z ]*PRIVATE KEY-----|\Z)"
     r"|(?<=://)[^\s:/@]+:[^\s@/]+(?=@)"
     r"|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"

@@ -1,5 +1,7 @@
 import asyncio
+import logging
 import os
+import re
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -15,9 +17,19 @@ from whoknows.store import DEFAULT_DB, Store
 
 DATA = Path(__file__).resolve().parent.parent / "data"
 MAX_BODY = 4_000_000
+PERSONAL_URL = re.compile(r"/u/[^/]+/")
 FIXED_NOW = parse_at(os.environ["WHOKNOWS_NOW"]) if os.environ.get("WHOKNOWS_NOW") else None
 store = Store(Path(os.environ.get("WHOKNOWS_DB", DEFAULT_DB)))
 mcp = MemberMCP(store, FIXED_NOW)
+
+
+def hide_token(record: logging.LogRecord) -> bool:
+    # uvicorn's access log line holds the request path, and /u/<token>/mcp puts a member token in it.
+    record.args = tuple(PERSONAL_URL.sub("/u/***/", a) if isinstance(a, str) else a for a in record.args or ())
+    return True
+
+
+logging.getLogger("uvicorn.access").addFilter(hide_token)
 
 
 def member(authorization: str = Header("")) -> str:

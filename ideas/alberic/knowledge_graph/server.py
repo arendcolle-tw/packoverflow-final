@@ -9,6 +9,7 @@ import hmac
 import json
 import os
 import sys
+import tempfile
 import threading
 from datetime import datetime
 from pathlib import Path
@@ -60,7 +61,7 @@ def _make_mirror() -> tuple[object | None, str]:
 
 
 def make_graph() -> tuple[KnowledgeGraph, str]:
-    data_dir = Path(os.environ.get("KG_DATA_DIR") or ("/tmp/kg" if ON_CLOUD_RUN else HERE / "data"))
+    data_dir = Path(os.environ.get("KG_DATA_DIR") or (str(Path(tempfile.gettempdir()) / "kg") if ON_CLOUD_RUN else HERE / "data"))
     mirror, storage = _make_mirror()
     return KnowledgeGraph(data_dir / "graph.sqlite", seed_paths=[SEED] if SEED.exists() else [], mirror=mirror), storage
 

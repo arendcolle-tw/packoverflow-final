@@ -32,7 +32,7 @@ def person_for_email(email: str) -> str | None:
 
 
 def _id(kind: str, key: str) -> str:
-    return "g" + hashlib.sha1(f"{kind}:{key}".encode()).hexdigest()[:12]
+    return "g" + hashlib.sha1(f"{kind}:{key}".encode(), usedforsecurity=False).hexdigest()[:12]
 
 
 def _words(topic: str) -> str:

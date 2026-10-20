@@ -16,8 +16,8 @@ const voice = require("./voice");
 // Story wording in one place, so the headline and demo role are easy to flip.
 const HEADLINE = "Claude can tell you what. Your colleagues know why.";
 const ROLE = "You just inherited a payroll client portfolio. Before you trust the agent, find who still understands the work.";
-const ASK_DEFAULT = "Who knows how our Aikido scan was set up?";
-const ASK_EXAMPLES = [ASK_DEFAULT, "Why did we narrow the idea scope?", "How was the GitHub repo set up?"];
+const ASK_DEFAULT = "How was the GitHub repo set up?";
+const ASK_EXAMPLES = [ASK_DEFAULT, "Why did we narrow the idea scope?", "Who knows how our Aikido scan was set up?"];
 
 const TYPES = {
   ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript",
@@ -63,7 +63,7 @@ function simplePage() {
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PackOverflow</title>
+<title>Nobikos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/theme.css">
@@ -97,7 +97,7 @@ ${voice.STYLE}
   .more { color: var(--muted); font-size: 0.9rem; }
 </style></head>
 <body><main>
-  <h1>PackOverflow</h1>
+  <h1>Nobikos</h1>
   <p class="tag">Ask who knows. Get the person and the reason in their own words, straight from the work they already do.</p>
 
   <section class="glass step">
@@ -146,7 +146,7 @@ ${voice.SECTION}
 
   fetch("/api/feed").then((r) => r.json()).then((f) => {
     document.getElementById("feed").innerHTML = sample(f.live, "No data") +
-      '<div class="stats"><div><b>' + f.rows + '</b><span>rows</span></div><div><b>' + f.sessions + '</b><span>sessions</span></div><div><b>' + f.topics + '</b><span>topics</span></div><div><b>' + f.people + '</b><span>people</span></div></div>' +
+      '<div class="stats"><div><b>' + f.rows + '</b><span>' + (f.rows === 1 ? "row" : "rows") + '</span></div><div><b>' + f.sessions + '</b><span>' + (f.sessions === 1 ? "session" : "sessions") + '</span></div><div><b>' + f.topics + '</b><span>' + (f.topics === 1 ? "topic" : "topics") + '</span></div><div><b>' + f.people + '</b><span>' + (f.people === 1 ? "person" : "people") + '</span></div></div>' +
       f.latest.map((r) => '<div class="row">' + h(r.topic) + ' · ' + h(r.source) + ' · ' + h(r.role) + ' · ' + h(ago(r.at)) + '<q>' + h(r.why) + '</q></div>').join("");
   }).catch(() => { document.getElementById("feed").textContent = "Could not load."; });
 
@@ -174,7 +174,7 @@ function page() {
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PackOverflow</title>
+<title>Nobikos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/theme.css">
@@ -239,7 +239,7 @@ ${voice.STYLE}
 <body>
 <header>
   <div class="kicker">Tectonic Hackathon final · SD Worx track</div>
-  <h1>Pack<span class="grad-human">Overflow</span></h1>
+  <h1>Nobi<span class="grad-human">kos</span></h1>
   <p class="tag">${esc(HEADLINE)}</p>
   <nav class="glass" role="tablist">
     <button role="tab" data-tab="call" aria-selected="true">Call</button>

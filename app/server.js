@@ -40,7 +40,42 @@ function videoBlock() {
   return `<iframe class="frame" src="${esc(VIDEO_URL)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
 }
 
+// The pitch deck as images (app/slides/slide-NN.jpg, rendered from Nobikos.pdf), so it works on phones too.
+function slideViewer() {
+  const files = fs.existsSync(SLIDES_DIR) ? fs.readdirSync(SLIDES_DIR).filter((f) => /^slide-\d+\.jpg$/.test(f)).sort() : [];
+  if (!files.length) return "";
+  const dl = ["Nobikos.pdf", "Nobikos.pptx"].filter((f) => fs.existsSync(path.join(SLIDES_DIR, f)));
+  return `<div class="deck">
+    <img id="slideimg" src="/slides/${files[0]}" alt="Slide 1" width="1600" height="900">
+    <div class="deckbar">
+      <button class="btn ghost" id="prev" aria-label="Previous slide">&larr;</button>
+      <span id="slideno">1 / ${files.length}</span>
+      <button class="btn ghost" id="next" aria-label="Next slide">&rarr;</button>
+      <span class="hint">${dl.map((f) => `<a href="/slides/${f}" download>${f.endsWith(".pdf") ? "Download PDF" : "Download PowerPoint"}</a>`).join(" · ")}</span>
+    </div>
+  </div>
+  <script>
+  (function () {
+    const files = ${JSON.stringify(files)};
+    let i = 0;
+    const img = document.getElementById("slideimg"), no = document.getElementById("slideno");
+    files.forEach((f) => { const im = new Image(); im.src = "/slides/" + f; });
+    function go(k) { i = Math.max(0, Math.min(files.length - 1, k)); img.src = "/slides/" + files[i]; img.alt = "Slide " + (i + 1); no.textContent = (i + 1) + " / " + files.length; }
+    document.getElementById("prev").addEventListener("click", () => go(i - 1));
+    document.getElementById("next").addEventListener("click", () => go(i + 1));
+    img.addEventListener("click", (e) => go(e.offsetX > img.clientWidth / 3 ? i + 1 : i - 1));
+    addEventListener("keydown", (e) => {
+      if (document.getElementById("deck").hidden) return;
+      if (["ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); go(i + 1); }
+      if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); go(i - 1); }
+    });
+  })();
+  </script>`;
+}
+
 function slidesBlock() {
+  const viewer = slideViewer();
+  if (viewer) return viewer;
   if (fs.existsSync(path.join(SLIDES_DIR, "deck.pdf"))) {
     return `<iframe class="frame" src="/slides/deck.pdf" title="Pitch deck"></iframe>
       <p class="hint"><a href="/slides/deck.pdf" target="_blank">Open the deck full screen</a>${fs.existsSync(path.join(SLIDES_DIR, "deck.pptx")) ? ` · <a href="/slides/deck.pptx">Download PowerPoint</a>` : ""}</p>`;
@@ -142,6 +177,10 @@ function callPage() {
   .close { font: 800 1.6rem var(--display); margin-top: 32px; }
   .empty { text-align: center; padding: 80px 16px; border: 2px dashed var(--glass-line); border-radius: 18px; }
   .empty p, .hint { color: var(--muted); }
+  .deck img { width: 100%; height: auto; border-radius: 12px; display: block; cursor: pointer; background: #000; }
+  .deckbar { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+  .deckbar button { cursor: pointer; font: inherit; font-weight: 600; padding: 8px 18px; }
+  .deckbar .hint { margin-left: auto; }
 ${voice.STYLE}
 </style></head>
 <body><main>

@@ -164,9 +164,18 @@ def post_why(answer: WhyAnswer, authorization: str = Header("")) -> Response:
     return Response(status_code=204)
 
 
+HOST = re.compile(r"^[A-Za-z0-9.-]+(:\d{1,5})?$")
+
+
 def _base(request: Request) -> str:
+    # KC_PUBLIC_URL pins the links; otherwise the request's own host, checked so a forged header cannot inject markup.
+    if os.environ.get("KC_PUBLIC_URL"):
+        return os.environ["KC_PUBLIC_URL"].rstrip("/")
     scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
-    return f"{scheme}://{request.headers.get('host', request.url.netloc)}"
+    host = request.headers.get("host", request.url.netloc)
+    if scheme not in ("http", "https") or not HOST.match(host):
+        raise HTTPException(status_code=400, detail="Bad host")
+    return f"{scheme}://{host}"
 
 
 def _links(url: str) -> dict:

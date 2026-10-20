@@ -34,7 +34,7 @@ def hook(event: dict) -> None:
     if not config or not transcript or not any(config["match"] in str(event.get(k) or "") for k in ("cwd", "transcript_path")):
         return
     LOG.parent.mkdir(parents=True, exist_ok=True)
-    with open(LOG, "a") as log:
+    with open(LOG, "a", encoding="utf-8") as log:
         subprocess.Popen(
             [sys.executable, "-m", "recorder.hook", "--worker", transcript, event.get("hook_event_name") or "Stop"],
             cwd=ROOT, stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True,
@@ -53,7 +53,7 @@ def work(transcript: Path, event: str = "Stop") -> None:
     summaries = STATE / "summaries.json"
     locks = STATE / "locks"
     locks.mkdir(parents=True, exist_ok=True)
-    with open(locks / f"{session}.lock", "w") as lock:
+    with open(locks / f"{session}.lock", "w", encoding="utf-8") as lock:
         # Wait instead of skipping: the running worker read the transcript before this Stop's turn was written.
         fcntl.flock(lock, fcntl.LOCK_EX)
         text = compact(transcript)
@@ -83,7 +83,7 @@ def main() -> None:
     except Exception:
         try:
             LOG.parent.mkdir(parents=True, exist_ok=True)
-            with open(LOG, "a") as log:
+            with open(LOG, "a", encoding="utf-8") as log:
                 log.write(f"{datetime.now().isoformat(timespec='seconds')} {traceback.format_exc()}")
         except OSError:
             pass

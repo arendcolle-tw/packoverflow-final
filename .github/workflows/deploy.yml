@@ -49,16 +49,35 @@ jobs:
           SERVICE: ${{ inputs.service || 'packoverflow' }}
           MIN_INSTANCES: ${{ inputs.min_instances }}
           MAX_INSTANCES: ${{ inputs.max_instances }}
+          # Repository secrets. GitHub masks them in logs; blank ones are skipped so nothing gets wiped.
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          KG_ADMIN_TOKEN: ${{ secrets.KG_ADMIN_TOKEN }}
         run: |
           [[ "$SERVICE" =~ ^[a-z][a-z0-9-]{0,48}$ ]] || { echo "bad service name"; exit 1; }
           [[ "$SOURCE" =~ ^[A-Za-z0-9_./-]+$ && "$SOURCE" != *..* ]] || { echo "bad source folder"; exit 1; }
           scale=()
           [ -n "$MIN_INSTANCES" ] && scale+=(--min-instances "$MIN_INSTANCES")
           [ -n "$MAX_INSTANCES" ] && scale+=(--max-instances "$MAX_INSTANCES")
+          # Env vars per service. Names only here; values come from the env above.
+          case "$SERVICE" in
+            packoverflow) names=(ELEVENLABS_API_KEY); fixed=(ELEVENLABS_AGENT_ID=agent_8701m5cj7mknehsa9v29b68gqqwm) ;;
+            knowledge-graph) names=(ELEVENLABS_API_KEY ANTHROPIC_API_KEY KG_ADMIN_TOKEN); fixed=() ;;
+            *) names=(); fixed=() ;;
+          esac
+          vars=""
+          names_set=()
+          for kv in "${fixed[@]}"; do vars+="${vars:+@@}$kv"; names_set+=("${kv%%=*}"); done
+          for n in "${names[@]}"; do
+            if [ -n "${!n}" ]; then vars+="${vars:+@@}$n=${!n}"; names_set+=("$n"); fi
+          done
+          envflag=()
+          # "^@@^" sets @@ as the separator, so a comma inside a value cannot split it.
+          if [ -n "$vars" ]; then envflag=(--update-env-vars "^@@^$vars"); echo "Env vars set: ${names_set[*]}"; fi
           gcloud run deploy "$SERVICE" \
             --source "$SOURCE" \
             --project "$PROJECT_ID" --region "$REGION" \
-            --allow-unauthenticated --quiet "${scale[@]}"
+            --allow-unauthenticated --quiet "${scale[@]}" "${envflag[@]}"
       - name: Print URL
         env:
           SERVICE: ${{ inputs.service || 'packoverflow' }}

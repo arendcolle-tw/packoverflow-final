@@ -29,6 +29,13 @@ Actions tab > "Deploy to Cloud Run" > Run workflow (inputs: source folder, servi
 
 ## API keys
 
-API keys for the live app, such as ElevenLabs, go on the Cloud Run service as env vars. Arend sets them from his Mac with the gcloud configuration `tectonic`. Never commit them.
+API keys live in GitHub repository secrets (Settings > Secrets and variables > Actions). Every deploy, automatic or manual, copies them onto the Cloud Run service with `--update-env-vars`, so a redeploy keeps the keys. A secret that is not set is skipped, so it never blanks a key already on the service.
+
+| Service | Env vars it gets |
+|---|---|
+| `packoverflow` | `ELEVENLABS_API_KEY`, plus `ELEVENLABS_AGENT_ID` (not secret, fixed in the workflow) |
+| `knowledge-graph` | `ELEVENLABS_API_KEY`, `ANTHROPIC_API_KEY`, `KG_ADMIN_TOKEN` |
+
+To add or rotate a key: update the repository secret, then rerun "Deploy to Cloud Run" for that service. Never commit keys.
 
 In cloud threads, ElevenLabs works through a network secret on the `default` environment for `api.elevenlabs.io`.

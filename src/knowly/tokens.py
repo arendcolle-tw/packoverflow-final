@@ -1,15 +1,14 @@
 import argparse
-import os
 import secrets
 import sqlite3
 import threading
 from pathlib import Path
 
-DEFAULT_DB = Path(__file__).resolve().parents[2] / "data" / "tokens.db"
+from knowly.config import load
 
 
 class Tokens:
-    def __init__(self, path: Path = DEFAULT_DB):
+    def __init__(self, path: Path):
         path.parent.mkdir(parents=True, exist_ok=True)
         self._db = sqlite3.connect(path, check_same_thread=False)
         self._lock = threading.Lock()
@@ -17,7 +16,7 @@ class Tokens:
             self._db.execute("CREATE TABLE IF NOT EXISTS members (token TEXT PRIMARY KEY, person TEXT NOT NULL)")
 
     def add(self, person: str) -> str:
-        # The prefix lets the recorder's scrub recognise a pasted token.
+        # The prefix lets the capture scrub recognise a pasted token.
         token = "wk_" + secrets.token_urlsafe(24)
         with self._lock, self._db:
             self._db.execute("INSERT INTO members VALUES (?, ?)", (token, person))
@@ -36,11 +35,10 @@ class Tokens:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Create an access token for one person, or revoke all of theirs.")
     parser.add_argument("person")
-    parser.add_argument("--db", type=Path, default=Path(os.environ.get("KNOWLY_TOKENS_DB", DEFAULT_DB)),
-                        help="default $KNOWLY_TOKENS_DB, else data/tokens.db")
+    parser.add_argument("--db", type=Path, help="default tokens.db in $KNOWLY_DATA_DIR")
     parser.add_argument("--revoke", action="store_true", help="delete every token of this person")
     args = parser.parse_args()
-    person, tokens = " ".join(args.person.split()).lower(), Tokens(args.db)
+    person, tokens = " ".join(args.person.split()).lower(), Tokens(args.db or load().data_dir / "tokens.db")
     print(f"revoked {tokens.revoke(person)} tokens of {person}" if args.revoke else tokens.add(person))
 
 

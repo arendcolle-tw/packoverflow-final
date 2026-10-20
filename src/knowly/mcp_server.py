@@ -1,4 +1,4 @@
-"""MCP server with one tool, ask(question), answered from the knowledge graph through the Asker.
+"""MCP server with one tool, ask(question), answered from the Knowly fact store through the Asker.
 
 How to connect. Make a token with `knowly-token <person>`; replace <host> with http://localhost:8091
 locally or the Cloud Run URL.
@@ -37,7 +37,7 @@ from pydantic import Field, StringConstraints
 from starlette.datastructures import Headers
 from starlette.responses import JSONResponse
 
-from knowly.graph import GraphError
+from knowly.client import StoreError
 from knowly.tokens import Tokens
 
 PERSON = "knowly.person"
@@ -70,8 +70,8 @@ class MemberMCP:
             recorded facts are closest."""
             try:
                 result = await self.asker.ask(question, ctx.request_context.request.scope[PERSON])
-            except GraphError as error:
-                raise ToolError(f"the knowledge graph is unreachable: {error}") from error
+            except StoreError as error:
+                raise ToolError(f"the Knowly fact store is unreachable: {error}") from error
             return CallToolResult(content=[TextContent(text=result["text"])], structured_content=result)
 
     @asynccontextmanager

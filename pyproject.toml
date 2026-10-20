@@ -9,17 +9,19 @@ dependencies = [
     "slack_bolt",
     "aiohttp",
     "mcp>=2.3,<3",
+    "httpx",
+    "google-cloud-storage",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "httpx", "pytest-socket"]
+dev = ["pytest", "pytest-socket"]
 
 [project.scripts]
 knowly-server = "knowly.server:main"
-knowly-record = "knowly.recorder.run:main"
-knowly-hook = "knowly.recorder.hook:main"
-knowly-install = "knowly.recorder.install:main"
-knowly-screenshots = "knowly.recorder.screenshots:main"
+knowly-record = "knowly.capture.run:main"
+knowly-hook = "knowly.capture.hook:main"
+knowly-install = "knowly.capture.install:main"
+knowly-screenshots = "knowly.capture.screenshots:main"
 knowly-token = "knowly.tokens:main"
 
 [build-system]

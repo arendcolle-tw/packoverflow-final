@@ -13,7 +13,7 @@ on:
       service:
         description: Target service (describe, set-env)
         type: choice
-        options: [packoverflow, knowledge-graph, knowledge-mcp, whoknows]
+        options: [packoverflow, knowly]
         default: packoverflow
       name:
         description: "set-env: env var name, e.g. ELEVENLABS_API_KEY"
@@ -21,13 +21,13 @@ on:
       from_service:
         description: "set-env: copy NAME from this service's env (none = use value)"
         type: choice
-        options: [none, packoverflow, knowledge-graph, knowledge-mcp, whoknows]
+        options: [none, packoverflow, knowly]
         default: none
       value:
         description: "set-env: literal NON-secret value (visible in the run); refused for secret-looking names"
         required: false
       call:
-        description: "admin-call: knowledge-graph endpoint"
+        description: "admin-call: Knowly store endpoint"
         type: choice
         options: [gaps-scan, add-member]
         default: gaps-scan
@@ -126,16 +126,16 @@ jobs:
           PUBKEY: ${{ inputs.pubkey }}
         run: |
           set -euo pipefail
-          desc=$(gcloud run services describe knowledge-graph --project "$PROJECT_ID" --region "$REGION" --format=json)
+          desc=$(gcloud run services describe knowly --project "$PROJECT_ID" --region "$REGION" --format=json)
           url=$(jq -r '.status.url' <<<"$desc")
-          token=$(jq -r '[.spec.template.spec.containers[0].env[]? | select(.name == "KG_ADMIN_TOKEN") | .value // empty] | first // empty' <<<"$desc")
-          [ -n "$token" ] || { echo "KG_ADMIN_TOKEN is not set on knowledge-graph"; exit 1; }
+          token=$(jq -r '[.spec.template.spec.containers[0].env[]? | select(.name == "KNOWLY_ADMIN_TOKEN") | .value // empty] | first // empty' <<<"$desc")
+          [ -n "$token" ] || { echo "KNOWLY_ADMIN_TOKEN is not set on knowly"; exit 1; }
           echo "::add-mask::$token"
           auth=(-H "Authorization: Bearer $token")
           case "$CALL" in
             gaps-scan)
               [[ "$CLAUDE" =~ ^[0-9]{1,2}$ ]] && [ "$CLAUDE" -le 50 ] || { echo "claude must be 0 to 50"; exit 1; }
-              curl -sS --fail-with-body -X POST "${auth[@]}" "$url/gaps/scan?claude=$CLAUDE" | tee -a "$GITHUB_STEP_SUMMARY"
+              curl -sS --fail-with-body -X POST "${auth[@]}" "$url/store/gaps/scan?claude=$CLAUDE" | tee -a "$GITHUB_STEP_SUMMARY"
               ;;
             add-member)
               [[ "$PERSON" =~ ^[a-z0-9][a-z0-9._-]{0,63}$ ]] || { echo "person must be a lowercase key"; exit 1; }
@@ -143,7 +143,7 @@ jobs:
               base64 -d <<<"$PUBKEY" > pub.pem 2>/dev/null || { echo "pubkey is not base64"; exit 1; }
               openssl pkey -pubin -in pub.pem -noout 2>/dev/null || { echo "pubkey is not a public key PEM"; exit 1; }
               body=$(jq -nc --arg p "$PERSON" '{person: $p}')
-              member=$(curl -sS --fail-with-body -X POST "${auth[@]}" -H "Content-Type: application/json" -d "$body" "$url/members" | jq -r '.token')
+              member=$(curl -sS --fail-with-body -X POST "${auth[@]}" -H "Content-Type: application/json" -d "$body" "$url/store/members" | jq -r '.token')
               echo "::add-mask::$member"
               enc=$(printf '%s' "$member" | openssl pkeyutl -encrypt -pubin -inkey pub.pem -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 | base64 -w0)
               { echo "member token for $PERSON, RSA-OAEP-SHA256 encrypted, base64:"; echo "$enc"; } | tee -a "$GITHUB_STEP_SUMMARY"

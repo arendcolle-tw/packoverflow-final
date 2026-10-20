@@ -1,112 +1,107 @@
 <p align="center">
-  <img src="docs/header.svg" alt="Knowly: heads, AI sessions and docs are summarised around decisions into one knowledge base where every fact has a person and a reason" width="100%">
+  <img src="assets/hero.svg" alt="Knowly: one centralised knowledge base. All files, facts and sessions in one place." width="100%">
 </p>
 
-# Knowly
+Knowly is one centralised knowledge base. All files, facts and sessions sit in one place, and every fact has a person and a reason.
 
-Knowly is a central, fact-based knowledge base for a team. Every fact names the person it comes from and their reason.
+A lot of what a team knows sits in people's heads, and more and more of it is decided in conversations with AI. Those decisions disappear into chat history, and the documents that should hold them go out of date. Knowly fills the knowledge base from work people already do, and asks a person only when nobody wrote the answer down.
 
-A recorder on each laptop summarises Claude Code sessions, and screenshots of other AI chats, into one row per session about the decisions the person made. It pushes the rows to Alberic's knowledge graph in `ideas/alberic`. Anyone can ask a question in Slack, through MCP or over HTTP. Haiku answers from the matching facts only and names the person, their reason, the source task and the date. When no fact answers the question, Knowly DMs the colleague with the closest related fact in Slack, and their answer goes into the graph as their own fact.
+## How it works
 
-The stage demo and its setup script are in [`demo/README.md`](demo/README.md). The hackathon team setup guide is [`docs/team-setup.md`](docs/team-setup.md).
+<p align="center">
+  <img src="assets/header.svg" alt="Files, facts and sessions are summarised around decisions into one knowledge base; questions are answered with a person and a reason" width="100%">
+</p>
 
-## Repo layout
+Knowly runs three loops.
 
-| Path | Contents |
+1. **Capture.** A Claude Code hook picks up every session in the background. Claude summarises it around the decisions you made and why, quotes your own words for the reason, and stores the result as your fact. Raw sessions never leave your laptop.
+2. **Ask.** Anyone asks in the `#ask-knowly` Slack channel, in a DM, or from Claude over MCP. The Knowly agent searches the knowledge base with its own tools and answers with the fact, the person behind it, their reason and the source session or question.
+3. **Learn.** When the knowledge base has no answer, Knowly shows the closest related facts and tags the person most likely to know. They reply in the thread in their own words. Knowly turns the reply into a fact under their name and reacts with ✅. The next person who asks gets the answer straight away.
+
+| Package | What it does |
 |---|---|
-| `src/knowly/` | the server: Slack bot, MCP endpoint, `POST /api/ask` and the ask flow |
-| `src/knowly/recorder/` | session and screenshot recorder, Claude Code hook and its installer |
-| `tests/` | pytest suite |
-| `demo/` | `full_demo.sh` and the stage script |
-| `site/` | HyperFrames marketing page |
-| `app/` | the team's hackathon app, deployed by `.github/workflows/deploy.yml` |
-| `ideas/<name>/` | each person's experiments; `ideas/alberic` is the knowledge graph Knowly reads and writes |
-| `docs/` | team setup guide, deploy notes, Claude project instructions, the header image |
+| `knowly.capture` | Reads Claude Code sessions, scrubs secrets, summarises decisions, pushes facts (`knowly-record`, `knowly-hook`, `knowly-install`, `knowly-screenshots`) |
+| `knowly.store` | The central fact store: facts per person with reasons, scoring that fades with time, gaps where a reason is missing |
+| `knowly.agent` | The Knowly agent: Claude with search tools over the store (`search_facts`, `person_facts`, `recent_facts`) |
+| `knowly.slack` | Slack bot: `#ask-knowly`, DM, `@knowly`, `/knowly`, and turning thread replies into facts |
+| `knowly.ask` | One answer path shared by Slack, MCP and `POST /api/ask` |
+| `knowly.server` | One service: the store API under `/store`, MCP at `/mcp`, `/api/ask`, `/healthz`, and the Slack bot |
 
-## Setup
+## Demo
+
+```bash
+./demo/full_demo.sh          # add --reset for a clean start
+```
+
+The script starts Knowly, creates the demo members and stores one real Claude session as a fact. Then, in Slack:
+
+1. Invite `@knowly` to `#ask-knowly`.
+2. Ask: *"What time does the nightly payroll export start?"* Knowly answers that it is not recorded yet, shows the related fact about payroll retries and tags Tristan.
+3. Tristan replies in the thread: *"16:00, so three retries still finish before the bank closes the SFTP window at 18:00."* Knowly saves it as his fact.
+4. Ask again. Knowly answers with 16:00, Tristan and his reason.
+
+[demo/README.md](demo/README.md) has the full stage script and the MCP variant.
+
+## Quickstart
 
 ```bash
 uv venv --python 3.13
-uv pip install -e '.[dev]' slack-cli-hooks
-.venv/bin/python -m pytest -q
+uv pip install -e '.[dev]'
+export KNOWLY_ADMIN_TOKEN=$(openssl rand -hex 24)
+
+knowly-server                      # the store, API and MCP on port 8091
+slack run                          # same server plus the Slack bot, uses manifest.json
 ```
 
-## Run the server
+Create a member and send your sessions:
 
-The server reads the knowledge graph at `KG_URL`, default `http://127.0.0.1:8770`. `demo/full_demo.sh` starts a local copy of the graph there.
+```bash
+curl -X POST localhost:8091/store/members -H "Authorization: Bearer $KNOWLY_ADMIN_TOKEN" -d '{"person": "you"}'
+knowly-record --person you --push http://127.0.0.1:8091 --token=<member token>      # backfill
+knowly-install --person you --push http://127.0.0.1:8091 --token=<member token> --write-settings   # live hook
+```
 
-- With the Slack CLI, run `slack run` from the repo root. It installs the app from `manifest.json`, runs `app.py` and passes `SLACK_BOT_TOKEN` and `SLACK_APP_TOKEN`.
-- Without it, run `.venv/bin/knowly-server`. It listens on `127.0.0.1:8091` (`HOST` and `PORT` change it) and starts the Slack bot only when both Slack tokens are set.
+Ask from Claude Code:
 
-Make an access token per person with `.venv/bin/knowly-token <person>`. `--revoke` deletes every token of that person.
+```bash
+claude mcp add --transport http knowly http://127.0.0.1:8091/mcp --header "Authorization: Bearer $(knowly-token you)"
+```
 
-| Env var | Default | Use |
+## Configuration
+
+| Variable | Default | Meaning |
 |---|---|---|
-| `KG_URL` | `http://127.0.0.1:8770` | the knowledge graph |
-| `SLACK_PEOPLE` | | `tristan:U0C9D2HJUA1,...` maps person keys to Slack user ids where first names do not match |
-| `DEFAULT_EXPERT` | | the person to ask when nobody but the asker has a related fact |
-| `KNOWLY_TOKENS_DB` | `data/tokens.db` | access tokens |
-| `KNOWLY_QUESTIONS_DB` | `data/questions.db` | questions sent to colleagues and their answers |
-| `KNOWLY_GRAPH_TOKENS` | `data/graph_tokens.json` | `{"<person>": "<graph member token>"}`, used to post a colleague's Slack answer to the graph as their fact |
+| `KNOWLY_DATA_DIR` | `./data` | Where every database file lives |
+| `KNOWLY_ADMIN_TOKEN` | | Admin token for creating members (at least 32 characters) |
+| `KNOWLY_URL` | `http://127.0.0.1:$PORT` | The server's own address, used by the agent and recorders |
+| `KNOWLY_CHANNEL` | `ask-knowly` | The Slack channel Knowly listens to |
+| `KNOWLY_ALLOW_SELF` | `0` | `1` lets one Slack account ask and answer (single-account demos) |
+| `SLACK_PEOPLE` | | `name:Uxxx,...` to map people to Slack users |
+| `PORT` | `8091` | HTTP port |
+| `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN` | | Set by `slack run` |
 
-## Recording facts
+## Privacy and security
 
-### Backfill
+- Raw sessions stay on the laptop. Only the summary of your decisions is sent.
+- Secrets, tokens and email addresses are scrubbed before anything leaves the machine.
+- Quotes in a summary are checked against what you actually typed.
+- The person behind a fact always comes from their token or Slack identity, never from the request.
 
-```bash
-.venv/bin/knowly-record --person tristan --push <graph url> --token <graph member token>
+## Layout
+
 ```
-
-The recorder summarises every session whose compacted text changed since the last run, writes the rows to `~/.cache/knowly/signals-<person>.json` (`--out` changes it) and, with `--push`, posts them in chunks of 1000 to `<url>/signals`. `--mode turns` labels each human turn instead. `KNOWLY_TOKEN` can replace `--token`.
-
-### Live capture
-
-```bash
-.venv/bin/knowly-install --person tristan --push <graph url> --token <graph member token> --write-settings
+src/knowly/   capture, store, agent, slack, ask, server
+tests/        test suite (offline)
+demo/         one-command demo setup and stage script
+assets/       images
+app/          team web app
 ```
-
-The installer writes `~/.config/knowly/recorder.json` (mode 600) and adds `knowly-hook` as a Stop and SessionEnd hook in `~/.claude/settings.json`. When a session whose folder or transcript path contains `packoverflow` (`--match` changes it) stops or ends, the hook starts a background worker and returns. The worker summarises that session again and pushes its one row, and skips the session when its compacted text is unchanged. On Stop the worker waits until 60 s have passed since the previous summary of the session, so the summary includes the turns written meanwhile. The worker logs to `~/.cache/knowly/hook.log`.
-
-### Screenshots
-
-For chats in Copilot, ChatGPT, Teams or any other assistant the recorder cannot read, drop a screenshot of the chat in `~/Knowly/screenshots` (`--dir` changes it).
-
-```bash
-.venv/bin/knowly-screenshots --person tristan --watch --push <graph url> --token <graph member token>
-```
-
-`--watch` checks the folder every 5 s. `claude -p --model sonnet` transcribes each new `.png`, `.jpg`, `.jpeg` or `.webp` once, in an empty temp folder with only the Read tool, and the Haiku classifier labels each human turn. The rows have `source` `screenshot`.
-
-### Row shape
-
-```json
-{"id": "<session>:summary", "person": "tristan", "topic": "payroll-export",
- "source": "claude_session", "source_id": "<session>", "at": "<time of the last human turn>",
- "human_role": "corrected", "actor": "human", "task": "Plan the nightly payroll SFTP export",
- "why": "Set retries to 3, not 5, \"because the bank closes the SFTP window at 18:00\""}
-```
-
-`human_role` is `decided`, `corrected`, `explained_why` or `accepted_as_is`. `why` is at most 200 characters on what the person chose, corrected or ruled out, and `task` at most 80. The recorder keeps quote marks only around words the person typed.
-
-## Asking
-
-- Slack: `@knowly <question>` in a channel the bot is in, a DM to the bot, or `/knowly <question>`.
-- MCP: `claude mcp add --transport http knowly <host>/mcp --header "Authorization: Bearer <token>"`. Clients that cannot set headers, such as a claude.ai custom connector or Copilot Studio, use the personal URL `<host>/u/<token>/mcp`. The one tool is `ask(question)`.
-- HTTP: `POST /api/ask` with `Authorization: Bearer <token>` and `{"question": "..."}` returns `{known, text, question_id, pinged, sources}`, or 502 when the graph is unreachable. `GET /healthz` returns `{"ok": true}`.
-
-When the graph does not answer the question, Knowly DMs the colleague with the strongest related fact (never the asker, else `DEFAULT_EXPERT`) with the question, who asked, up to three related facts and an Answer button. The same open question does not DM the same colleague twice. Only that colleague can submit the answer, at most 200 characters. The server posts it to the graph as their fact (`source` `gap_form`, `human_role` `answered_question`) and DMs the asker when the asker has a Slack account.
-
-The bot maps person keys to the first name of each full Slack member. Guests are skipped, and a first name that two members share maps to nobody, so set `SLACK_PEOPLE` for them.
-
-## Privacy
-
-- The recorder reads only the session folders in `~/.claude/projects` whose name contains `packoverflow`.
-- Raw sessions and screenshots stay on the laptop. Only the rows leave it.
-- The recorder replaces pasted content with `[pasted]`, and tokens, private keys, values after `password=`, `token:` and similar, passwords in URLs and email addresses with `[redacted]`.
-- Summarising runs `claude -p --model haiku` without tools under the person's own Claude Code login, on a compacted copy of the session: the human turns verbatim and Claude's text replies cut to about 1500 characters, without tool calls, tool output or subagent runs.
 
 ## Unfinished
 
-- Knowly tokens are bearer tokens without login or expiry. Anyone holding one can ask as its person until `knowly-token --revoke` deletes it.
-- The token and question stores are SQLite files next to the server, so a Cloud Run restart loses them.
-- Copilot and ChatGPT sessions are read only through screenshots.
+- Claude runs through the `claude` CLI with a logged-in account. A server deployment needs an API key instead.
+- SQLite storage, so one instance at a time.
+- Bearer tokens, no single sign-on.
+- Answers are not cached, so every question costs a Claude call.
+
+Built at the Tectonic Hackathon final (SD Worx track) by the Packoverflow team.

@@ -1,0 +1,26 @@
+[
+  {
+    "person": "tristan",
+    "folder": "~/Knowly/seed-sessions/nightly-bank-export",
+    "turns": [
+      "Draft a short plan for the nightly payroll export to KBC over SFTP, with 5 retries for a failed upload.",
+      "No, retry 3 times, not 5, because the bank closes the SFTP window at 18:00 and a late file is rejected anyway."
+    ]
+  },
+  {
+    "person": "alberic",
+    "folder": "~/Knowly/seed-sessions/peeters-pay-transparency",
+    "turns": [
+      "Help me set up the pay transparency report for our client Bakkerij Peeters, a bakery with 48 employees: bakers, shop staff, delivery drivers and two office staff. Which job classification should we group them by?",
+      "Use the sector classification their pay scales already follow, not our generic job families, because the works council negotiates on those levels and will recognise them. And put the two office staff with the shop staff, so no group is small enough to show one person's salary."
+    ]
+  },
+  {
+    "person": "alberic",
+    "folder": "~/Knowly/seed-sessions/garage-claes-onboarding",
+    "turns": [
+      "We are onboarding a new payroll client, Garage Claes, 30 mechanics and 5 office staff, go-live in January. Draft an onboarding plan with two parallel payroll runs before go-live.",
+      "No, one parallel run in December only, because their contract with the previous provider ends on 31 December and we can't get their November data in time."
+    ]
+  }
+]

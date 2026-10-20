@@ -1,12 +1,15 @@
 import asyncio
 import json
 import logging
-import os
 import re
 import secrets
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
+
+from knowly.agent import PING, answer
+from knowly.config import person_key
+from knowly.slack.extract import kebab_topic
 
 log = logging.getLogger(__name__)
 
@@ -15,55 +18,48 @@ SCHEMA = """CREATE TABLE IF NOT EXISTS questions (
     status TEXT NOT NULL, answer TEXT, created_at TEXT NOT NULL, answered_at TEXT)"""
 
 
-def related_facts(lookup: dict) -> list[dict]:
-    facts = [
-        {"person": p["person"], **ev}
-        for p in lookup.get("people") or []
-        for ev in p.get("evidence") or []
-    ]
-    return sorted(facts, key=lambda f: f.get("similarity") or 0, reverse=True)
-
-
 class Asker:
-    def __init__(self, graph, db_path: Path, tokens_path: Path, notify=None, compose=None):
-        if compose is None:
-            from knowly.answer import compose
-        self.graph = graph
-        self.compose = compose
-        self.tokens_path = Path(tokens_path)
+    """Answers questions from MCP, POST /api/ask and Slack DMs, and asks a colleague when the answer is not recorded."""
+
+    def __init__(self, base_url: str, data_dir: Path, members, notify=None, default_expert: str = ""):
+        self.base_url = base_url
+        self.members = members
         self.notify = notify
-        Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-        self._db = sqlite3.connect(db_path, check_same_thread=False, isolation_level=None)
+        self.default_expert = default_expert.strip()
+        Path(data_dir).mkdir(parents=True, exist_ok=True)
+        self._db = sqlite3.connect(Path(data_dir) / "questions.db", check_same_thread=False, isolation_level=None)
         self._db.row_factory = sqlite3.Row
         self._db.execute(SCHEMA)
 
     async def ask(self, question: str, asker: str) -> dict:
+        """Returns text for MCP and /api/ask, plus answer and ping (with a {person} placeholder) for Slack."""
         question = question.strip()
-        lookup = await asyncio.to_thread(self.graph.lookup, question)
-        composed = await asyncio.to_thread(self.compose, question, lookup)
-        sources = composed.get("sources") or []
-        if composed.get("answered"):
-            return {"known": True, "text": composed["text"], "question_id": None, "pinged": None, "sources": sources}
+        result = await asyncio.to_thread(answer, question, asker, self.base_url)
+        sources = result["sources"]
+        reply = {"known": True, "text": result["answer"], "answer": result["answer"], "ping": None,
+                 "question_id": None, "pinged": None, "sources": sources}
+        if result["answered"]:
+            return reply
 
         earlier = self._answered(question)
         if earlier:
-            text = f"{earlier['target']} answered this on {earlier['answered_at'][:10]}: \"{earlier['answer']}\""
-            return {"known": True, "text": text, "question_id": earlier["id"], "pinged": None, "sources": sources}
+            text = f"{earlier['target'].title()} answered this on {earlier['answered_at'][:10]}: {earlier['answer']}"
+            return {**reply, "text": text, "answer": text, "question_id": earlier["id"]}
 
-        facts = related_facts(lookup)
-        me = asker.strip().lower()
-        target = next((f["person"] for f in facts if f["person"].lower() != me), None)
-        if not target and os.environ.get("DEFAULT_EXPERT", "").strip().lower() not in ("", me):
-            target = os.environ["DEFAULT_EXPERT"].strip()
+        me = person_key(asker)
+        target = result["ask_person"] if person_key(result["ask_person"] or "") != me else None
+        ping = result.get("ping") if target else None
+        if not target and person_key(self.default_expert) not in ("", me):
+            target = self.default_expert
         if not target:
-            text = f"{composed['text']}\n\nNobody else has recorded anything related, so I could not find anyone to ask."
-            return {"known": False, "text": text, "question_id": None, "pinged": None, "sources": sources}
+            return {**reply, "known": False}
+        ping = ping or PING.format(person="{person}", asker=asker.title(), question=question)
 
         record = self._open(question, target)
         if record is None:
             record = {
                 "id": secrets.token_hex(6), "question": question, "asker": asker, "target": target,
-                "related": facts[:3], "status": "open", "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                "related": sources[:3], "status": "open", "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             }
             self._db.execute(
                 "INSERT INTO questions (id, question, asker, target, related_json, status, created_at) VALUES (?,?,?,?,?,?,?)",
@@ -71,38 +67,25 @@ class Asker:
             )
             if self.notify:
                 try:
-                    await self.notify(record)
+                    await self.notify({**record, "ping": ping})
                 except Exception:
                     log.exception("notify failed for question %s", record["id"])
-        text = f"{composed['text']}\n\nI asked {target}; ask again once they have answered."
-        return {"known": False, "text": text, "question_id": record["id"], "pinged": target, "sources": sources}
+        text = f"{result['answer']}\n\n{ping.replace('{person}', target.title())}"
+        return {**reply, "known": False, "text": text, "ping": ping, "question_id": record["id"], "pinged": target}
 
     def record_answer(self, question_id: str, person: str, text: str) -> dict:
         record = self.get(question_id)
         if record is None:
             raise KeyError(f"no question {question_id}")
-        if (record["target"] or "").lower() != person.lower():
+        if person_key(record["target"] or "") != person_key(person):
             raise PermissionError(f"only {record['target']} can answer question {question_id}")
         text = text.strip()
         if not 1 <= len(text) <= 200:
             raise ValueError("an answer must be 1 to 200 characters")
-        try:
-            token = json.loads(self.tokens_path.read_text())[record["target"]]
-        except (OSError, ValueError, KeyError):
-            raise RuntimeError(f"no graph member token for {record['target']} in {self.tokens_path}") from None
-
-        topic = next((f["topic"] for f in record["related"] if f.get("topic")), "questions")
-        now = datetime.now(timezone.utc).isoformat(timespec="seconds")
-        row = {
-            "id": f"ask:{question_id}:{record['target']}", "person": record["target"], "topic": topic,
-            "source": "gap_form", "source_id": f"ask-{question_id}", "at": now, "human_role": "answered_question",
-            "actor": "human", "why": text, "task": record["question"][:80],
-        }
-        self.graph.post_rows([row], token)
-        self.graph.invalidate()
-        self._db.execute(
-            "UPDATE questions SET status='answered', answer=?, answered_at=? WHERE id=?", (text, now, question_id)
-        )
+        row = self.members.store_fact(record["target"], record["question"], text, kebab_topic("", record["question"]),
+                                      question_id)
+        self._db.execute("UPDATE questions SET status='answered', answer=?, answered_at=? WHERE id=?",
+                         (text, datetime.now(timezone.utc).isoformat(timespec="seconds"), question_id))
         return row
 
     def get(self, question_id: str) -> dict | None:
@@ -116,10 +99,9 @@ class Asker:
     def _open(self, question: str, target: str) -> dict | None:
         key = re.findall(r"\w+", question.lower())
         for found in self._db.execute(
-            "SELECT id FROM questions WHERE status='open' AND lower(target)=? ORDER BY created_at", (target.lower(),)
-        ).fetchall():
+            "SELECT id FROM questions WHERE status='open' ORDER BY created_at").fetchall():
             record = self.get(found["id"])
-            if re.findall(r"\w+", record["question"].lower()) == key:
+            if person_key(record["target"] or "") == person_key(target) and re.findall(r"\w+", record["question"].lower()) == key:
                 return record
         return None
 

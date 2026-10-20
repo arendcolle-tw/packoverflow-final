@@ -1,28 +1,24 @@
 #!/usr/bin/env bash
-# Sets up the whole Knowly demo on this Mac: a local copy of Alberic's knowledge graph, graph members,
-# tristan's payroll session pushed as a fact, and the Slack bot with MCP on port 8091.
+# Sets up the Knowly demo on this Mac: one Knowly server on port 8091 (fact store, Slack bot in #ask_knowly, MCP)
+# started by `slack run`, members tristan and alberic, and tristan's payroll session pushed as his fact.
 # Usage: demo/full_demo.sh [--reset | --stop]
-#   --reset  wipes the local graph, open questions and the demo session first, then sets everything up again
-#   --stop   stops the bot and the local graph
+#   --reset  stops the server, wipes data/ and the demo Claude session, then sets everything up again
+#   --stop   stops the server
 set -euo pipefail
 
 ROOT=${ROOT:-$(cd "$(dirname "$0")/.." && pwd)}
-ALB=${ALB:-$(cd "$ROOT/ideas/alberic" && pwd)}
 BIN=$ROOT/.venv/bin
 PY=$BIN/python
-KG_PORT=8770
-KG=http://127.0.0.1:$KG_PORT
-GRAPH_DIR=$ROOT/data/demo-graph
-TOKENS=$ROOT/data/graph_tokens.json
-DB=${KNOWLY_TOKENS_DB:-$ROOT/data/tokens.db}
-LIES_TOKEN_FILE=$ROOT/data/demo-lies-mcp-token
-ROWS=$ROOT/data/demo-rows.json
-WORK=$HOME/Knowly/demo-knowly-payroll
-LIES_DIR=$HOME/Knowly/demo-lies
+DATA=$ROOT/data
+PORT=8091
+URL=http://127.0.0.1:$PORT
+MEMBER_TOKENS=$DATA/member_tokens.json
+ALBERIC_TOKEN_FILE=$DATA/alberic-mcp-token
+ROWS=$DATA/demo-rows.json
+SLACK_LOG=$DATA/slack-run.log
+WORK=$HOME/Knowly/demo-payroll
+ALBERIC_DIR=$HOME/Knowly/demo-alberic
 TEAM=T0C9C4CTJEP
-BOT_PORT=8091
-BOT=http://127.0.0.1:$BOT_PORT
-SLACK_LOG=$ROOT/data/slack-run.log
 QUESTION="What time does the nightly payroll export start?"
 ANSWER="It starts at 16:00 so three retries still finish before the bank's 18:00 cutoff"
 
@@ -55,128 +51,108 @@ kill_port() {
   lsof -ti "tcp:$1" -sTCP:LISTEN 2>/dev/null | xargs kill -9 2>/dev/null || true
 }
 
-stop_slack() {
+stop_server() {
   local pid
   for pid in $(pgrep -f "slack run --team $TEAM" || true); do
     pkill -P "$pid" 2>/dev/null || true
     kill "$pid" 2>/dev/null || true
   done
-  kill_port "$BOT_PORT"
+  kill_port "$PORT"
 }
 
 if [ "$MODE" = --stop ]; then
-  stop_slack
-  kill_port "$KG_PORT"
-  echo "stopped the bot and the local graph"
+  stop_server
+  echo "stopped the Knowly server"
   exit 0
 fi
 
-[ -x "$BIN/knowly-token" ] || { echo "install Knowly first: uv pip install --python $PY -e $ROOT" >&2; exit 1; }
+[ -x "$BIN/knowly-token" ] || { echo "install Knowly first: uv pip install --python $PY -e '$ROOT[dev]' slack-cli-hooks" >&2; exit 1; }
 
 if [ "$MODE" = --reset ]; then
-  printf '== reset: local graph, open questions, demo session\n'
-  stop_slack
-  kill_port "$KG_PORT"
-  rm -rf "$GRAPH_DIR" "$ROWS" "$ROOT/data/questions.db" "$ROOT/data/questions.db-wal" "$ROOT/data/questions.db-shm"
-  rm -rf "$HOME/.claude/projects/"*demo-knowly-payroll
+  printf '== reset: data/ and the demo Claude session\n'
+  stop_server
+  rm -rf "$DATA"
+  rm -rf "$HOME/.claude/projects/"*demo-payroll
 fi
 
-printf '\n== 1/6  local knowledge graph on %s\n' "$KG"
-mkdir -p "$GRAPH_DIR"
-printf '*\n' > "$GRAPH_DIR/.gitignore"
-if [ ! -s "$GRAPH_DIR/admin_token" ]; then
-  kill_port "$KG_PORT"
-  (umask 077; "$PY" -c 'import secrets; print(secrets.token_urlsafe(32))' > "$GRAPH_DIR/admin_token")
+mkdir -p "$DATA"
+if [ ! -s "$DATA/admin_token" ]; then
+  (umask 077; "$PY" -c 'import secrets; print(secrets.token_urlsafe(32))' > "$DATA/admin_token")
 fi
-ADMIN=$(cat "$GRAPH_DIR/admin_token")
-if curl -fsS -o /dev/null "$KG/health" 2>/dev/null; then
-  echo "   already running"
-else
-  # ELEVENLABS_API_KEY would make this copy re-register the hosted graph's voice webhook.
-  (cd "$ALB" && env -u ELEVENLABS_API_KEY -u K_SERVICE KG_DATA_DIR="$GRAPH_DIR" KG_ADMIN_TOKEN="$ADMIN" \
-    nohup uv run --python 3.13 --with-requirements requirements.txt \
-    uvicorn knowledge_graph.server:app --host 127.0.0.1 --port "$KG_PORT" >> "$GRAPH_DIR/server.log" 2>&1 < /dev/null &)
-  wait_for "$KG/health" 180 "$GRAPH_DIR/server.log"
-  echo "   started, log $GRAPH_DIR/server.log"
-fi
+ADMIN=$(cat "$DATA/admin_token")
 
-printf '\n== 2/6  graph members tristan and lies -> %s\n' "$TOKENS"
-"$PY" - "$KG" "$ADMIN" "$TOKENS" <<'PY'
-import json
+printf '\n== 1/5  Knowly server on %s (slack run, team %s)\n' "$URL" "$TEAM"
+stop_server
+# ELEVENLABS_API_KEY would make the local store re-register the hosted voice webhook; KNOWLY_BUCKET would mirror to Cloud Storage.
+(cd "$ROOT" && env -u ELEVENLABS_API_KEY -u KNOWLY_BUCKET \
+  KNOWLY_DATA_DIR="$DATA" KNOWLY_URL="$URL" KNOWLY_ADMIN_TOKEN="$ADMIN" KNOWLY_CHANNEL=ask_knowly \
+  SLACK_PEOPLE=tristan:U0C9D2HJUA1 KNOWLY_ALLOW_SELF=1 DEFAULT_EXPERT=tristan PORT="$PORT" \
+  nohup slack run --team "$TEAM" --app local --manifest-source local --no-activity --hide-triggers --skip-update \
+  > "$SLACK_LOG" 2>&1 < /dev/null &)
+wait_for "$URL/healthz" 120 "$SLACK_LOG"
+echo "   running, log $SLACK_LOG"
+
+printf '\n== 2/5  members tristan and alberic -> %s\n' "$MEMBER_TOKENS"
+"$PY" - "$URL/store" "$ADMIN" "$MEMBER_TOKENS" <<'PY'
 import sys
-import urllib.error
-import urllib.request
 from pathlib import Path
 
-kg, admin, path = sys.argv[1], sys.argv[2], Path(sys.argv[3])
+from knowly.client import StoreError
+from knowly.members import Members
 
-
-def post(route, token, body):
-    request = urllib.request.Request(kg + route, json.dumps(body).encode(),
-                                     {"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
-    with urllib.request.urlopen(request, timeout=30) as response:
-        return json.load(response)
-
-
-tokens = json.loads(path.read_text()) if path.exists() else {}
-for person in ("tristan", "lies"):
-    if tokens.get(person):
-        try:
-            post("/signals", tokens[person], [])
-            print(f"   {person}: token still valid")
-            continue
-        except urllib.error.HTTPError as error:
-            if error.code != 401:
-                raise
+members = Members(sys.argv[1], sys.argv[2], Path(sys.argv[3]))
+for person in ("tristan", "alberic"):
+    token = members.token_for(person)
     try:
-        tokens[person] = post("/members", admin, {"person": person})["token"]
-    except urllib.error.HTTPError as error:
-        sys.exit(f"the graph on {kg} rejected data/demo-graph/admin_token (HTTP {error.code}); run demo/full_demo.sh --reset")
-    print(f"   {person}: new member")
-path.write_text(json.dumps(tokens, indent=2) + "\n")
-path.chmod(0o600)
+        members.store.post_facts([], token)
+    except StoreError as error:
+        if error.status != 401:
+            raise
+        members.token_for(person, stale=token)
+    print(f"   {person}: member")
 PY
-TRISTAN=$("$PY" -c 'import json, sys; print(json.load(open(sys.argv[1]))["tristan"])' "$TOKENS")
+TOKEN=$("$PY" -c 'import json, sys; print(json.load(open(sys.argv[1]))["tristan"])' "$MEMBER_TOKENS")
 
-printf '\n== 3/6  MCP token for lies (tokens %s)\n' "$DB"
-LIES=$(cat "$LIES_TOKEN_FILE" 2>/dev/null || true)
-OWNER=$("$PY" -c 'import sys; from pathlib import Path; from knowly.tokens import Tokens; print(Tokens(Path(sys.argv[1])).person_for(sys.argv[2]))' "$DB" "${LIES:-none}")
-if [ "$OWNER" != lies ]; then
-  LIES=$("$BIN/knowly-token" --db "$DB" lies)
-  (umask 077; printf '%s\n' "$LIES" > "$LIES_TOKEN_FILE")
+printf '\n== 3/5  MCP token for alberic -> %s\n' "$ALBERIC_TOKEN_FILE"
+if [ ! -s "$ALBERIC_TOKEN_FILE" ]; then
+  ALBERIC=$("$BIN/knowly-token" --db "$DATA/tokens.db" alberic)
+  (umask 077; printf '%s\n' "$ALBERIC" > "$ALBERIC_TOKEN_FILE")
 fi
-echo "   $LIES"
+ALBERIC=$(cat "$ALBERIC_TOKEN_FILE")
+echo "   $ALBERIC"
 
-printf '\n== 4/6  demo step 1: tristan'\''s Claude Code session -> recorder -> graph\n'
-COUNT=$("$PY" -c 'import json, sys; print(len(json.load(open(sys.argv[1]))))' "$ROWS" 2>/dev/null || echo 0)
-if [ "$COUNT" -gt 0 ]; then
-  echo "   reusing $COUNT rows from $ROWS"
-  curl -fsS -X POST "$KG/signals" -H "Authorization: Bearer $TRISTAN" -H "Content-Type: application/json" --data-binary @"$ROWS"
+printf '\n== 4/5  demo step 1: tristan'\''s Claude session -> knowly-record -> fact store\n'
+FACTS=$(curl -fsS "$URL/store/rows" | "$PY" -c 'import json, sys; print(sum(r["person"] == "tristan" for r in json.load(sys.stdin)))')
+if [ "$FACTS" -gt 0 ]; then
+  echo "   tristan already has $FACTS facts"
+elif [ -s "$ROWS" ]; then
+  echo "   pushing $ROWS again"
+  curl -fsS -X POST "$URL/store/facts" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" --data-binary @"$ROWS"
   echo
 else
-  rm -rf "$HOME/.claude/projects/"*demo-knowly-payroll
+  rm -rf "$HOME/.claude/projects/"*demo-payroll
   mkdir -p "$WORK"
-  SESSION=$(cd "$WORK" && env -u RECORDER_CHILD claude -p \
+  SESSION=$(cd "$WORK" && env -u KNOWLY_CAPTURE_CHILD claude -p \
     "Draft a short plan for the nightly payroll export to the bank over SFTP, with 5 retries for a failed upload." \
     --model haiku --tools "" --output-format json | "$PY" -c 'import json, sys; print(json.load(sys.stdin)["session_id"])')
-  (cd "$WORK" && env -u RECORDER_CHILD claude -p \
+  (cd "$WORK" && env -u KNOWLY_CAPTURE_CHILD claude -p \
     "No, retry 3 times, not 5, because the bank closes the SFTP window at 18:00 and a late file is rejected anyway." \
     --resume "$SESSION" --model haiku --tools "" --output-format json) > /dev/null
   echo "   session $SESSION in $WORK"
-  "$BIN/knowly-record" --mode summary --person tristan --match demo-knowly-payroll \
-    --push "$KG" --token="$TRISTAN" --out "$ROWS"
+  "$BIN/knowly-record" --mode summary --person tristan --match demo-payroll \
+    --push "$URL" --token="$TOKEN" --out "$ROWS"
 fi
-"$PY" - "$KG" "$QUESTION" <<'PY'
+"$PY" - "$URL/store" "$QUESTION" <<'PY'
 import json
 import sys
 import urllib.parse
 import urllib.request
 
-kg, question = sys.argv[1], sys.argv[2]
+store, question = sys.argv[1], sys.argv[2]
 for query in ("nightly payroll SFTP export retries", question):
-    with urllib.request.urlopen(f"{kg}/who_knows?" + urllib.parse.urlencode({"q": query}), timeout=30) as response:
+    with urllib.request.urlopen(f"{store}/who_knows?" + urllib.parse.urlencode({"q": query}), timeout=30) as response:
         found = json.load(response)
-    print(f"   graph for {query!r}: {found['status']}")
+    print(f"   store for {query!r}: {found['status']}")
     for person in found["people"][:2]:
         top = person["evidence"][0] if person["evidence"] else {}
         why = (top.get("whys") or [{}])[0].get("why")
@@ -185,36 +161,30 @@ for query in ("nightly payroll SFTP export retries", question):
         print("     nothing related found, so step 2 will not show the payroll fact")
 PY
 
-printf '\n== 5/6  Slack bot + MCP on %s (slack run, team %s)\n' "$BOT" "$TEAM"
-stop_slack
-(cd "$ROOT" && KG_URL="$KG" SLACK_PEOPLE=tristan:U0C9D2HJUA1 DEFAULT_EXPERT=tristan PORT="$BOT_PORT" KNOWLY_TOKENS_DB="$DB" \
-  nohup slack run --team "$TEAM" --app local --manifest-source local --no-activity --hide-triggers --skip-update \
-  > "$SLACK_LOG" 2>&1 < /dev/null &)
-wait_for "$BOT/healthz" 120 "$SLACK_LOG"
-echo "   running, log $SLACK_LOG"
-
-mkdir -p "$LIES_DIR"
+mkdir -p "$ALBERIC_DIR"
 cat <<EOF
 
-== 6/6  run the demo
+== 5/5  run the demo in #ask_knowly (Knowly (local) must be in the channel: /invite @knowly)
 
-lies's Claude Code (second terminal), once:
-  cd $LIES_DIR
-  claude mcp remove -s local knowly 2>/dev/null; claude mcp add --transport http -s local knowly $BOT/mcp --header "Authorization: Bearer $LIES"
-  claude
-
-Step 1  tristan's payroll session is in the graph (shown above).
-Step 2  lies asks in Claude Code:
-          Ask knowly: $QUESTION
-        Expected: not recorded yet, the related payroll fact, "I asked tristan". tristan gets a Slack DM with an Answer button.
-Step 3  tristan clicks Answer in Slack and submits:
+Step 1  Tristan's payroll session is a fact in the store (shown above).
+Step 2  Alberic posts in #ask_knowly:
+          $QUESTION
+        Expected in the thread: Knowly says there is no answer yet and why Tristan is the one to ask, then tags Tristan.
+Step 3  Tristan replies in that thread:
           $ANSWER
-Step 4  lies asks the same question again:
-          Ask knowly: $QUESTION
-        Expected: tristan's answer, his name and today's date.
+        Expected: a check mark on the reply and a thank-you to Tristan saying it is saved to Knowly.
+Step 4  Alberic posts the same question again in #ask_knowly, as a new message:
+          $QUESTION
+        Expected: 16:00, with Tristan's reason, and Tristan and today's date under it.
 
-Without Slack or Claude Code, the same ask over HTTP:
-  curl -s -X POST $BOT/api/ask -H "Authorization: Bearer $LIES" -H "Content-Type: application/json" -d '{"question": "$QUESTION"}'
+The same answers over MCP, as alberic in Claude Code (second terminal):
+  cd $ALBERIC_DIR
+  claude mcp remove -s local knowly 2>/dev/null; claude mcp add --transport http -s local knowly $URL/mcp --header "Authorization: Bearer $ALBERIC"
+  claude
+  > Ask knowly: $QUESTION
 
-Reset: demo/full_demo.sh --reset     Stop: demo/full_demo.sh --stop
+Or over HTTP:
+  curl -s -X POST $URL/api/ask -H "Authorization: Bearer $ALBERIC" -H "Content-Type: application/json" -d '{"question": "$QUESTION"}'
+
+Log: $SLACK_LOG     Reset: demo/full_demo.sh --reset     Stop: demo/full_demo.sh --stop
 EOF

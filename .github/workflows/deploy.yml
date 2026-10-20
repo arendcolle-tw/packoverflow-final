@@ -7,14 +7,14 @@ on:
   workflow_dispatch:
     inputs:
       source:
-        description: Folder to deploy
+        description: Folder to deploy (. is the repo root, Knowly)
         type: choice
-        options: [app, ideas/alberic, ideas/wout, ideas/tristan]
+        options: [app, .]
         default: app
       service:
         description: Cloud Run service name
         type: choice
-        options: [packoverflow, knowledge-graph, knowledge-mcp, whoknows]
+        options: [packoverflow, knowly]
         default: packoverflow
       min_instances:
         description: Min instances (blank = unchanged)
@@ -61,11 +61,11 @@ jobs:
           # Repository secrets. GitHub masks them in logs; blank ones are skipped so nothing gets wiped.
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          KG_ADMIN_TOKEN: ${{ secrets.KG_ADMIN_TOKEN }}
+          KNOWLY_ADMIN_TOKEN: ${{ secrets.KNOWLY_ADMIN_TOKEN }}
         run: |
           # Only these folder and service pairs can be deployed.
           case "$SOURCE:$SERVICE" in
-            app:packoverflow|ideas/alberic:knowledge-graph|ideas/wout:knowledge-mcp|ideas/tristan:whoknows) ;;
+            app:packoverflow|.:knowly) ;;
             *) echo "refusing to deploy $SOURCE as $SERVICE"; exit 1 ;;
           esac
           scale=()
@@ -74,7 +74,7 @@ jobs:
           # Env vars per service. Names only here; values come from the env above.
           case "$SERVICE" in
             packoverflow) names=(ELEVENLABS_API_KEY); fixed=(ELEVENLABS_AGENT_ID=agent_8701m5cj7mknehsa9v29b68gqqwm) ;;
-            knowledge-graph) names=(ELEVENLABS_API_KEY ANTHROPIC_API_KEY KG_ADMIN_TOKEN); fixed=() ;;
+            knowly) names=(ELEVENLABS_API_KEY ANTHROPIC_API_KEY KNOWLY_ADMIN_TOKEN); fixed=(KNOWLY_DATA_DIR=/tmp/knowly "KNOWLY_BUCKET=$PROJECT_ID-knowly") ;;
             *) names=(); fixed=() ;;
           esac
           vars=""

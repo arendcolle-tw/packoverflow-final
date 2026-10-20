@@ -30,7 +30,10 @@
         "im:history",
         "im:read",
         "im:write",
-        "users:read"
+        "users:read",
+        "channels:history",
+        "channels:read",
+        "reactions:write"
       ]
     }
   },
@@ -38,7 +41,8 @@
     "event_subscriptions": {
       "bot_events": [
         "app_mention",
-        "message.im"
+        "message.im",
+        "message.channels"
       ]
     },
     "interactivity": {

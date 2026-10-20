@@ -1,6 +1,8 @@
 # The dependencies of pyproject.toml, pinned, for the Cloud Run buildpack.
-fastapi==0.151.0
+fastapi==0.143.5
 uvicorn==0.54.0
 slack_bolt==1.30.0
 aiohttp==3.14.5
 mcp==2.3.0
+httpx==0.28.1
+google-cloud-storage==3.17.1

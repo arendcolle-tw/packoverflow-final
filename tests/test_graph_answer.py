@@ -99,8 +99,14 @@ def test_http_failures_raise_graph_error(http, error):
 
 
 def test_default_url_from_env(monkeypatch):
-    monkeypatch.setenv("KG_URL", "http://graph.example/")
-    assert GraphClient().base_url == "http://graph.example"
+    monkeypatch.setenv("KG_URL", "https://graph.example/")
+    assert GraphClient().base_url == "https://graph.example"
+
+
+@pytest.mark.parametrize("url", ["file:///etc/passwd", "http://graph.example", "https://user:pw@graph.example", "ftp://graph.example"])
+def test_refuses_unsafe_graph_urls(url):
+    with pytest.raises(ValueError):
+        GraphClient(url)
 
 
 LOOKUP = {"question": "q", "status": "single_point", "best_similarity": 0.42, "people": [

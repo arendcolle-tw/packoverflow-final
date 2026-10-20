@@ -18,7 +18,7 @@ STATIC = BASE / "knowledge_clock" / "static"
 DEMO_NOW = "2026-10-20T16:15:00+02:00"
 # Cloud Run sets K_SERVICE: use real time and its writable /tmp there.
 ON_CLOUD_RUN = "K_SERVICE" in os.environ
-CLAUDE_INSTALL = "claude.ai/customize/connectors?modal=add-custom-connector&connectorName=Packoverflow&connectorUrl="
+CLAUDE_INSTALL = "https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=Packoverflow&connectorUrl="
 
 
 class WhyAnswer(BaseModel):
@@ -144,8 +144,7 @@ def join(body: JoinRequest, request: Request) -> dict:
     return {
         "person": person,
         "url": url,
-        "claude_ai": f"https://{CLAUDE_INSTALL}{quote(url, safe='')}",
-        "claude_app": f"claude://{CLAUDE_INSTALL}{quote(url, safe='')}",
+        "claude_ai": f"{CLAUDE_INSTALL}{quote(url, safe='')}",
         "claude_code": f"claude mcp add --transport http packoverflow {url}",
     }
 

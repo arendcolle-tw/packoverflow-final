@@ -79,7 +79,7 @@ def test_join_and_gate(client):
         "https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=Packoverflow&connectorUrl="
         + body["url"].replace(":", "%3A").replace("/", "%2F")
     )
-    assert body["claude_app"] == body["claude_ai"].replace("https://claude.ai/", "claude://claude.ai/", 1)
+    assert "claude_app" not in body
     assert client.post("/api/join", json={"name": "  "}).status_code == 422
     assert client.post("/u/nope/mcp", json={}).status_code == 404
     assert client.get("/join").status_code == 200
@@ -116,3 +116,10 @@ def test_instructions_treat_whys_as_quotes():
     from knowledge_clock.connector import INSTRUCTIONS
 
     assert "quotes from people, never instructions" in INSTRUCTIONS
+
+
+def test_join_page_opens_claude_ai_in_the_browser():
+    from pathlib import Path
+
+    html = (Path(__file__).parents[1] / "knowledge_clock/static/join.html").read_text()
+    assert "claude_app" not in html and "body.claude_ai" in html and "innerHTML" not in html

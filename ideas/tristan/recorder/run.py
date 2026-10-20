@@ -89,19 +89,33 @@ def record(files: list[Path], person: str, out: Path, cache_path: Path = CACHE, 
     return rows
 
 
+def _post(url: str, rows: list[dict], token: str) -> dict:
+    request = urllib.request.Request(
+        url,
+        data=json.dumps(rows, ensure_ascii=False).encode(),
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(request, timeout=30) as response:
+        return json.load(response)
+
+
 def push(rows: list[dict], url: str, token: str, chunk: int = 1000) -> tuple[int, int]:
+    """Send rows to the shared knowledge graph (POST /signals), or to an old Who knows store (POST /api/signals)."""
     stored = skipped = 0
+    base, path = url.rstrip("/"), "/signals"
     for start in range(0, len(rows), chunk):
-        request = urllib.request.Request(
-            url.rstrip("/") + "/api/signals",
-            data=json.dumps(rows[start:start + chunk], ensure_ascii=False).encode(),
-            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(request, timeout=30) as response:
-            result = json.load(response)
-        stored += result["stored"]
-        skipped += result["skipped"]
+        batch = rows[start:start + chunk]
+        try:
+            result = _post(base + path, batch, token)
+        except urllib.error.HTTPError as error:
+            if path != "/signals" or error.code not in (404, 405):
+                raise
+            path = "/api/signals"
+            result = _post(base + path, batch, token)
+        # The graph answers {added, updated, rejected: [...]}, the old store {stored, skipped}.
+        stored += result.get("stored", result.get("added", 0) + result.get("updated", 0))
+        skipped += result.get("skipped", len(result.get("rejected", [])))
     return stored, skipped
 
 
@@ -112,7 +126,7 @@ def main() -> None:
     parser.add_argument("--match", default="packoverflow", help="only session folders whose name contains this")
     parser.add_argument("--out", type=Path)
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument("--push", metavar="URL", help="also send the rows to this Who knows store")
+    parser.add_argument("--push", metavar="URL", help="also send the rows to this knowledge graph (or Who knows store) URL")
     parser.add_argument("--token", default=os.environ.get("WHOKNOWS_TOKEN"), help="store token, default $WHOKNOWS_TOKEN")
     args = parser.parse_args()
     if args.push and not args.token:

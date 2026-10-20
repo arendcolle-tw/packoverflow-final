@@ -31,4 +31,4 @@ If you use Claude Code with the Slack connector, ask it to post the line for you
 
 ## Deploy
 
-The live deploy is not set up yet. It will run from GitHub Actions to Google Cloud once we choose the stack.
+Every merge to `main` that changes `app/` deploys it to Google Cloud Run in `us-central1`, through `.github/workflows/deploy.yml`. The live URL is in the summary of the latest run on the Actions tab. Cloud Run builds from source, so `app/` needs a start command Google buildpacks recognise (a `package.json` with a `start` script, or a Python app with `requirements.txt`) and must listen on the `PORT` env var.

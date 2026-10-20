@@ -1,13 +1,15 @@
 import os
+import re
 import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 
 
 def person_key(name: str) -> str:
-    """The person a name stands for: its first word, lowercase, accents stripped, so "Albéric X" is "alberic"."""
+    """The person a name stands for: its first word, lowercase, accents stripped, so "Albéric X" and "alberic.loos" are "alberic"."""
     plain = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
-    return (plain.lower().split() or [""])[0]
+    # Slack usernames like "alberic.loos" count too, so split on anything that is not a letter or digit.
+    return next((word for word in re.split(r"[^a-z0-9]+", plain.lower()) if word), "")
 
 
 @dataclass(frozen=True)

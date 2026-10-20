@@ -87,6 +87,7 @@ def answer_blocks(result: dict) -> list[dict]:
 def channel_matcher(channel: str):
     """A Bolt matcher that is true for events in `channel`, given as a channel id or a name with or without #."""
     channel = channel.lstrip("#")
+    wanted = channel.lower().replace("-", "_")
     names: dict[str, str] = {}
 
     async def in_channel(event: dict, client) -> bool:
@@ -102,7 +103,8 @@ def channel_matcher(channel: str):
             except SlackApiError:
                 log.exception("conversations.info failed for %s", channel_id)
                 names[channel_id] = ""
-        return names[channel_id] == channel
+        # "ask-knowly" and "ask_knowly" are the same channel to Knowly.
+        return names[channel_id].lower().replace("-", "_") == wanted
 
     return in_channel
 
@@ -196,6 +198,41 @@ def register_channel(app: AsyncApp, *, channel: str, answer_fn: Callable[[str, s
             return
         await client.reactions_add(channel=event["channel"], timestamp=event["ts"], name="white_check_mark")
         await client.chat_postMessage(**where, text=f"Thanks <@{event['user']}>, that's saved to Knowly now.")
+
+    async def in_open_thread(event: dict) -> bool:
+        thread_ts = event.get("thread_ts")
+        if not thread_ts or thread_ts == event.get("ts") or event.get("channel_type") == "im":
+            return False
+        with connect(threads_db) as db:
+            return db.execute("SELECT 1 FROM threads WHERE thread_ts = ? AND channel = ? AND status = 'open'",
+                              (thread_ts, event.get("channel"))).fetchone() is not None
+
+    # Registered first: Bolt runs only the first matching listener, and a reply in a Knowly thread must always
+    # reach reply(), whichever channel the question was asked in.
+    @app.event("message", matchers=[in_open_thread])
+    async def on_thread_reply(event: dict, client) -> None:
+        if event.get("bot_id") or event.get("subtype") not in HUMAN_SUBTYPES or not event.get("user"):
+            return
+        if (event["channel"], event["ts"]) in seen:
+            return
+        seen.add((event["channel"], event["ts"]))
+        text = plain(event.get("text") or "")
+        if text:
+            await reply(event, text, event["thread_ts"], client)
+
+    # A mention anywhere starts the same threaded flow as a question in the Knowly channel.
+    @app.event("app_mention")
+    async def on_any_mention(event: dict, client) -> None:
+        if event.get("bot_id") or not event.get("user") or (event["channel"], event["ts"]) in seen:
+            return
+        seen.add((event["channel"], event["ts"]))
+        text = plain(event.get("text") or "")
+        if not text:
+            return
+        if event.get("thread_ts") and event["thread_ts"] != event["ts"]:
+            await reply(event, text, event["thread_ts"], client)
+        else:
+            await ask(event, text, client)
 
     @app.event("message", matchers=[channel_matcher(channel)])
     async def on_ask_knowly_message(event: dict, client) -> None:

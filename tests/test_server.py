@@ -184,3 +184,8 @@ def test_main_serves_on_the_configured_host_and_port(tmp_path, monkeypatch):
     server.main()
     assert (seen["host"], seen["port"]) == ("0.0.0.0", 9123)
     assert seen["app"].state.settings.url == "http://127.0.0.1:9123"
+
+
+def test_person_key_reads_slack_usernames_and_accents():
+    from knowly.config import person_key
+    assert person_key("alberic.loos") == person_key("Albéric Loos") == "alberic"

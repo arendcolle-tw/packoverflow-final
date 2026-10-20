@@ -105,7 +105,7 @@ const REVIEW_SEED = [
 const DEMO_VIDEO = path.join(__dirname, "video", "demo.mp4");
 
 function demoVideo() {
-  if (fs.existsSync(DEMO_VIDEO)) return `<video class="frame" src="/video/demo.mp4" controls playsinline preload="metadata"></video>`;
+  if (fs.existsSync(DEMO_VIDEO)) return `<video class="frame demo" src="/video/demo.mp4" poster="/video/demo-poster.jpg" controls playsinline preload="metadata"></video>`;
   return VIDEO_URL ? videoBlock() : "";
 }
 
@@ -173,6 +173,7 @@ function callPage(host) {
   .meta { color: var(--muted); font-size: 0.9rem; }
   blockquote { margin: 8px 0; padding-left: 14px; border-left: 3px solid var(--amber); font-size: 1.05rem; }
   .sample { display: inline-block; font-size: 0.8rem; font-weight: 600; color: var(--navy-950); background: var(--amber); border-radius: 999px; padding: 2px 10px; margin-bottom: 8px; }
+  .frame.demo { aspect-ratio: auto; height: auto; }
   .frame { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 18px; background: #000; margin-top: 28px; }
   nav { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 24px; }
   nav button { background: none; border: 0; border-radius: 999px; color: var(--muted); font: inherit; font-weight: 600; padding: 8px 20px; cursor: pointer; }
@@ -206,6 +207,7 @@ ${voice.STYLE}
   <nav class="glass" role="tablist">
     <button role="tab" data-view="home" aria-selected="true">Call</button>
     <button role="tab" data-view="deck" aria-selected="false">Slides</button>
+    ${video ? `<button role="tab" data-view="demo" aria-selected="false">Demo</button>` : ""}
   </nav>
   <div class="view" id="home">
 ${voice.SECTION}
@@ -214,17 +216,19 @@ ${video}
 ${aboutBlock()}
   </div>
   <div class="view" id="deck" hidden>${slidesBlock()}</div>
+  ${video ? `<div class="view" id="demo" hidden><p class="hint">Asking "who knows" in Slack: the answer, the person behind it, and what happens when nobody recorded it yet.</p>${video}</div>` : ""}
 </main>
 <script>
   document.getElementById("call").hidden = false;
   const views = document.querySelectorAll("nav button");
   function view(name) {
-    if (name !== "deck") name = "home";
+    if (!document.getElementById(name) || !["deck", "demo"].includes(name)) name = "home";
+    document.querySelectorAll("video").forEach((v) => v.pause());
     views.forEach((b) => b.setAttribute("aria-selected", b.dataset.view === name));
     document.querySelectorAll(".view").forEach((v) => (v.hidden = v.id !== name));
   }
-  views.forEach((b) => b.addEventListener("click", () => { history.replaceState(null, "", b.dataset.view === "deck" ? "#slides" : "#"); view(b.dataset.view); }));
-  view(location.hash === "#slides" ? "deck" : "home");
+  views.forEach((b) => b.addEventListener("click", () => { history.replaceState(null, "", b.dataset.view === "deck" ? "#slides" : b.dataset.view === "demo" ? "#demo" : "#"); view(b.dataset.view); }));
+  view(location.hash === "#slides" ? "deck" : location.hash === "#demo" ? "demo" : "home");
 </script>
 ${voice.SCRIPTS}
 </body></html>`;
@@ -367,6 +371,7 @@ function page() {
   .card p { color: var(--muted); margin: 0 0 18px; }
   ol { margin: 0; padding-left: 20px; } li { margin: 10px 0; }
   code.prompt { display: inline-block; background: rgba(0, 13, 58, 0.6); border: 1px solid var(--glass-line); border-radius: 10px; padding: 6px 12px; font: 0.95rem var(--mono); cursor: pointer; }
+  .frame.demo { aspect-ratio: auto; height: auto; }
   .frame { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 18px; background: #000; }
   .empty { text-align: center; padding: 80px 16px; border: 2px dashed var(--glass-line); border-radius: 18px; }
   .empty h2 { margin: 0 0 8px; } .empty p, .hint { color: var(--muted); }
@@ -606,6 +611,12 @@ const server = http.createServer((req, res) => {
       if (err) { res.writeHead(404); return res.end(); }
       res.writeHead(200, { "Content-Type": ICONS[urlPath], "Cache-Control": "public, max-age=86400" });
       res.end(data);
+    });
+  }
+  if (urlPath === "/video/demo-poster.jpg") {
+    return fs.readFile(path.join(__dirname, "video", "demo-poster.jpg"), (err, data) => {
+      if (err) { res.writeHead(404); return res.end(); }
+      res.writeHead(200, { "Content-Type": "image/jpeg" }); res.end(data);
     });
   }
   if (urlPath === "/video/demo.mp4") {

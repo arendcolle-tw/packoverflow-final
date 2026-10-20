@@ -2,18 +2,48 @@
 
 Context only: how we're judged and what we learned from round 1. Planning, timing and who does what are decided by the team, not here.
 
-Prize: €10,000, winner takes all. 15 teams in our track (SD Worx). Judged on a live pitch with a demo.
+Prize: €10,000, winner takes all, one winner across the KBC and SD Worx tracks. 16 teams in our track (SD Worx), 8 per room. Judged on a live pitch with a demo.
 
-## How we're scored (assumed same as round 1)
+## How we're scored (finals guide)
 
-| Criterion | What it means in practice |
-|---|---|
-| **Creativity** | Is the idea original? Can a jury member get it in 5 seconds? |
-| **Technical ability** | Does it actually work, live, end to end? |
-| **Fit** | Does it solve SD Worx's case, for a real role at SD Worx? |
-| **Security (10%)** | Aikido AI Code Audit: business logic, IDOR, authentication, authorization. Score = issues left after fixes. Before/after screenshots. |
+| Criterion | Weight | What it means in practice |
+|---|---|---|
+| **Creativity** | 25% | Is the idea original? Can a jury member get it in 5 seconds? |
+| **Technical ability** | 20% | Does it actually work, live, end to end? |
+| **Fit** | 20% | Does it solve SD Worx's case, for a real role at SD Worx? |
+| **Pitch quality** | 25% | How well did we present? 3 minutes, then 5 minutes of questions, cut off on time. |
+| **Security** | 10% | Aikido AI Code Audit: business logic, IDOR, authentication, authorization. Score = issues left after fixes. Submit screenshots of the final scan with the repo name and the remaining issues. |
 
-Rules (round 1): built during the event only · repo public until judging ends · README with what it is, how to run, what's unfinished · no secrets in git · final means final.
+Rules (finals guide): built during the event only · one project per team · repo public until judging ends · README with what it is, how to run, what's unfinished · no secrets in git · final means final, no code or submission changes after submitting · pitch deck as PPT or PDF.
+
+## Finals day
+
+| Time | What | Where |
+|---|---|---|
+| 08:00 | Arrival and breakfast | Vooruit Concertzaal |
+| 08:40 | Welcome by partners | Vooruit Concertzaal |
+| 09:00 to 16:00 | Hacking, lunch at 12:30. Partner staff answer questions and give feedback. | Vooruit Concertzaal |
+| **16:00** | **Submissions close** | Builderbase |
+| **16:15 to 16:25** | **Our pitch, SD Worx Room 4, first slot. Be there by 16:05.** | Wintercircus |
+| 18:25 | SD Worx winner announced, then pitches again at 18:30 | Vooruit Theaterzaal |
+| 19:00 | Overall winner announced | Vooruit Theaterzaal |
+
+In Room 4 we pitch against ProstoPizdetz, SkepTech, Sssst… hier hackt den AI, Team 2, Tekst, The Four Loops and Vulcan Kinetics. Two of those, Team 2 and Vulcan Kinetics, were round 1 finalists. Room 3 has Aleida.ai, Algoholics, "Arno, Rune & Aeon", CDN, GenHomies, Les Flammand, Maze Runners and OpStudio.
+
+We pitch on the organisers' device, not ours. The demo has to run from the deck: a live URL plus screenshots or a recording in the PDF.
+
+**Submit by 16:00 on Builderbase.** One teammate logs in and fills in the Overview fields:
+- a short description
+- the pitch deck (under 3 minutes, PPT or PDF)
+- the GitHub repo link (the repo must be public)
+- screenshots of the final Aikido scan, showing the repo name and the remaining vulnerabilities
+
+## Partner tools
+
+- **Aikido.** Create a free account at app.aikido.dev with GitHub, connect this repo and let it scan. Fix the findings, push, and wait for a scan of the latest code before taking the screenshots. Start early, because the final scan must finish before 16:00. Aikido staff are on site.
+- **Google Cloud.** Our team (table F1) gets shared credentials, valid for one week. The team link is in Builderbase and stays out of this repo, because it grants access. Each teammate who enters their email there joins the team and gets the credentials.
+- **ElevenLabs** (text to speech). Get credits in the coupon-codes channel of their Discord (discord.com/invite/VnBvbbcdEC): click Start Redemption and use the email you registered with.
+- **Cursor.** Credits come the same way through discord.gg/5UwpfTF7M. We build with Claude Code, so we skip it.
 
 ## What round 1 taught us
 

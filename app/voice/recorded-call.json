@@ -9,54 +9,54 @@
    "text": "Hi, this is Nobikos. Ask me what I can do for your team."
   },
   {
-   "at": 4.41,
+   "at": 4.04,
    "who": "you",
    "text": "Hi. What is Nobikos?"
   },
   {
-   "at": 7.17,
+   "at": 6.7,
    "who": "agent",
-   "text": "Hi there. Nobikos keeps the reasoning behind decisions, not just the facts. When your team uses AI to write code or draft text, we capture the moments where a person actually thinks it through, corrects the AI, or explains why something matters. We store that with the person's name and their reason in their own words. So when someone asks who knows something, they get a real colleague and why they know it, instead of just asking how it was done. It's less about asking how, more about talking why."
+   "text": "Hi there. Nobikos keeps the reasoning behind your team's work and who it lives with. Facts are not knowledge, a system can tell you what was done and how, but only a person knows why, and the why is what matters. So instead of asking how, we're talking why. We find who actually worked something out, keep their reason in their own words, and reach out when nobody's explained it yet."
   },
   {
-   "at": 35.83,
+   "at": 28.26,
    "who": "you",
-   "text": "What would my team actually use it for?"
+   "text": "Where does it get its knowledge from?"
   },
   {
-   "at": 39.19,
+   "at": 31.06,
    "who": "agent",
-   "text": "Let me give you two quick ones. First, your people can ask in Slack or through an AI assistant \"who knows this topic\" and get back the colleague who actually worked it out, with their reason in their own words, and a way to chat with them. That's live today. Second, you as a leader can see which topics are going dark,  where only one person knows something, or nobody has explained it lately. That's live too, and it helps you spot where knowledge is at risk before someone leaves. What matters most to your team right now?"
+   "text": "We learn from the work itself, documents and code changes with who owns them, and the moments people decide or explain why in AI sessions like Claude, Copilot or ChatGPT. Each reason stays with the person, in their own words. We also ask in Slack or reach out directly when something's not recorded yet, and their reply becomes the next answer for everyone. Right now, finding who knows and reaching out in Slack are live today."
   },
   {
-   "at": 71.23,
+   "at": 57.77,
    "who": "you",
-   "text": "And as a manager, what do I get?"
+   "text": "And what if the answer is not in there?"
   },
   {
-   "at": 74.27,
+   "at": 60.66,
    "who": "agent",
-   "text": "As a manager, you see where knowledge is at risk. We show you topics that only one person understands, or nobody has reasoned about in a while, we call that going dark. You get the topic names, never who knows what, so there's no scoring people. It helps you plan handovers and spot gaps before they become problems when someone leaves or moves to a new role."
+   "text": "If nobody's recorded it yet, our bot messages the person most likely to know, and their reply becomes the next answer for everyone. So the gap gets filled, and the next person who asks gets a real answer instead of silence. That's how knowledge stays current and doesn't get lost when people move on."
   },
   {
-   "at": 95.54,
+   "at": 79.57,
    "who": "you",
-   "text": "Is the onboarding path live already?"
+   "text": "Can I call you before a meeting to get briefed?"
   },
   {
-   "at": 98.72,
+   "at": 82.88,
    "who": "agent",
-   "text": "No, that's on the roadmap. Right now we have who knows and going dark live for you. The onboarding path,  building a learning route around what a newcomer already knows, that's an idea we're working toward, not built yet."
+   "text": "That's on the roadmap. Right now you can call me to ask questions like this, and I'll find who knows or pull what we have. But calling for a briefing on what was decided and who to ask before a meeting, that's the idea we're building toward. For now, you can ask me anything and I'll connect you with the colleague who actually worked it out."
   },
   {
-   "at": 111.03,
+   "at": 100.95,
    "who": "you",
    "text": "Great, thanks."
   },
   {
-   "at": 113.14,
+   "at": 103.06,
    "who": "agent",
-   "text": "You're welcome. Feel free to reach out anytime you want to know more. Take care."
+   "text": "You're welcome. Good luck with your team."
   }
  ]
 }

@@ -152,14 +152,14 @@ function handle(req, res, urlPath) {
 }
 
 const STYLE = `
-  .call { text-align: center; padding: 40px 24px; }
+  .call { text-align: center; padding: 32px 24px; }
   .call h2 { font-size: clamp(1.6rem, 3.4vw, 2.3rem); max-width: 26ch; margin: 8px auto 26px; }
   .callbtns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
   #callbtn { border: 0; cursor: pointer; font: 800 1.6rem var(--display); padding: 22px 64px; border-radius: 999px; }
   #callbtn.live { background: var(--coral); color: var(--text); }
   #playbtn { border: 0; cursor: pointer; font: 600 1.05rem var(--sans); padding: 22px 28px; border-radius: 999px; }
   #callstate { color: var(--muted); margin: 18px 0 0; min-height: 1.5em; }
-  #captions { max-width: 640px; margin: 14px auto 0; text-align: left; }
+  #captions { max-width: 760px; margin: 18px auto 0; text-align: left; }
   #captions .line { margin: 6px 0; font-size: 1.05rem; color: var(--muted); }
   #captions .line.agent { color: var(--text); }
   #captions .line.you::before { content: "You: "; color: var(--sky-300); font-weight: 600; }
@@ -179,7 +179,6 @@ const SECTION = `
         <button class="btn ghost" id="playbtn">Play recorded call</button>
       </div>
       <p id="callstate">Press Call and ask out loud. You can interrupt it any time.</p>
-      <div id="captions"></div>
       <audio id="recorded" src="/voice/recorded-call.mp3" preload="auto"></audio>
     </div>
     <div id="callnames">
@@ -191,6 +190,7 @@ const SECTION = `
           <blockquote id="knowwhy"></blockquote><div class="meta" id="knowwhen"></div></div>
       </div>
     </div>
+    <div id="captions"></div>
   </section>`;
 
 const SCRIPTS = `<script src="/voice/sdk.js"></script><script src="/voice/call.js"></script>`;

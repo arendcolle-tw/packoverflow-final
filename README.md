@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/header.svg" alt="Knowly: heads, AI sessions and docs are summarised around decisions into one knowledge base where every fact has a person and a reason" width="100%">
+  <img src="assets/hero.svg" alt="Knowly: one central, fact-based knowledge base. Every fact has a person and a reason." width="100%">
 </p>
 
 # Knowly

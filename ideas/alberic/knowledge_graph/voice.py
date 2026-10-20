@@ -8,6 +8,7 @@ import hmac
 import json
 import os
 import re
+import sys
 import time
 from difflib import SequenceMatcher
 from html import escape
@@ -17,6 +18,8 @@ import httpx
 from knowledge_graph.llm import ask_json
 
 API = "https://api.elevenlabs.io"
+AGENT_ID = "agent_6001m5cjmdb8enjr7ka28z6c9p4g"  # made with setup_agent on 2026-10-20; ELEVENLABS_AGENT_ID overrides
+PUBLIC_URL = "https://knowledge-graph-323892475788.us-central1.run.app"  # KG_PUBLIC_URL overrides
 WIDGET_JS = "https://unpkg.com/@elevenlabs/convai-widget-embed"
 TOLERANCE = 30 * 60  # seconds a signed webhook stays valid
 AFFIRM = {"yes", "yeah", "yep", "ja", "correct", "right", "that", "s", "is", "it", "thats", "sure", "exactly", "ok", "okay",
@@ -25,6 +28,39 @@ AFFIRM = {"yes", "yeah", "yep", "ja", "correct", "right", "that", "s", "is", "it
 
 class NotConfigured(Exception):
     pass
+
+
+def agent_id() -> str:
+    return os.environ.get("ELEVENLABS_AGENT_ID") or AGENT_ID
+
+
+def webhook_secret(graph) -> str:
+    return os.environ.get("ELEVENLABS_WEBHOOK_SECRET") or graph.setting("elevenlabs_webhook_secret") or ""
+
+
+def ensure_webhook(graph) -> None:
+    """Register the HMAC post-call webhook once and attach it to the agent. The secret is kept only in the graph's
+    database, so nobody has to copy it. Needs ELEVENLABS_API_KEY; does nothing when a secret is already known."""
+    key = os.environ.get("ELEVENLABS_API_KEY")
+    if not key or webhook_secret(graph):
+        return
+    headers = {"xi-api-key": key}
+    url = (os.environ.get("KG_PUBLIC_URL") or PUBLIC_URL).rstrip("/") + "/webhooks/elevenlabs"
+    try:
+        hook = httpx.post(f"{API}/v1/workspace/webhooks", headers=headers, timeout=30, json={"settings": {
+            "auth_type": "hmac", "name": "knowledge-graph post-call", "webhook_url": url}})
+        hook.raise_for_status()
+        found = hook.json()
+        if not found.get("webhook_secret"):
+            raise RuntimeError("no secret returned")
+        graph.set_setting("elevenlabs_webhook_secret", found["webhook_secret"])
+        graph.set_setting("elevenlabs_webhook_id", found["webhook_id"])
+        attach = httpx.patch(f"{API}/v1/convai/agents/{agent_id()}", headers=headers, timeout=30, json={"platform_settings": {
+            "workspace_overrides": {"webhooks": {"post_call_webhook_id": found["webhook_id"], "events": ["transcript"]}}}})
+        attach.raise_for_status()
+        print("ElevenLabs post-call webhook registered", file=sys.stderr)
+    except Exception as error:  # noqa: BLE001
+        print(f"ElevenLabs webhook setup failed: {type(error).__name__}", file=sys.stderr)
 
 
 def dynamic_variables(gap: dict) -> dict:
@@ -43,7 +79,8 @@ def phone_number(person: str) -> str | None:
 
 def start_call(gap: dict) -> str:
     """Start the Twilio outbound call. Returns the ElevenLabs conversation id."""
-    key, agent, line = (os.environ.get(k) for k in ("ELEVENLABS_API_KEY", "ELEVENLABS_AGENT_ID", "ELEVENLABS_PHONE_NUMBER_ID"))
+    key, line = os.environ.get("ELEVENLABS_API_KEY"), os.environ.get("ELEVENLABS_PHONE_NUMBER_ID")
+    agent = agent_id()
     if not (key and agent and line):
         raise NotConfigured("phone calls are not configured")
     to = phone_number(gap.get("owner") or "")
@@ -63,9 +100,7 @@ def start_call(gap: dict) -> str:
 
 def widget(gap: dict) -> str:
     """The ElevenLabs web widget for the same agent and variables, or a 'not configured' note."""
-    agent = os.environ.get("ELEVENLABS_AGENT_ID")
-    if not agent:
-        return "<p class=muted>Voice is not configured yet (no ELEVENLABS_AGENT_ID). Type your answer below.</p>"
+    agent = agent_id()
     variables = escape(json.dumps(dynamic_variables(gap), ensure_ascii=False), quote=True)
     return (f"<h2>Talk it through</h2><div class=glass><p class=muted>Press the button, allow the microphone, "
             f"and correct Claude out loud. The board updates when you hang up.</p>"

@@ -99,7 +99,7 @@ def test_confirmed_weighs_half_of_edited(tmp_path):
         new = next(r for r in graph.rows() if r["id"] == f"gap-{gap['id']}")
         assert new["draft"] == result and new["source"] == "voice_call" and new["person"] == "tristan"
         weights[result] = row_weight(new)
-        evidence = graph.who_knows(gap["subject"], NOW)["people"][0]["evidence"][0]
+        evidence = graph.who_knows(gap["subject"])["people"][0]["evidence"][0]
         weights[result + "_contribution"] = evidence["contribution"] / evidence["similarity"]
     assert weights["confirmed"] == 0.5 and weights["edited"] == 1.0
     assert weights["confirmed_contribution"] < weights["edited_contribution"]
@@ -118,6 +118,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("KG_ADMIN_TOKEN", ADMIN)
     monkeypatch.setenv("KG_PHONE_NUMBERS", '{"wout": "+32470000001", "arend": "+32470000002"}')
     monkeypatch.delenv("K_SERVICE", raising=False)
+    monkeypatch.delenv("ELEVENLABS_API_KEY", raising=False)
     import knowledge_graph.server as server
 
     server = importlib.reload(server)

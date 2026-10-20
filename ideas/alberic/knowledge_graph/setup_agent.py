@@ -1,7 +1,8 @@
-"""Create the ElevenLabs agent once: python -m knowledge_graph.setup_agent [--webhook-url URL]
+"""Create the ElevenLabs agent once: python -m knowledge_graph.setup_agent
 
-Needs ELEVENLABS_API_KEY. Prints the agent id (put it in ELEVENLABS_AGENT_ID). With --webhook-url it also creates the
-HMAC post-call webhook, attaches it to the agent and prints its secret once (put it in ELEVENLABS_WEBHOOK_SECRET).
+Needs ELEVENLABS_API_KEY. Prints the agent id (the service defaults to the one already made, voice.AGENT_ID).
+The post-call webhook is not made here: the service registers it itself (voice.ensure_webhook), so its secret
+never leaves the service's own database.
 """
 
 import argparse
@@ -34,19 +35,9 @@ PLACEHOLDERS = {"person": "Wout", "subject": "Retry the payroll export 3 times",
 
 def main() -> None:
     parser = argparse.ArgumentParser(prog="knowledge_graph.setup_agent")
-    parser.add_argument("--webhook-url", help="e.g. https://<service>/webhooks/elevenlabs")
     parser.add_argument("--voice-id", default=None, help="ElevenLabs voice id (default: the platform default)")
     args = parser.parse_args()
     headers = {"xi-api-key": os.environ["ELEVENLABS_API_KEY"]}
-
-    platform: dict = {}
-    if args.webhook_url:
-        hook = httpx.post(f"{API}/v1/workspace/webhooks", headers=headers, timeout=30, json={"settings": {
-            "auth_type": "hmac", "name": "knowledge-graph post-call", "webhook_url": args.webhook_url}})
-        hook.raise_for_status()
-        found = hook.json()
-        platform["workspace_overrides"] = {"webhooks": {"post_call_webhook_id": found["webhook_id"], "events": ["transcript"]}}
-        print(f"ELEVENLABS_WEBHOOK_SECRET={found.get('webhook_secret')}  (shown once, keep it out of git)")
 
     tts = {"voice_id": args.voice_id} if args.voice_id else {}
     agent = httpx.post(f"{API}/v1/convai/agents/create", headers=headers, timeout=30, json={
@@ -57,7 +48,6 @@ def main() -> None:
                       "dynamic_variables": {"dynamic_variable_placeholders": PLACEHOLDERS}},
             **({"tts": tts} if tts else {}),
         },
-        **({"platform_settings": platform} if platform else {}),
     })
     agent.raise_for_status()
     print(f"ELEVENLABS_AGENT_ID={agent.json()['agent_id']}")

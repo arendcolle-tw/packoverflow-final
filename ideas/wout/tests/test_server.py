@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from conftest import CODE
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -52,7 +54,7 @@ def qclient(tmp_path, monkeypatch):
     monkeypatch.setenv("KC_DATA_DIR", str(tmp_path / "live"))
     from knowledge_clock.server import app
     client = TestClient(app)
-    token = client.post("/api/join", json={"name": "wout"}).json()["url"].split("/u/")[1].split("/")[0]
+    token = client.post("/api/join", json={"name": "wout", "code": CODE}).json()["url"].split("/u/")[1].split("/")[0]
     client.headers["Authorization"] = f"Bearer {token}"
     return client
 
@@ -60,22 +62,26 @@ def qclient(tmp_path, monkeypatch):
 def test_why_needs_the_owners_token(qclient):
     assert qclient.post("/api/why", json={"id": "s2:q1", "why": "x"}, headers={"Authorization": ""}).status_code == 401
     assert qclient.post("/api/why", json={"id": "s2:q1", "why": "x"}, headers={"Authorization": "Bearer nope"}).status_code == 401
-    other = qclient.post("/api/join", json={"name": "tristan"}).json()["url"].split("/u/")[1].split("/")[0]
+    other = qclient.post("/api/join", json={"name": "tristan", "code": CODE}).json()["url"].split("/u/")[1].split("/")[0]
     assert qclient.post("/api/why", json={"id": "s2:q1", "why": "x"}, headers={"Authorization": f"Bearer {other}"}).status_code == 404
 
 
-def test_join_refuses_a_taken_name(qclient):
-    assert qclient.post("/api/join", json={"name": "Wout"}).status_code == 409
+def test_join_refuses_a_taken_name_a_bad_code_and_odd_names(qclient):
+    assert qclient.post("/api/join", json={"name": "Wout", "code": CODE}).status_code == 409
+    assert qclient.post("/api/join", json={"name": "jan", "code": "wrong"}).status_code == 403
+    assert qclient.post("/api/join", json={"name": "<script>", "code": CODE}).status_code == 422
 
 
 def test_questions_list_only_unexplained_human_decisions(qclient):
-    assert [q["id"] for q in qclient.get("/api/questions", params={"person": "wout"}).json()] == ["s2:q1"]
-    assert qclient.get("/api/questions", params={"person": "tristan"}).json() == []
+    assert [q["id"] for q in qclient.get("/api/questions").json()] == ["s2:q1"]
+    other = qclient.post("/api/join", json={"name": "tristan", "code": CODE}).json()["url"].split("/u/")[1].split("/")[0]
+    assert qclient.get("/api/questions", headers={"Authorization": f"Bearer {other}"}).json() == []
+    assert qclient.get("/api/questions", headers={"Authorization": ""}).status_code == 401
 
 
 def test_answering_removes_question_and_shows_why(qclient):
     assert qclient.post("/api/why", json={"id": "s2:q1", "why": "the bot posts twice otherwise"}).status_code == 204
-    assert qclient.get("/api/questions", params={"person": "wout"}).json() == []
+    assert qclient.get("/api/questions").json() == []
     whys = [s["why"] for s in qclient.get("/api/topics/slack-bot").json()["signals"]]
     assert "the bot posts twice otherwise" in whys
 

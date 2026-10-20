@@ -65,6 +65,9 @@ class Store:
     def seed(self, paths: list[Path]) -> int:
         stored = 0
         for path in paths:
+            # Seed files are JSON only, so a stray path can never pull in some other file.
+            if path.suffix != ".json" or not path.is_file():
+                continue
             try:
                 rows = json.loads(path.read_text())
             except (OSError, json.JSONDecodeError):

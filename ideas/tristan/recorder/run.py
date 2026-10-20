@@ -8,6 +8,7 @@ import subprocess
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -142,9 +143,16 @@ def record_summaries(files: list[Path], person: str, out: Path, cache_path: Path
     return rows
 
 
+
+def check_url(url: str) -> None:
+    """Only send member tokens over HTTPS, or plain HTTP to this machine for local testing."""
+    parts = urllib.parse.urlsplit(url)
+    local = parts.hostname in ("localhost", "127.0.0.1", "::1")
+    if not parts.hostname or parts.username or not (parts.scheme == "https" or (parts.scheme == "http" and local)):
+        raise ValueError(f"refusing to send to {url!r}: use an https:// URL")
+
 def push(rows: list[dict], url: str, token: str, path: str = "/signals", chunk: int = 1000) -> tuple[int, int]:
-    if not url.startswith(("https://", "http://")):
-        raise ValueError("push URL must be http(s)")
+    check_url(url)
     stored = skipped = 0
     path = "/" + path.lstrip("/")
     for start in range(0, len(rows), chunk):

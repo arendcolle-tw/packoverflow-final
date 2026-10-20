@@ -9,9 +9,13 @@ KIND_TO_ROLE = {"decided": "decided", "corrected": "corrected", "explained_why":
 MAX_ITEMS = 50
 
 
+# Letters (any script), digits, spaces, dots, hyphens and apostrophes: enough for real names, nothing that injects.
+PERSON_NAME = re.compile(r"^[^\W_](?:[\w .'-]*[^\W_])?$")
+
+
 def person_key(name: str) -> str | None:
-    key = " ".join(name.split()).lower()
-    return key if 0 < len(key) <= 40 else None
+    key = " ".join(str(name).split()).lower()
+    return key if 0 < len(key) <= 40 and PERSON_NAME.match(key) and "_" not in key else None
 
 
 def normalize_topic(topic: str) -> str:

@@ -43,7 +43,8 @@ def hook(event: dict) -> None:
 
 def work(transcript: Path, event: str = "Stop") -> None:
     config = load_config()
-    if not config:
+    # Only Claude Code session transcripts: the path arrives in the hook's input, so nothing else gets read.
+    if not config or transcript.suffix != ".jsonl" or not transcript.is_file():
         return
     # Imported here so the hook itself stays fast: run.py pulls in urllib, ssl and the summariser.
     from recorder.run import load_summaries, locked_update, push, record_summaries

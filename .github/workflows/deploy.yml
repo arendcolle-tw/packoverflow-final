@@ -8,9 +8,13 @@ on:
     inputs:
       source:
         description: Folder to deploy
+        type: choice
+        options: [app, ideas/alberic, ideas/wout, ideas/tristan]
         default: app
       service:
         description: Cloud Run service name
+        type: choice
+        options: [packoverflow, knowledge-graph, knowledge-mcp, whoknows]
         default: packoverflow
       min_instances:
         description: Min instances (blank = unchanged)
@@ -25,6 +29,9 @@ env:
   WIF_PROVIDER: projects/323892475788/locations/global/workloadIdentityPools/github/providers/github-oidc
   DEPLOY_SA: github-deployer@qwiklabs-gcp-04-61c2ca7d9c86.iam.gserviceaccount.com
 
+# Nothing by default; the deploy job asks for only what it needs.
+permissions: {}
+
 concurrency:
   group: deploy-${{ inputs.service || 'packoverflow' }}
   cancel-in-progress: false
@@ -37,6 +44,8 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
       - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           workload_identity_provider: ${{ env.WIF_PROVIDER }}
@@ -54,8 +63,11 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           KG_ADMIN_TOKEN: ${{ secrets.KG_ADMIN_TOKEN }}
         run: |
-          [[ "$SERVICE" =~ ^[a-z][a-z0-9-]{0,48}$ ]] || { echo "bad service name"; exit 1; }
-          [[ "$SOURCE" =~ ^[A-Za-z0-9_./-]+$ && "$SOURCE" != *..* ]] || { echo "bad source folder"; exit 1; }
+          # Only these folder and service pairs can be deployed.
+          case "$SOURCE:$SERVICE" in
+            app:packoverflow|ideas/alberic:knowledge-graph|ideas/wout:knowledge-mcp|ideas/tristan:whoknows) ;;
+            *) echo "refusing to deploy $SOURCE as $SERVICE"; exit 1 ;;
+          esac
           scale=()
           [ -n "$MIN_INSTANCES" ] && scale+=(--min-instances "$MIN_INSTANCES")
           [ -n "$MAX_INSTANCES" ] && scale+=(--max-instances "$MAX_INSTANCES")

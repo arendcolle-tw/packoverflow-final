@@ -9,6 +9,9 @@ from knowledge_clock.store import load_signals, validate
 
 # Module-level because the server builds a store per request.
 _LOCK = threading.Lock()
+MAX_MEMBERS = 500
+MAX_LIVE_BYTES = 5_000_000
+MAX_APPEND = 50
 
 
 class LiveStore:
@@ -47,7 +50,12 @@ class LiveStore:
         return seed + live
 
     def append(self, rows: list[dict]) -> None:
+        # Bounded, so no caller can grow the file (and its Cloud Storage copy) without limit.
+        if len(rows) > MAX_APPEND:
+            raise ValueError(f"at most {MAX_APPEND} rows per call")
         with _LOCK:
+            if self.live_path.exists() and self.live_path.stat().st_size > MAX_LIVE_BYTES:
+                raise ValueError("live store is full")
             with self.live_path.open("a") as out:
                 for row in rows:
                     out.write(json.dumps(row, ensure_ascii=False) + "\n")
@@ -61,7 +69,10 @@ class LiveStore:
         person = self.person_aliases.get(person, person)
         token = secrets.token_urlsafe(16)
         with _LOCK:
-            self._members = {**self._load_members(), token: person}
+            members = self._load_members()
+            if len(members) >= MAX_MEMBERS:
+                return None
+            self._members = {**members, token: person}
             # Atomic replace: readers outside the lock must never see an empty file.
             tmp = self.members_path.with_suffix(".tmp")
             tmp.write_text(json.dumps(self._members))

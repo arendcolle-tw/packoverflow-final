@@ -51,6 +51,7 @@
     <summary>Team member? Get a personal URL to see what you know</summary>
     <form id="join">
       <input id="name" placeholder="Your name" maxlength="40" required autocomplete="name">
+      <input id="code" type="password" placeholder="Invite code" maxlength="200" required autocomplete="off">
       <button>Get my URL</button>
     </form>
     <p id="error" class="error"></p>
@@ -84,8 +85,8 @@ document.getElementById("join").addEventListener("submit", async event => {
   const error = document.getElementById("error");
   const result = document.getElementById("result");
   error.textContent = "";
-  const res = await fetch("/api/join", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: document.getElementById("name").value }) });
-  if (!res.ok) { error.textContent = res.status === 409 ? "That name already has a connector." : res.status === 429 ? "Too many tries, wait a few minutes." : "Use a name of 1 to 40 characters."; return; }
+  const res = await fetch("/api/join", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: document.getElementById("name").value, code: document.getElementById("code").value }) });
+  if (!res.ok) { error.textContent = res.status === 409 ? "That name already has a connector." : res.status === 429 ? "Too many tries, wait a few minutes." : res.status === 403 ? "Ask the team for the invite code." : "Use a name of 1 to 40 characters."; return; }
   const body = await res.json();
   // Kept in this browser so the map can save your answers as you.
   try { localStorage.setItem("kcToken", body.url.split("/u/")[1].split("/")[0]); } catch {}

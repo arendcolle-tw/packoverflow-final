@@ -1,3 +1,6 @@
 # Local-only state: captured events and review decisions never leave the laptop.
 local/
+PAUSE
+# Raw screenshots never belong in git; only the README screenshots do.
 *.png
+!docs/*.png

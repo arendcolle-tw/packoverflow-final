@@ -120,7 +120,15 @@
         top: 330px;
         width: 1600px;
         height: 400px;
-        background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(14, 23, 20, 0.92) 0%, rgba(14, 23, 20, 0.6) 55%, rgba(14, 23, 20, 0) 100%);
+        background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(14, 23, 20, 0.96) 0%, rgba(14, 23, 20, 0.9) 60%, rgba(14, 23, 20, 0) 100%);
+      }
+      #hb-scrim {
+        position: absolute;
+        left: 0;
+        top: 290px;
+        width: 1920px;
+        height: 500px;
+        background: radial-gradient(ellipse 52% 50% at 50% 50%, rgba(247, 245, 238, 0.97) 0%, rgba(247, 245, 238, 0.9) 58%, rgba(247, 245, 238, 0) 100%);
       }
       .rule {
         position: absolute;
@@ -153,9 +161,9 @@
       #top-right {
         position: absolute;
         right: 150px;
-        top: 58px;
+        top: 57px;
         font-family: var(--mono);
-        font-size: 15px;
+        font-size: 16px;
         letter-spacing: 0.2em;
         text-transform: uppercase;
         color: var(--gray);
@@ -165,25 +173,26 @@
         left: 150px;
         width: 900px;
         font-weight: 900;
-        font-size: 88px;
+        font-size: 92px;
         line-height: 1.02;
         letter-spacing: -0.03em;
       }
       #h1 {
-        top: 122px;
+        top: 120px;
         white-space: nowrap;
+        color: #727873;
       }
       #h2 {
-        top: 212px;
+        top: 213.84px;
         transform-origin: 0 0;
       }
       #problem {
         position: absolute;
         left: 150px;
-        top: 432px;
-        width: 840px;
-        font-size: 26px;
-        line-height: 1.46;
+        top: 444px;
+        width: 880px;
+        font-size: 28px;
+        line-height: 1.45;
         color: var(--ink2);
       }
       #problem b {
@@ -193,10 +202,10 @@
 
       #chat {
         position: absolute;
-        left: 1100px;
-        top: 122px;
-        width: 670px;
-        height: 500px;
+        left: 1150px;
+        top: 132px;
+        width: 620px;
+        height: 402px;
         color: var(--cream);
       }
       #chat-fill {
@@ -224,7 +233,7 @@
       #chat-inner {
         position: absolute;
         inset: 0;
-        padding: 0 34px;
+        padding: 0 32px;
       }
       #chat-head {
         height: 58px;
@@ -240,7 +249,7 @@
       }
       .mono-label {
         font-family: var(--mono);
-        font-size: 14px;
+        font-size: 15px;
         letter-spacing: 0.2em;
         text-transform: uppercase;
       }
@@ -261,9 +270,9 @@
         background: var(--green);
       }
       #q {
-        margin: 24px 0 0 auto;
+        margin: 22px 0 0 auto;
         width: fit-content;
-        max-width: 470px;
+        white-space: nowrap;
         background: #1c2924;
         border-radius: 16px 16px 4px 16px;
         padding: 13px 20px;
@@ -300,8 +309,8 @@
         border: 1.5px solid var(--amber);
         color: var(--amber);
         font-family: var(--mono);
-        font-size: 13px;
-        letter-spacing: 0.16em;
+        font-size: 14px;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
       }
       .pill i {
@@ -343,7 +352,7 @@
       }
       .sqs {
         display: flex;
-        gap: 4px;
+        gap: 3px;
       }
       .sqs i {
         width: 12px;
@@ -364,35 +373,12 @@
         font-style: normal;
         color: var(--mint);
       }
-      #input {
-        position: absolute;
-        left: 34px;
-        right: 34px;
-        bottom: 22px;
-        height: 46px;
-        border: 1.5px solid rgba(243, 240, 229, 0.16);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 0 18px;
-      }
-      #input .bar {
-        height: 7px;
-        width: 150px;
-        background: rgba(243, 240, 229, 0.1);
-      }
-      #caret {
-        width: 3px;
-        height: 22px;
-        background: var(--green);
-      }
       #chat-note {
         position: absolute;
-        left: 1100px;
-        top: 636px;
+        left: 1150px;
+        top: 548px;
         font-family: var(--mono);
-        font-size: 14px;
+        font-size: 15px;
         letter-spacing: 0.03em;
         color: var(--gray);
       }
@@ -400,9 +386,9 @@
       #steps {
         position: absolute;
         left: 150px;
-        top: 692px;
+        top: 624px;
         width: 1620px;
-        height: 250px;
+        height: 270px;
       }
       #steps-line {
         position: absolute;
@@ -416,16 +402,17 @@
       .step {
         position: absolute;
         top: 0;
-        width: 500px;
+        width: 470px;
       }
       #step-1 {
         left: 0;
       }
       #step-2 {
-        left: 560px;
+        left: 500px;
       }
       #step-3 {
-        left: 1120px;
+        left: 1000px;
+        width: 620px;
       }
       .node {
         position: relative;
@@ -442,35 +429,36 @@
       .label {
         margin-top: 22px;
         color: var(--gray);
-        font-size: 14px;
+        font-size: 16px;
       }
       .title {
         margin-top: 10px;
         font-weight: 900;
-        font-size: 44px;
+        font-size: 46px;
         line-height: 1;
         letter-spacing: -0.025em;
       }
       .body {
         margin-top: 12px;
-        width: 485px;
-        font-size: 20px;
+        width: 470px;
+        font-size: 19px;
         line-height: 1.42;
         color: var(--ink2);
       }
       .viz {
-        margin-top: 16px;
+        margin-top: 18px;
       }
       .tags {
-        display: flex;
-        gap: 7px;
+        display: grid;
+        grid-template-columns: repeat(2, max-content);
+        gap: 8px;
       }
       .tag {
-        padding: 5px 8px 4px;
+        padding: 5px 9px 4px;
         border: 1.5px solid var(--dark);
         font-family: var(--mono);
-        font-size: 13px;
-        letter-spacing: 0.04em;
+        font-size: 15px;
+        letter-spacing: 0.02em;
         white-space: nowrap;
       }
       .tag.ai {
@@ -480,8 +468,8 @@
         text-decoration: line-through;
       }
       .fade .sqs i {
-        width: 12px;
-        height: 12px;
+        width: 11px;
+        height: 11px;
         border: none;
         background: var(--green);
       }
@@ -489,12 +477,12 @@
         gap: 4px;
       }
       .fade-ticks {
-        margin-top: 7px;
-        width: 476px;
+        margin-top: 8px;
+        width: 446px;
         display: flex;
         justify-content: space-between;
         font-family: var(--mono);
-        font-size: 12px;
+        font-size: 14px;
         letter-spacing: 0.12em;
         text-transform: uppercase;
         color: var(--gray);
@@ -507,10 +495,10 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 5px 9px 4px;
+        padding: 5px 10px 4px;
         border: 1.5px solid transparent;
         font-family: var(--mono);
-        font-size: 13px;
+        font-size: 15px;
         letter-spacing: 0.04em;
         color: var(--ink2);
         white-space: nowrap;
@@ -539,7 +527,7 @@
       #foot-rule {
         position: absolute;
         left: 150px;
-        top: 966px;
+        top: 950px;
         width: 1620px;
         height: 1px;
         background: rgba(14, 23, 20, 0.18);
@@ -548,11 +536,11 @@
       #closing {
         position: absolute;
         left: 150px;
-        top: 990px;
+        top: 976px;
         display: flex;
         align-items: center;
         gap: 14px;
-        font-size: 26px;
+        font-size: 28px;
         font-weight: 600;
         letter-spacing: -0.005em;
       }
@@ -564,9 +552,9 @@
       #credit {
         position: absolute;
         right: 150px;
-        top: 997px;
+        top: 984px;
         font-family: var(--mono);
-        font-size: 15px;
+        font-size: 16px;
         letter-spacing: 0.04em;
         color: var(--gray);
       }
@@ -587,6 +575,7 @@
 
       <div id="cream" class="layer clip" data-start="0" data-duration="11.5" data-label="Cream band" data-track-index="2">
         <div id="wall-cream" class="wall" data-layout-ignore></div>
+        <div id="hb-scrim"></div>
       </div>
 
       <div id="rules" class="layer clip" data-start="0" data-duration="3.6" data-label="Rules" data-track-index="3">
@@ -613,14 +602,14 @@
         </div>
 
         <p id="problem">
-          When work runs through Claude and Copilot, nobody can tell who still understands it. Who knows counts only
-          what a person <b>decided, corrected or explained</b>. AI-written text never counts as knowledge.
+          When work runs through Claude and Copilot, nobody can tell who still understands it.
+          <b>AI-written text never counts as knowledge.</b>
         </p>
 
         <div id="chat">
           <div id="chat-fill"></div>
-          <svg id="chat-outline" viewBox="0 0 670 500" preserveAspectRatio="none">
-            <rect x="0" y="0" width="670" height="500" rx="18" pathLength="1" />
+          <svg id="chat-outline" viewBox="0 0 620 402" preserveAspectRatio="none">
+            <rect x="0" y="0" width="620" height="402" rx="18" pathLength="1" />
           </svg>
           <div id="chat-inner">
             <div id="chat-head">
@@ -648,7 +637,6 @@
               </div>
               <div id="counts-txt">Claude alone 12 · <em>human reasoning 4</em></div>
             </div>
-            <div id="input"><div class="bar"></div><div id="caret"></div></div>
           </div>
         </div>
         <div id="chat-note">Illustration. Names and numbers are examples.</div>
@@ -700,15 +688,15 @@
     <script>
       const WORDS = ["DECIDED", "CORRECTED THE AI", "EXPLAINED WHY", "ACCEPTED AS IS"];
       const ROWS = [
-        { y: 30, size: 34, op: 0.1, dir: -1, speed: 70 },
-        { y: 128, size: 36, op: 0.17, dir: 1, speed: 92 },
-        { y: 228, size: 38, op: 0.12, dir: -1, speed: 60 },
-        { y: 330, size: 40, op: 0.2, dir: 1, speed: 82 },
-        { y: 446, size: 42, op: 0.08, dir: -1, speed: 70 },
-        { y: 565, size: 44, op: 0.1, dir: 1, speed: 86 },
-        { y: 680, size: 46, op: 0.22, dir: -1, speed: 64 },
-        { y: 800, size: 50, op: 0.16, dir: 1, speed: 90 },
-        { y: 932, size: 56, op: 0.26, dir: -1, speed: 74 },
+        { y: 30, size: 34, op: 0.1, dop: 0.07, dir: -1, speed: 70 },
+        { y: 128, size: 36, op: 0.17, dop: 0.11, dir: 1, speed: 92 },
+        { y: 228, size: 38, op: 0.12, dop: 0.08, dir: -1, speed: 60 },
+        { y: 330, size: 40, op: 0.2, dop: 0.12, dir: 1, speed: 82 },
+        { y: 446, size: 42, op: 0.08, dop: 0.06, dir: -1, speed: 70 },
+        { y: 565, size: 44, op: 0.1, dop: 0.07, dir: 1, speed: 86 },
+        { y: 680, size: 46, op: 0.22, dop: 0.12, dir: -1, speed: 64 },
+        { y: 800, size: 50, op: 0.16, dop: 0.1, dir: 1, speed: 90 },
+        { y: 932, size: 56, op: 0.26, dop: 0.14, dir: -1, speed: 74 },
       ];
       const SCROLL = 6.6;
 
@@ -719,7 +707,7 @@
           row.className = `row row-${i}`;
           row.style.top = `${r.y}px`;
           row.style.fontSize = `${r.size}px`;
-          row.style.opacity = wall === "wall-dark" ? r.op : Math.min(1, r.op * 3.2);
+          row.style.opacity = wall === "wall-dark" ? r.dop : Math.min(1, r.op * 3.2);
           for (let k = 0; k < 14; k++) {
             const idx = (k + i) % 4;
             const s = document.createElement("span");
@@ -775,13 +763,15 @@
       tl.to("#wall-cream .w-human", { color: "#18A757", duration: 0.45, ease: "power1.out" }, 3.05);
 
       // Scene B: rows recede, the second headline lands big and centred.
-      tl.to("#wall-cream", { opacity: 0.32, scale: 0.97, duration: 0.9, ease: "power2.out" }, 3.45);
-      const H2_FROM = { x: 224, y: 193, scale: 1.5 };
+      tl.to("#wall-cream", { opacity: 0.28, scale: 0.97, duration: 0.9, ease: "power2.out" }, 3.45);
+      gsap.set("#hb-scrim", { opacity: 0 });
+      tl.to("#hb-scrim", { opacity: 1, duration: 0.7, ease: "power2.out" }, 3.4);
+      const H2_FROM = { x: 224, y: 190, scale: 1.45 };
       gsap.set("#h2", H2_FROM);
       tl.from("#h2 .w", { yPercent: 110, duration: 0.7, ease: "power3.out", stagger: 0.07 }, 3.6);
 
       // Scene B becomes the page: the headline settles into the hero.
-      tl.to("#wall-cream", { opacity: 0, duration: 0.6, ease: "power1.in" }, 5.8);
+      tl.to(["#wall-cream", "#hb-scrim"], { opacity: 0, duration: 0.6, ease: "power1.in" }, 5.8);
       tl.to("#h2", { x: 0, y: 0, scale: 1, duration: 0.9, ease: "power3.inOut" }, 5.8);
       tl.to("#h2 .w", { color: "#063E33", duration: 0.6, ease: "power1.inOut" }, 6.0);
       tl.from("#h1 .w", { yPercent: 110, duration: 0.6, ease: "power3.out", stagger: 0.06 }, 6.2);
@@ -790,26 +780,25 @@
       tl.from("#problem", { opacity: 0, y: 24, duration: 0.6, ease: "power3.out" }, 6.5);
 
       // Assistant window draws on, then fills.
-      tl.fromTo("#chat-outline rect", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.75, ease: "power2.inOut" }, 6.5);
-      tl.from("#chat-fill", { opacity: 0, duration: 0.35, ease: "power1.out" }, 7.05);
-      tl.to("#chat-outline", { opacity: 0.35, duration: 0.4 }, 7.2);
-      tl.from("#chat-head", { opacity: 0, duration: 0.35 }, 7.15);
-      tl.from("#q", { opacity: 0, x: 40, duration: 0.45, ease: "power3.out" }, 7.25);
-      tl.from("#tool", { opacity: 0, x: -16, duration: 0.35, ease: "power2.out" }, 7.6);
-      tl.from(".pill", { opacity: 0, scale: 0.6, duration: 0.4, ease: "back.out(2.2)" }, 7.8);
-      tl.from("#ans-who", { opacity: 0, x: -12, duration: 0.4, ease: "power2.out" }, 7.88);
-      tl.from("#quote-bar", { scaleY: 0, duration: 0.4, ease: "power2.out" }, 7.96);
-      tl.from("#quote-txt", { opacity: 0, y: 12, duration: 0.45, ease: "power2.out" }, 8.04);
-      tl.from("#meta", { opacity: 0, duration: 0.35 }, 8.16);
-      tl.from("#count-sqs i", { opacity: 0, scale: 0.4, duration: 0.2, ease: "power2.out", stagger: 0.03 }, 8.24);
-      tl.from("#counts-txt", { opacity: 0, duration: 0.35 }, 8.7);
-      tl.from("#input", { opacity: 0, duration: 0.35 }, 8.75);
-      tl.from("#chat-note", { opacity: 0, duration: 0.4 }, 8.85);
+      tl.fromTo("#chat-outline rect", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.7, ease: "power2.inOut" }, 6.45);
+      tl.from("#chat-fill", { opacity: 0, duration: 0.35, ease: "power1.out" }, 6.95);
+      tl.to("#chat-outline", { opacity: 0.35, duration: 0.4 }, 7.1);
+      tl.from("#chat-head", { opacity: 0, duration: 0.35 }, 7.0);
+      tl.from("#q", { opacity: 0, x: 40, duration: 0.45, ease: "power3.out" }, 7.1);
+      tl.from("#tool", { opacity: 0, x: -16, duration: 0.35, ease: "power2.out" }, 7.4);
+      tl.from(".pill", { opacity: 0, scale: 0.6, duration: 0.4, ease: "back.out(2.2)" }, 7.6);
+      tl.from("#ans-who", { opacity: 0, x: -12, duration: 0.4, ease: "power2.out" }, 7.66);
+      tl.from("#quote-bar", { scaleY: 0, duration: 0.4, ease: "power2.out" }, 7.74);
+      tl.from("#quote-txt", { opacity: 0, y: 12, duration: 0.45, ease: "power2.out" }, 7.8);
+      tl.from("#meta", { opacity: 0, duration: 0.35 }, 7.92);
+      tl.from("#count-sqs i", { opacity: 0, scale: 0.4, duration: 0.2, ease: "power2.out", stagger: 0.025 }, 7.98);
+      tl.from("#counts-txt", { opacity: 0, duration: 0.35 }, 8.35);
+      tl.from("#chat-note", { opacity: 0, duration: 0.4 }, 8.4);
 
-      // Steps: a green connector draws through three nodes.
-      const STEPS_AT = 7.9;
-      tl.from("#steps-line", { scaleX: 0, duration: 1.2, ease: "power1.inOut" }, STEPS_AT);
-      [0, 0.5, 0.73].forEach((dt, i) => {
+      // Steps: a green connector draws through three nodes once the answer has landed.
+      const STEPS_AT = 8.2;
+      tl.from("#steps-line", { scaleX: 0, duration: 1.0, ease: "power1.inOut" }, STEPS_AT);
+      [0, 0.32, 0.64].forEach((dt, i) => {
         const s = `#step-${i + 1}`;
         const t = STEPS_AT + dt;
         tl.from(`${s} .node`, { scale: 0, duration: 0.3, ease: "back.out(2.5)" }, t);
@@ -817,11 +806,9 @@
         tl.from([`${s} .label`, `${s} .title`, `${s} .body`, `${s} .viz`], { opacity: 0, y: 18, duration: 0.5, ease: "power3.out", stagger: 0.08 }, t + 0.06);
       });
 
-      tl.from("#foot-rule", { scaleX: 0, duration: 0.6, ease: "power2.inOut" }, 9.3);
-      tl.from("#closing", { opacity: 0, y: 14, duration: 0.5, ease: "power3.out" }, 9.45);
-      tl.from("#credit", { opacity: 0, duration: 0.5 }, 9.6);
-
-      [9.4, 9.9, 10.4, 10.9].forEach((t, i) => tl.set("#caret", { opacity: i % 2 === 0 ? 0 : 1 }, t));
+      tl.from("#foot-rule", { scaleX: 0, duration: 0.6, ease: "power2.inOut" }, 9.4);
+      tl.from("#closing", { opacity: 0, y: 14, duration: 0.5, ease: "power3.out" }, 9.55);
+      tl.from("#credit", { opacity: 0, duration: 0.5 }, 9.7);
 
       window.__timelines["root"] = tl;
     </script>

@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Who knows</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #101318;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #101318;
+        color: #f2eee5;
+        font-family: system-ui, sans-serif;
+      }
+      .page {
+        position: absolute;
+        inset: 0;
+        padding: 40px 110px 44px;
+        display: flex;
+        flex-direction: column;
+      }
+      .human {
+        color: #ffc857;
+      }
+      .panel {
+        background: #1a1e26;
+        border: 2px solid #2c323d;
+        border-radius: 24px;
+      }
+
+      #nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      #logo {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 34px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+      }
+      #logo-dot {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #ffc857;
+      }
+      #nav-right {
+        font-size: 22px;
+        color: #a9b0bc;
+      }
+
+      #hero {
+        margin-top: 28px;
+        display: flex;
+        gap: 72px;
+        align-items: flex-start;
+      }
+      #hero-copy {
+        width: 900px;
+        padding-top: 12px;
+      }
+      #eyebrow {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #ffc857;
+        margin-bottom: 22px;
+      }
+      #tagline {
+        font-size: 66px;
+        font-weight: 800;
+        line-height: 1.05;
+        letter-spacing: -0.025em;
+      }
+      #problem {
+        margin-top: 22px;
+        font-size: 28px;
+        line-height: 1.35;
+        color: #a9b0bc;
+      }
+      #privacy {
+        margin-top: 30px;
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 24px;
+        font-weight: 600;
+        padding: 14px 24px;
+        border-radius: 999px;
+        border: 2px solid #ffc857;
+      }
+      #privacy-lock {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        background: #ffc857;
+      }
+
+      #card-wrap {
+        width: 760px;
+      }
+      #card {
+        padding: 28px 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+      .msg {
+        display: flex;
+        gap: 16px;
+      }
+      .avatar {
+        flex: none;
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: 800;
+        color: #101318;
+      }
+      .name {
+        font-size: 22px;
+        font-weight: 700;
+      }
+      .name span {
+        font-size: 17px;
+        font-weight: 500;
+        color: #8e9ab0;
+        margin-left: 8px;
+      }
+      .text {
+        margin-top: 4px;
+        font-size: 22px;
+        line-height: 1.4;
+      }
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .pill {
+        display: inline-block;
+        font-size: 18px;
+        font-weight: 800;
+        padding: 3px 14px;
+        border-radius: 999px;
+        color: #101318;
+        background: #ff8a3d;
+      }
+      .quote {
+        margin: 10px 0 6px;
+        padding-left: 16px;
+        border-left: 4px solid #ffc857;
+        font-size: 22px;
+      }
+      .meta {
+        font-size: 18px;
+        font-style: italic;
+        color: #a9b0bc;
+      }
+      .counts {
+        margin-top: 10px;
+        font-size: 17px;
+        color: #8e9ab0;
+      }
+      .btn {
+        margin-top: 14px;
+        display: inline-block;
+        font-size: 19px;
+        font-weight: 700;
+        padding: 8px 18px;
+        border-radius: 8px;
+        border: 2px solid #4a5263;
+        color: #f2eee5;
+      }
+      #card-note {
+        margin-top: 12px;
+        font-size: 17px;
+        color: #8e9ab0;
+        text-align: right;
+      }
+
+      #steps {
+        margin-top: 30px;
+        display: flex;
+        gap: 32px;
+      }
+      .step {
+        flex: 1;
+        padding: 26px 30px;
+      }
+      .step-num {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #ffc857;
+      }
+      .step-title {
+        margin-top: 8px;
+        font-size: 34px;
+        font-weight: 800;
+      }
+      .step-text {
+        margin-top: 10px;
+        font-size: 21px;
+        line-height: 1.4;
+        color: #a9b0bc;
+      }
+
+      #fit {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        gap: 36px;
+        padding-top: 20px;
+        border-top: 2px solid #2c323d;
+      }
+      #fit-head {
+        width: 470px;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1.3;
+      }
+      .fit-item {
+        flex: 1;
+        font-size: 20px;
+        line-height: 1.4;
+        color: #a9b0bc;
+      }
+      .fit-item b {
+        display: block;
+        color: #f2eee5;
+        font-size: 21px;
+      }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-q73j" id="root" data-composition-id="root" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+      <div data-hf-id="hf-eupu" id="landing" class="scene clip" data-start="0" data-duration="6" data-label="Landing page" data-track-index="1">
+        <main data-hf-id="hf-vhz5" class="page">
+          <header data-hf-id="hf-z17c" id="nav">
+            <div data-hf-id="hf-21i8" id="logo"><div data-hf-id="hf-3w32" id="logo-dot"></div>who knows</div>
+            <div data-hf-id="hf-58q6" id="nav-right">Tectonic Hackathon final · SD Worx track</div>
+          </header>
+
+          <section data-hf-id="hf-e3hp" id="hero">
+            <div data-hf-id="hf-vp5h" id="hero-copy">
+              <div data-hf-id="hf-ucru" id="eyebrow">Knowledge your AI didn't write</div>
+              <h1 data-hf-id="hf-pezc" id="tagline">Your AI can answer.<br data-hf-id="hf-x5px" /><span data-hf-id="hf-nps6" class="human">We show who still understands.</span></h1>
+              <p data-hf-id="hf-63zb" id="problem">
+                When work runs through Claude and copilots, documents and AI answers no longer tell you who
+                understands something. Who knows counts only what a person decided, corrected or explained.
+                AI-written text never counts as knowledge.
+              </p>
+              <div data-hf-id="hf-f2w5" id="privacy"><div data-hf-id="hf-a7ch" id="privacy-lock"></div>Stores no session text, only the sentence you approve.</div>
+            </div>
+
+            <div data-hf-id="hf-yty8" id="card-wrap">
+              <div data-hf-id="hf-5dve" id="card" class="panel">
+                <div data-hf-id="hf-rzw8" id="msg-ask" class="msg">
+                  <div data-hf-id="hf-zvox" class="avatar" style="background: #8e9ab0">T</div>
+                  <div data-hf-id="hf-yeow">
+                    <div data-hf-id="hf-2sa6" class="name">Tristan <span data-hf-id="hf-gchq">16:02</span></div>
+                    <div data-hf-id="hf-b7cd" class="text">@whoknows set up the aikido security scan</div>
+                  </div>
+                </div>
+                <div data-hf-id="hf-tycz" id="msg-answer" class="msg">
+                  <div data-hf-id="hf-td6s" class="avatar" style="background: #ffc857">W</div>
+                  <div data-hf-id="hf-y7yw">
+                    <div data-hf-id="hf-hhqh" class="name">whoknows <span data-hf-id="hf-thz8">APP · 16:02</span></div>
+                    <div data-hf-id="hf-3u6r" class="text status"><span data-hf-id="hf-cwye" class="pill">single point</span> Only Wout really knows this.</div>
+                    <div data-hf-id="hf-o201" class="text"><b data-hf-id="hf-u2nu">Wout</b> · last reasoned 19 days ago · 2× decided, 1× explained why</div>
+                    <div data-hf-id="hf-94zq" class="quote">"so someone who checks our screenshots sees how we used Aikido"</div>
+                    <div data-hf-id="hf-gndm" class="meta">Their own words, in the Claude session "Set up the Aikido security scan" on 30 Sep.</div>
+                    <div data-hf-id="hf-se0m" class="counts">3 similar Claude sessions · Claude alone 12 · human reasoning 4</div>
+                    <div data-hf-id="hf-ljt2" id="ask-btn" class="btn">Ask Wout</div>
+                  </div>
+                </div>
+              </div>
+              <div data-hf-id="hf-3ldu" id="card-note">Illustration. Names and numbers are examples.</div>
+            </div>
+          </section>
+
+          <section data-hf-id="hf-ckyi" id="steps">
+            <div data-hf-id="hf-bore" id="step-1" class="step panel">
+              <div data-hf-id="hf-uexi" class="step-num">1 · Record</div>
+              <div data-hf-id="hf-ixtw" class="step-title">Every Claude session</div>
+              <div data-hf-id="hf-p9zl" class="step-text">
+                Each human turn becomes decided, corrected Claude, explained why, or accepted as is. Raw sessions
+                stay on the laptop. Only scrubbed rows leave it.
+              </div>
+            </div>
+            <div data-hf-id="hf-7qnd" id="step-2" class="step panel">
+              <div data-hf-id="hf-i0q5" class="step-num">2 · Store</div>
+              <div data-hf-id="hf-guyx" class="step-title">One central store</div>
+              <div data-hf-id="hf-m5h8" class="step-text">
+                Person × task × their own words. Only human reasoning counts, and it fades over 90 days unless
+                someone reasons about it again.
+              </div>
+            </div>
+            <div data-hf-id="hf-6yzk" id="step-3" class="step panel">
+              <div data-hf-id="hf-eecq" class="step-num">3 · Ask</div>
+              <div data-hf-id="hf-rld7" class="step-title">Ask in Slack</div>
+              <div data-hf-id="hf-hvuy" class="step-text">
+                The bot names the person, quotes their why, links the session and says healthy, single point,
+                fading or dark. "Ask Wout" DMs them the question with their earlier reasoning.
+              </div>
+            </div>
+          </section>
+
+          <footer data-hf-id="hf-t3sg" id="fit">
+            <div data-hf-id="hf-en4c" id="fit-head">Built for SD Worx's finals case: knowledge stays trusted without extra work.</div>
+            <div data-hf-id="hf-rbcx" id="fit-1" class="fit-item"><b data-hf-id="hf-rrac">Automatic</b>Capture runs on sessions people already have.</div>
+            <div data-hf-id="hf-8ncx" id="fit-2" class="fit-item"><b data-hf-id="hf-l2o4">Human where it matters</b>A colleague answers only when the bot finds a gap.</div>
+            <div data-hf-id="hf-q2eq" id="fit-3" class="fit-item"><b data-hf-id="hf-7udo">Where people work</b>Slack today, Teams next.</div>
+          </footer>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+
+      const rise = { opacity: 0, y: 30, duration: 0.6, ease: "power3.out" };
+      const tl = gsap.timeline({ paused: true });
+      tl.to({}, { duration: 6 }, 0);
+
+      tl.from("#nav", { opacity: 0, duration: 0.5 }, 0)
+        .from("#eyebrow", rise, 0.2)
+        .from("#tagline", rise, 0.35)
+        .from("#problem", rise, 0.7)
+        .from("#privacy", rise, 0.95)
+        .from("#msg-ask", { opacity: 0, x: 40, duration: 0.6, ease: "power3.out" }, 1.2)
+        .from("#msg-answer", { opacity: 0, x: 40, duration: 0.6, ease: "power3.out" }, 1.9)
+        .from("#card-note", { opacity: 0, duration: 0.4 }, 2.4)
+        .from(["#step-1", "#step-2", "#step-3"], { ...rise, stagger: 0.15 }, 2.6)
+        .from(["#fit-head", "#fit-1", "#fit-2", "#fit-3"], { ...rise, stagger: 0.1 }, 3.2);
+
+      window.__timelines["root"] = tl;
+    </script>
+  </body>
+</html>

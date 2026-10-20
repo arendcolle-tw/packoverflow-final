@@ -1,0 +1,52 @@
+{
+  "display_information": {
+    "name": "Who Knows",
+    "description": "Finds the colleague who actually reasoned about this, in their own words."
+  },
+  "features": {
+    "app_home": {
+      "messages_tab_enabled": true,
+      "messages_tab_read_only_enabled": false
+    },
+    "bot_user": {
+      "display_name": "whoknows",
+      "always_online": true
+    },
+    "slash_commands": [
+      {
+        "command": "/whoknows",
+        "description": "Who actually knows how to do this?",
+        "usage_hint": "set up the aikido security scan",
+        "should_escape": false
+      }
+    ]
+  },
+  "oauth_config": {
+    "scopes": {
+      "bot": [
+        "app_mentions:read",
+        "chat:write",
+        "commands",
+        "im:history",
+        "im:read",
+        "im:write",
+        "mpim:write",
+        "users:read"
+      ]
+    }
+  },
+  "settings": {
+    "event_subscriptions": {
+      "bot_events": [
+        "app_mention",
+        "message.im"
+      ]
+    },
+    "interactivity": {
+      "is_enabled": true
+    },
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": true,
+    "token_rotation_enabled": false
+  }
+}

@@ -49,3 +49,11 @@ def test_mirror_restores_rows_and_members_on_a_fresh_disk(tmp_path):
     mirror.download_all(tmp_path / "disk2")
     fresh = LiveStore([], tmp_path / "disk2", mirror=mirror)
     assert fresh.person_for(token) == "jan" and [r["id"] for r in fresh.rows()] == ["mcp-1"]
+
+
+def test_person_aliases_resolve_existing_and_new_members(tmp_path):
+    store = LiveStore([], tmp_path / "live")
+    token, _ = store.create_member("Wout Van Hemelrijck")
+    aliased = LiveStore([], tmp_path / "live", person_aliases={"wout van hemelrijck": "wout"})
+    assert aliased.person_for(token) == "wout"
+    assert aliased.create_member("wout  van hemelrijck")[1] == "wout"

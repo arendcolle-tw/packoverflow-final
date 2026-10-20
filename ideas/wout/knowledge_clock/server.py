@@ -56,7 +56,8 @@ MIRROR, STORAGE = _make_mirror()
 
 def _store() -> LiveStore:
     seeds = [BASE / p.strip() for p in os.environ.get("KC_SIGNALS", "data/signals.json").split(",")]
-    return LiveStore(seeds, _data_dir(), mirror=MIRROR)
+    aliases = load_aliases(BASE / os.environ.get("KC_PERSON_ALIASES", "data/person_aliases.json"))
+    return LiveStore(seeds, _data_dir(), mirror=MIRROR, person_aliases=aliases)
 
 
 def _now() -> datetime:

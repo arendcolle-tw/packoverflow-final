@@ -12,8 +12,9 @@ _LOCK = threading.Lock()
 
 
 class LiveStore:
-    def __init__(self, seed_paths: list[Path], data_dir: Path, mirror=None):
+    def __init__(self, seed_paths: list[Path], data_dir: Path, mirror=None, person_aliases: dict[str, str] | None = None):
         self.seed_paths = seed_paths
+        self.person_aliases = person_aliases or {}
         self.mirror = mirror
         self.data_dir = data_dir
         self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -57,6 +58,7 @@ class LiveStore:
         person = person_key(name)
         if person is None:
             return None
+        person = self.person_aliases.get(person, person)
         token = secrets.token_urlsafe(16)
         with _LOCK:
             self._members = {**self._load_members(), token: person}
@@ -69,4 +71,5 @@ class LiveStore:
         return token, person
 
     def person_for(self, token: str) -> str | None:
-        return self._members.get(token)
+        person = self._members.get(token)
+        return self.person_aliases.get(person, person) if person else None

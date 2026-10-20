@@ -7,7 +7,7 @@
 set -euo pipefail
 
 ROOT=${ROOT:-$(cd "$(dirname "$0")/.." && pwd)}
-ALB=${ALB:-$(cd "$ROOT/../alberic" && pwd)}
+ALB=${ALB:-$(cd "$ROOT/ideas/alberic" && pwd)}
 BIN=$ROOT/.venv/bin
 PY=$BIN/python
 KG_PORT=8770

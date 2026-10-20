@@ -8,7 +8,7 @@ import pytest
 
 from knowly.ask import Asker
 
-ALB = Path(__file__).resolve().parents[2] / "alberic"
+ALB = Path(__file__).resolve().parents[1] / "ideas" / "alberic"
 QUESTION = "What time does the nightly payroll export start?"
 PAYROLL = {
     "person": "tristan", "proficiency": 0.4,

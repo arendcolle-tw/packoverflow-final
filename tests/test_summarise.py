@@ -14,7 +14,7 @@ import knowly.recorder.run as run
 import knowly.recorder.summarise as summarise
 from knowly.recorder.summarise import compact, guard_quotes, to_row
 
-ALBERIC = Path(__file__).resolve().parents[2] / "alberic"
+ALBERIC = Path(__file__).resolve().parents[1] / "ideas" / "alberic"
 SUMMARY = {"title": "pick a database for the queue", "topic": "Database Choice", "role": "decided",
            "summary": 'Chose Postgres over Redis "because we already  RUN it." and "because it is faster"'}
 

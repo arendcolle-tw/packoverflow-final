@@ -3,9 +3,9 @@
 `demo/full_demo.sh` sets up the whole demo on this Mac and prints every command and question used on stage. Run it from anywhere; it is safe to run again.
 
 ```bash
-ideas/tristan/demo/full_demo.sh           # set up, reusing what already exists
-ideas/tristan/demo/full_demo.sh --reset   # wipe the local graph, open questions and the demo session, then set up
-ideas/tristan/demo/full_demo.sh --stop    # stop the bot and the local graph
+demo/full_demo.sh           # set up, reusing what already exists
+demo/full_demo.sh --reset   # wipe the local graph, open questions and the demo session, then set up
+demo/full_demo.sh --stop    # stop the bot and the local graph
 ```
 
 ## Setup steps in the script
@@ -14,13 +14,12 @@ ideas/tristan/demo/full_demo.sh --stop    # stop the bot and the local graph
 2. Creates graph members `tristan` and `lies` and writes their graph tokens to `data/graph_tokens.json`. The bot posts tristan's answer with his token from that file.
 3. Creates lies's MCP token with `knowly-token lies` in `data/tokens.db` and keeps it in `data/demo-lies-mcp-token`. `--reset` keeps it, so lies's MCP config stays valid.
 4. Runs a real Claude Code session with Haiku in `~/Knowly/demo-knowly-payroll`: tristan asks for the nightly payroll SFTP export plan with 5 retries, then says "No, retry 3 times, not 5, because the bank closes the SFTP window at 18:00 and a late file is rejected anyway." `knowly-record --mode summary` summarises it and pushes one row to the graph as tristan's fact. A later run without `--reset` pushes `data/demo-rows.json` again and skips the session.
-5. Stops any `slack run` for team T0C9C4CTJEP and starts the bot from `ideas/tristan` with `KG_URL=http://127.0.0.1:8770`, `SLACK_PEOPLE=tristan:U0C9D2HJUA1`, `DEFAULT_EXPERT=tristan` and `PORT=8091`. Log: `data/slack-run.log`.
+5. Stops any `slack run` for team T0C9C4CTJEP and starts the bot from the repo root with `KG_URL=http://127.0.0.1:8770`, `SLACK_PEOPLE=tristan:U0C9D2HJUA1`, `DEFAULT_EXPERT=tristan` and `PORT=8091`. Log: `data/slack-run.log`.
 6. Prints the `claude mcp add` command for lies and the questions below.
 
-Needs `claude` logged in, `slack` logged in to the BotTesting workspace, `uv`, and `ideas/tristan/.venv` with Knowly and the Slack CLI hooks installed:
+Needs `claude` logged in, `slack` logged in to the BotTesting workspace, `uv`, and `.venv` in the repo root with Knowly and the Slack CLI hooks installed:
 
 ```bash
-cd ideas/tristan
 uv venv --python 3.13
 uv pip install -e '.[dev]' slack-cli-hooks
 ```

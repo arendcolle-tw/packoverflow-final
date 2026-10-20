@@ -1,5 +1,5 @@
 {
- "names_at": 11.02,
+ "names_at": 10.93,
  "captions": [
   {
    "at": 0.6,
@@ -12,29 +12,29 @@
    "text": "Hi, I have a meeting with the bank in ten minutes about the nightly payroll export. Who actually knows how the retries work?"
   },
   {
-   "at": 11.02,
+   "at": 10.93,
    "who": "agent",
-   "text": "Marc's your person here. He corrected that you retry the upload three times, not five, because the bank closes the SFTP window at six in the evening and a late export gets rejected anyway. He reasoned through this twelve days ago. Sofie's been busiest on it, but she mostly went along with what the AI suggested. This is going dark though, only Marc still thinks about it. Want me to ping him?"
+   "text": "Marc knows this. He corrected it to retry the upload three times, not five, because the bank closes the SFTP window at six in the evening and a late export gets rejected anyway. He last thought about it twelve days ago. This is going dark though, only Marc understands it right now. Want me to ping him?"
   },
   {
-   "at": 35.04,
+   "at": 31.92,
    "who": "you",
    "text": "And what did he correct?"
   },
   {
-   "at": 37.33,
+   "at": 34.26,
    "who": "agent",
-   "text": "Marc corrected that you retry the upload three times, not five, because the bank closes the SFTP window at six in the evening and a late export is rejected anyway. He also decided to start the export at five in the afternoon, so a failed upload still has an hour before the window closes."
+   "text": "Marc corrected that you should retry the upload three times, not five, because the bank closes the SFTP window at six in the evening and a late export gets rejected anyway. He also decided to start the export at five in the afternoon so a failed upload still has an hour before the window closes."
   },
   {
-   "at": 54.66,
+   "at": 53.03,
    "who": "you",
    "text": "Yes, ping him. Thanks!"
   },
   {
-   "at": 57.23,
+   "at": 55.56,
    "who": "agent",
-   "text": "I'd send that to Marc now. Good luck with your meeting!"
+   "text": "I'd send that ping to Marc now. Good luck with your meeting!"
   }
  ],
  "note": "Simulated call with the live agent and its real tool answers, voiced with ElevenLabs text to speech.",
@@ -48,11 +48,7 @@
     "decided: \"Start the export at 17:00, so a failed upload still has an hour before the window closes.\""
    ],
    "last_reasoned": "12 days ago",
-   "others_who_also_reasoned": 0
-  },
-  "busiest_on_this": {
-   "name": "Sofie",
-   "note": "Most active on this topic, but mostly accepted the AI's answers as they were."
+   "others_who_also_know": 0
   }
  }
 }

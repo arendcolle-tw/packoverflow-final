@@ -23,14 +23,6 @@ const ago = (iso) => {
   return d <= 0 ? "today" : d === 1 ? "yesterday" : `${d} days ago`;
 };
 
-// Who was most active on a topic: a plain count of rows, not a score.
-function busiest(rows, topic) {
-  const counts = {};
-  for (const r of rows) if (r.topic === topic) counts[r.person] = (counts[r.person] || 0) + 1;
-  const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
-  return top ? top[0] : null;
-}
-
 async function lookup(topic) {
   if (DEMO_MATCH.test(topic)) {
     const answer = graph.shape(topic, DEMO.who_knows, DEMO.rows);
@@ -49,10 +41,8 @@ async function whoKnows(topic) {
   const found = await lookup(topic);
   const a = found.answer;
   const note = found.demo ? "Demo data: a seeded example topic, not a real colleague."
-    : a.live === false ? "Sample data: the live knowledge base was unreachable." : "Live data from the team's real AI sessions.";
-  if (!a.person) return { topic, data: note, nobody_knows: true, say: "Nobody has reasoned about this. The AI did all of it." };
-  const t = rawTopic(found);
-  const busy = t ? busiest(found.rows, t) : null;
+    : a.live === false ? "Sample data: the live knowledge base was unreachable." : "Live data from the team's real work.";
+  if (!a.person) return { topic, data: note, nobody_knows: true, say: "Nobody on the team has reasoned about this yet." };
   return {
     topic: a.source.topic,
     data: note,
@@ -60,11 +50,8 @@ async function whoKnows(topic) {
       name: a.person,
       their_own_words: a.whys.map((w) => `${w.role}: "${w.why}"`),
       last_reasoned: ago(a.source.at),
-      others_who_also_reasoned: a.others,
+      others_who_also_know: a.others,
     },
-    busiest_on_this: busy && name(busy) !== a.person
-      ? { name: name(busy), note: "Most active on this topic, but mostly accepted the AI's answers as they were." }
-      : { name: a.person, note: "The busiest person here is also the one who knows." },
   };
 }
 
@@ -165,6 +152,9 @@ const STYLE = `
   #captions .line.you::before { content: "You: "; color: var(--sky-300); font-weight: 600; }
   #captions .line.agent::before { content: "PackOverflow: "; color: var(--amber); font-weight: 600; }
   #datatag[hidden] { display: none; }
+  #callnames .knows { max-width: 760px; margin: 0 auto; }
+  #callnames .label { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  #callnames .name { font: 800 2.4rem/1.1 var(--display); margin: 8px 0 12px; }
   #callnames { opacity: 0.25; transition: opacity 0.6s; margin-top: 18px; }
   #callnames.on { opacity: 1; }
 `;
@@ -183,12 +173,8 @@ const SECTION = `
     </div>
     <div id="callnames">
       <div class="sample" id="datatag" hidden></div>
-      <div class="who">
-        <div class="card glass ai"><div class="label">Who you would ask</div><div class="name grad-ai" id="busyname">...</div>
-          <p>The busiest person on this topic. Mostly accepted what the AI wrote.</p></div>
-        <div class="card glass human"><div class="label">Who actually knows</div><div class="name grad-human" id="knowname">...</div>
-          <blockquote id="knowwhy"></blockquote><div class="meta" id="knowwhen"></div></div>
-      </div>
+      <div class="card glass knows"><div class="label">Who knows</div><div class="name" id="knowname">...</div>
+        <blockquote id="knowwhy"></blockquote><div class="meta" id="knowwhen"></div></div>
     </div>
     <div id="captions"></div>
   </section>`;

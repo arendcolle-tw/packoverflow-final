@@ -25,3 +25,27 @@ def test_corrupt_live_line_skipped(tmp_path):
     (tmp_path / "live" / "live_signals.jsonl").write_text('{"bad"\n' + json.dumps(row(id="ok")) + "\n")
     store = LiveStore([], tmp_path / "live")
     assert [r["id"] for r in store.rows()] == ["ok"] and store.skipped == 1
+
+
+class FakeMirror:
+    def __init__(self):
+        self.blobs: dict[str, bytes] = {}
+
+    def upload(self, path):
+        self.blobs[path.name] = path.read_bytes()
+
+    def download_all(self, data_dir):
+        data_dir.mkdir(parents=True, exist_ok=True)
+        for name, data in self.blobs.items():
+            (data_dir / name).write_bytes(data)
+
+
+def test_mirror_restores_rows_and_members_on_a_fresh_disk(tmp_path):
+    mirror = FakeMirror()
+    store = LiveStore([], tmp_path / "disk1", mirror=mirror)
+    token, _ = store.create_member("Jan")
+    store.append([row(id="mcp-1", person="jan", source_id="mcp-jan-x")])
+
+    mirror.download_all(tmp_path / "disk2")
+    fresh = LiveStore([], tmp_path / "disk2", mirror=mirror)
+    assert fresh.person_for(token) == "jan" and [r["id"] for r in fresh.rows()] == ["mcp-1"]

@@ -2,6 +2,7 @@ import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import quote
 
 from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
 from fastapi.responses import FileResponse
@@ -17,6 +18,7 @@ STATIC = BASE / "knowledge_clock" / "static"
 DEMO_NOW = "2026-10-20T16:15:00+02:00"
 # Cloud Run sets K_SERVICE: use real time and its writable /tmp there.
 ON_CLOUD_RUN = "K_SERVICE" in os.environ
+CLAUDE_INSTALL = "https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=Packoverflow&connectorUrl="
 
 
 class WhyAnswer(BaseModel):
@@ -32,9 +34,29 @@ def _whys_path() -> Path:
     return BASE / os.environ.get("KC_WHYS", "data/whys.json")
 
 
+def _data_dir() -> Path:
+    return Path(os.environ.get("KC_DATA_DIR") or ("/tmp/kc" if ON_CLOUD_RUN else BASE / "data/live"))
+
+
+def _make_mirror() -> tuple[object | None, str]:
+    if not ON_CLOUD_RUN:
+        return None, "local"
+    try:
+        from knowledge_clock.gcs_mirror import GcsMirror
+
+        mirror = GcsMirror(os.environ.get("KC_BUCKET"))
+        mirror.download_all(_data_dir())
+        return mirror, "gcs"
+    except Exception as error:  # noqa: BLE001
+        return None, f"local ({type(error).__name__}: {error})"[:200]
+
+
+MIRROR, STORAGE = _make_mirror()
+
+
 def _store() -> LiveStore:
     seeds = [BASE / p.strip() for p in os.environ.get("KC_SIGNALS", "data/signals.json").split(",")]
-    return LiveStore(seeds, Path(os.environ.get("KC_DATA_DIR") or ("/tmp/kc" if ON_CLOUD_RUN else BASE / "data/live")))
+    return LiveStore(seeds, _data_dir(), mirror=MIRROR)
 
 
 def _now() -> datetime:
@@ -64,7 +86,12 @@ def _topics(cfg: dict) -> list[dict]:
 @router.get("/api/summary")
 def get_summary() -> dict:
     cfg = _config()
-    return {**summarize(_topics(cfg)), "skipped": cfg["skipped"], "now": cfg["now"].astimezone(timezone.utc).isoformat()}
+    return {
+        **summarize(_topics(cfg)),
+        "skipped": cfg["skipped"],
+        "now": cfg["now"].astimezone(timezone.utc).isoformat(),
+        "storage": STORAGE,
+    }
 
 
 @router.get("/api/topics")
@@ -114,7 +141,12 @@ def join(body: JoinRequest, request: Request) -> dict:
     token, person = member
     scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
     url = f"{scheme}://{request.headers.get('host', request.url.netloc)}/u/{token}/mcp"
-    return {"person": person, "url": url, "claude_code": f"claude mcp add --transport http packoverflow {url}"}
+    return {
+        "person": person,
+        "url": url,
+        "claude_ai": f"{CLAUDE_INSTALL}{quote(url, safe='')}",
+        "claude_code": f"claude mcp add --transport http packoverflow {url}",
+    }
 
 
 @router.get("/join")

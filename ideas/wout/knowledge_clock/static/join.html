@@ -24,6 +24,7 @@
   .muted { color: var(--muted); font-size: 14px; }
   .error { color: #c62828; }
   a { color: var(--human); }
+  a.add { display: inline-block; background: var(--human); color: #fff; text-decoration: none; font-weight: 600; font-size: 18px; padding: 14px 22px; border-radius: 10px; margin: 4px 0 8px; }
 </style>
 </head>
 <body>
@@ -34,7 +35,7 @@
 
   <div class="card">
     <form id="join">
-      <input id="name" placeholder="Your name" maxlength="40" required autocomplete="name">
+      <input id="name" placeholder="Your name" maxlength="40" required autocomplete="name" autofocus>
       <button>Get my connector</button>
     </form>
     <p id="error" class="error"></p>
@@ -70,14 +71,19 @@ document.getElementById("join").addEventListener("submit", async event => {
   if (!res.ok) { error.textContent = "Use a name of 1 to 40 characters."; return; }
   const body = await res.json();
   result.replaceChildren();
-  result.appendChild(el("p", null, `Welcome, ${body.person}. This URL is yours, keep it private:`));
-  result.appendChild(el("code", null, body.url));
-  result.appendChild(copyButton(body.url));
+  result.appendChild(el("p", null, `Welcome, ${body.person}.`));
+  const add = el("a", "add", "Add to Claude");
+  add.href = body.claude_ai;
+  add.target = "_blank";
+  add.rel = "noopener";
+  result.appendChild(add);
+  result.appendChild(el("p", "muted", "Opens Claude with everything filled in. Click Add, then ask: \u201cMap my knowledge with Packoverflow.\u201d"));
 
   const steps = el("ol");
   const web = el("li");
-  web.appendChild(el("strong", null, "claude.ai or Claude desktop: "));
-  web.appendChild(document.createTextNode("Settings, Connectors, Add custom connector. Name it Packoverflow and paste the URL."));
+  web.appendChild(el("strong", null, "Your personal URL (keep it private): "));
+  web.appendChild(el("code", null, body.url));
+  web.appendChild(copyButton(body.url));
   steps.appendChild(web);
   const cli = el("li");
   cli.appendChild(el("strong", null, "Claude Code: "));

@@ -1,4 +1,5 @@
 import json
+import os
 import secrets
 import threading
 from pathlib import Path
@@ -11,8 +12,9 @@ _LOCK = threading.Lock()
 
 
 class LiveStore:
-    def __init__(self, seed_paths: list[Path], data_dir: Path):
+    def __init__(self, seed_paths: list[Path], data_dir: Path, mirror=None):
         self.seed_paths = seed_paths
+        self.mirror = mirror
         self.data_dir = data_dir
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.live_path = data_dir / "live_signals.jsonl"
@@ -44,9 +46,12 @@ class LiveStore:
         return seed + live
 
     def append(self, rows: list[dict]) -> None:
-        with _LOCK, self.live_path.open("a") as out:
-            for row in rows:
-                out.write(json.dumps(row, ensure_ascii=False) + "\n")
+        with _LOCK:
+            with self.live_path.open("a") as out:
+                for row in rows:
+                    out.write(json.dumps(row, ensure_ascii=False) + "\n")
+            if self.mirror:
+                self.mirror.upload(self.live_path)
 
     def create_member(self, name: str) -> tuple[str, str] | None:
         person = person_key(name)
@@ -55,7 +60,12 @@ class LiveStore:
         token = secrets.token_urlsafe(16)
         with _LOCK:
             self._members = {**self._load_members(), token: person}
-            self.members_path.write_text(json.dumps(self._members))
+            # Atomic replace: readers outside the lock must never see an empty file.
+            tmp = self.members_path.with_suffix(".tmp")
+            tmp.write_text(json.dumps(self._members))
+            os.replace(tmp, self.members_path)
+            if self.mirror:
+                self.mirror.upload(self.members_path)
         return token, person
 
     def person_for(self, token: str) -> str | None:

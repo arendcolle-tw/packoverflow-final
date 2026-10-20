@@ -1,6 +1,6 @@
 # Tectonic Hackathon Final — Ghent
 
-Context only: how we're judged and what we learned from round 1. Planning, timing and who does what are decided by the team, not here.
+Context only: how we're judged and what we learned from round 1.
 
 Prize: €10,000, winner takes all. 15 teams in our track (SD Worx). Judged on a live pitch with a demo.
 
@@ -58,7 +58,7 @@ Caveat: matched on lead names, selection was top ~20% per city, and the cutoff w
 **Technical ability**
 - Do make one end-to-end happy path work before adding breadth.
 - Do keep a demo mode: seeded data, a reset button, a fixed demo date, no dependency on a live API.
-- Do use a paid AI key with caching and a fallback, if AI is in the loop at all.
+- If AI is in the loop, plan for quota limits with caching and a fallback.
 - Don't fake core logic. Judges and other teams read repos.
 
 **Fit**

@@ -79,6 +79,7 @@ def test_join_and_gate(client):
         "https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=Packoverflow&connectorUrl="
         + body["url"].replace(":", "%3A").replace("/", "%2F")
     )
+    assert body["claude_app"] == body["claude_ai"].replace("https://claude.ai/", "claude://claude.ai/", 1)
     assert client.post("/api/join", json={"name": "  "}).status_code == 422
     assert client.post("/u/nope/mcp", json={}).status_code == 404
     assert client.get("/join").status_code == 200

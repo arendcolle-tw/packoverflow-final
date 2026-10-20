@@ -40,31 +40,36 @@ def scrub(text: str) -> str:
     return SECRETS.sub("[redacted]", text)
 
 
+def human_text(record: dict) -> str | None:
+    # A /compact summary is a "user" record that Claude wrote.
+    if record.get("type") != "user" or record.get("isSidechain") or record.get("isMeta") or record.get("isCompactSummary"):
+        return None
+    text = PASTED.sub("[pasted]", _text((record.get("message") or {}).get("content")) or "").strip()
+    if not text or text.startswith(("<", COMPACT_SUMMARY)):
+        return None
+    return scrub(text)
+
+
 def human_turns(session_file: Path) -> list[dict]:
     turns, context = [], ""
     for record in _records(session_file):
         if record.get("isSidechain"):
             continue
-        message = record.get("message") or {}
-        text = _text(message.get("content"))
         if record.get("type") == "assistant":
+            text = _text((record.get("message") or {}).get("content"))
             if text:
                 context = scrub(text[-400:])
             continue
-        # A /compact summary is a "user" record that Claude wrote.
-        if record.get("type") != "user" or record.get("isMeta") or record.get("isCompactSummary") or not text:
-            continue
-        text = PASTED.sub("[pasted]", text).strip()
-        if not text or text.startswith(("<", COMPACT_SUMMARY)):
-            continue
-        turns.append({
-            "source_id": record["sessionId"],
-            "message_uuid": record["uuid"],
-            "at": record["timestamp"],
-            "text": scrub(text),
-            "context": context,
-            "is_agent": False,
-        })
+        text = human_text(record)
+        if text:
+            turns.append({
+                "source_id": record["sessionId"],
+                "message_uuid": record["uuid"],
+                "at": record["timestamp"],
+                "text": text,
+                "context": context,
+                "is_agent": False,
+            })
     return turns
 
 

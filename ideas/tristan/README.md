@@ -1,17 +1,19 @@
 # Who knows
 
-A Slack bot that answers "who actually knows how to do X". The recorder turns each person's Claude Code sessions into rows, one per human turn, and labels whether the person decided, corrected Claude, explained why, or accepted what Claude supplied. A central FastAPI service stores the rows in SQLite. The bot ranks people by their own reasoning in similar sessions and replies with the person, a verbatim quote of their why, the source Claude session and a status.
+A Slack bot that answers "who actually knows how to do X". The recorder turns each Claude Code session into one row: Claude's summary of the decisions the person made, and whether they decided, corrected Claude, explained why, or accepted what Claude supplied. Alberic's knowledge graph (`ideas/alberic/knowledge_graph`) is the central store for these rows. A central FastAPI service stores the rows in SQLite. The bot ranks people by their own reasoning in similar sessions and replies with the person, a verbatim quote of their why, the source Claude session and a status.
 
 ## Row shape
 
 ```json
-{"id": "<session>:<message uuid>", "person": "tristan", "topic": "aikido-security-scan",
- "source": "claude_session", "source_id": "<session>", "at": "2026-10-15T10:00:00Z",
- "human_role": "decided", "why": "<the person's own words, or null>", "actor": "human",
- "task": "Set up the aikido security scan in CI"}
+{"id": "<session>:summary", "person": "tristan", "topic": "aikido-security-scan",
+ "source": "claude_session", "source_id": "<session>", "at": "<time of the last human turn>",
+ "human_role": "decided", "actor": "human", "task": "Set up the aikido security scan in CI",
+ "why": "Chose the CI scan over a pre-commit hook \"because local hooks get skipped\""}
 ```
 
-`human_role` is `decided`, `corrected`, `explained_why` or `accepted_as_is`. `actor` is `human`, `agent` (a subagent prompt) or `unknown`. A subagent run has id `<session>:<agent>:run` and source_id `<session>:<agent>`. The recorder keeps a `why` only when it is a verbatim substring of what the person typed, so the model cannot write reasons for them.
+`human_role` is `decided`, `corrected`, `explained_why` or `accepted_as_is`. `why` is a summary of at most 200 characters of what the person chose, corrected or ruled out. The recorder keeps quote marks only around words that appear verbatim (ignoring case and whitespace) in what the person typed, so a row never claims a quote the person did not write.
+
+`--mode turns` gives the older shape instead: one row per human turn with id `<session>:<message uuid>`, `actor` `human`, `agent` (a subagent prompt, id `<session>:<agent>:run`) or `unknown`, and a `why` kept only when it is a verbatim substring of the turn.
 
 ## Ranking
 
@@ -30,7 +32,7 @@ Only rows where a human decided, corrected Claude or explained why count. Each r
 - The recorder reads `~/.claude/projects` on the laptop, only session folders whose name contains `packoverflow` (`--match` changes it).
 - Raw sessions stay on the laptop. Only rows leave it, with a why of at most 200 characters and a task of at most 80.
 - The recorder replaces pasted content with `[pasted]`, and tokens (`sk-`, `sk_live_`/`rk_test_`, `gh*_`, `github_pat_`, `glpat-`, `xox*`, `xapp-`, `AKIA`, `AIza`, `ATATT`, `npm_`, `hf_`, `ya29.`, JWTs, `Bearer` values, Slack webhook URLs, store tokens `wk_`, private keys), values after `password=`, `secret:`, `api_key=`, `token=` and similar, passwords in URLs and email addresses with `[redacted]`, before labelling. `record_signal` over MCP applies the same scrub. It skips the summary Claude writes on `/compact`.
-- Labelling runs `claude -p --model haiku` under the person's own Claude Code login. The label cache is `~/.cache/packoverflow-recorder/cache.json`.
+- Summarising runs `claude -p --model haiku` without tools under the person's own Claude Code login, on a compacted copy of the session: the human turns verbatim and Claude's text replies cut to about 1500 characters, without tool calls, tool output or subagent runs, at most about 60,000 characters. The summary cache is `~/.cache/packoverflow-recorder/summaries.json`, the turn label cache `cache.json` next to it.
 
 ## Run locally
 
@@ -55,12 +57,18 @@ Only rows where a human decided, corrected Claude or explained why count. Each r
 ## Backfill
 
 ```bash
-uv run --python 3.13 python -m recorder.run --person tristan --push http://localhost:8090 --token <token>
+uv run --python 3.13 python -m recorder.run --person tristan --push https://knowledge-graph-323892475788.us-central1.run.app --token <member token>
 ```
 
+<<<<<<< Updated upstream
 Labels every turn missing from the cache, writes `data/signals-tristan.json` and, with `--push`, posts the rows to the store.
 
 The team's one store is the knowledge graph (`ideas/alberic`, https://knowledge-graph-323892475788.us-central1.run.app). Pass that as `--push` with your graph member token: the recorder, the hook and the screenshot watcher post to `POST /signals`, and fall back to `POST /api/signals` only for the old Who knows store. `WHOKNOWS_TOKEN` can replace `--token`.
+||||||| Stash base
+Labels every turn missing from the cache, writes `data/signals-tristan.json` and, with `--push`, posts the rows to the store. `WHOKNOWS_TOKEN` can replace `--token`.
+=======
+Summarises every session whose compacted text changed since the last run, writes `data/signals-tristan.json` and, with `--push`, posts the rows in chunks of 1000 to `<url>/signals`. `--push-path /api/signals` posts to the whoknows server instead. `WHOKNOWS_TOKEN` can replace `--token`. `--mode turns` labels each human turn instead.
+>>>>>>> Stashed changes
 
 ## Live capture
 
@@ -68,7 +76,7 @@ The team's one store is the knowledge graph (`ideas/alberic`, https://knowledge-
 uv run --python 3.13 python -m recorder.install --person tristan --push <url> --token <token> --write-settings
 ```
 
-Adds a Claude Code Stop hook (`python -m recorder.hook`). When a session in a `packoverflow` folder stops, the hook starts a background worker that labels that session and pushes its rows. The hook reads person, URL and token from `~/.config/whoknows/recorder.json` and the worker logs to `~/.cache/packoverflow-recorder/hook.log`. The classifier's own `claude -p` runs set `RECORDER_CHILD=1`, and the hook skips them.
+Adds `python -m recorder.hook` as a Claude Code Stop and SessionEnd hook. When a session in a `packoverflow` folder stops or ends, the hook starts a background worker and returns. The worker summarises that session again and pushes its one row. It skips the session when its compacted text is unchanged, and on Stop it sleeps until 60 s have passed since the session's previous summary, so the summary then includes the turns written meanwhile. SessionEnd summarises at once. The hook reads person, URL, push path (default `/signals`) and token from `~/.config/whoknows/recorder.json` and the worker logs to `~/.cache/packoverflow-recorder/hook.log`. The summariser's own `claude -p` runs set `RECORDER_CHILD=1`, and the hook skips them.
 
 ## Screenshots
 

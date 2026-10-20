@@ -158,6 +158,7 @@ def store_server():
         def do_POST(self):
             rows = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
             received.append({"path": self.path, "auth": self.headers["Authorization"], "rows": rows})
+<<<<<<< Updated upstream
             status = reply["status"]
             if status == 200 and not reply["graph"] and self.path == "/signals":
                 status = 404
@@ -169,6 +170,16 @@ def store_server():
                 body = {"stored": len(rows), "skipped": 0}
             body = json.dumps(body).encode()
             self.send_response(status)
+||||||| Stash base
+            ok = reply["status"] == 200
+            body = json.dumps({"stored": len(rows), "skipped": 0} if ok else {"detail": "missing or unknown token"}).encode()
+            self.send_response(reply["status"])
+=======
+            # /signals answers like the knowledge graph, /api/signals like the whoknows server.
+            ok = {"added": len(rows), "updated": 0, "rejected": []} if self.path == "/signals" else {"stored": len(rows), "skipped": 0}
+            body = json.dumps(ok if reply["status"] == 200 else {"detail": "missing or unknown token"}).encode()
+            self.send_response(reply["status"])
+>>>>>>> Stashed changes
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
@@ -191,10 +202,18 @@ def test_push_sends_chunks_with_bearer_token(store_server):
     assert {(r["path"], r["auth"]) for r in store_server.received} == {("/signals", "Bearer tok")}
 
 
+<<<<<<< Updated upstream
 def test_push_falls_back_to_the_old_store(store_server):
     store_server.reply["graph"] = False
     assert run.push([{"id": str(n)} for n in range(1500)], store_server.url, "tok") == (1500, 0)
     assert [r["path"] for r in store_server.received] == ["/signals", "/api/signals", "/api/signals"]
+||||||| Stash base
+    assert {(r["path"], r["auth"]) for r in store_server.received} == {("/api/signals", "Bearer tok")}
+=======
+def test_push_path_selects_the_endpoint(store_server):
+    assert run.push([{"id": "1"}], store_server.url, "tok", "api/signals") == (1, 0)
+    assert store_server.received[0]["path"] == "/api/signals"
+>>>>>>> Stashed changes
 
 
 def test_main_pushes_rows_and_failed_push_exits_nonzero_keeping_rows(store_server, tmp_path, monkeypatch, capsys):
@@ -205,12 +224,12 @@ def test_main_pushes_rows_and_failed_push_exits_nonzero_keeping_rows(store_serve
         out.write_text(json.dumps(rows))
         return rows
 
-    monkeypatch.setattr(run, "record", fake_record)
+    monkeypatch.setattr(run, "record_summaries", fake_record)
     monkeypatch.setenv("WHOKNOWS_TOKEN", "envtok")
     argv = ["run", "--person", "tristan", "--projects-dir", str(tmp_path), "--out", str(out), "--push", store_server.url]
     monkeypatch.setattr(sys, "argv", argv)
     run.main()
-    assert store_server.received[0]["auth"] == "Bearer envtok"
+    assert (store_server.received[0]["path"], store_server.received[0]["auth"]) == ("/signals", "Bearer envtok")
     assert "1 stored, 0 skipped" in capsys.readouterr().out
 
     out.unlink()
@@ -255,10 +274,20 @@ def test_hook_filters(hook_env, monkeypatch, case, spawns):
     assert bool(hook_env.spawned) == spawns
 
 
+def test_main_turns_mode_keeps_one_row_per_turn(store_server, tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr(run, "record", lambda files, person, out, workers: calls.append("turns") or [{"id": "s1:u1"}])
+    monkeypatch.setattr(run, "record_summaries", lambda files, person, out, workers: calls.append("summary") or [])
+    monkeypatch.setattr(sys, "argv", ["run", "--person", "tristan", "--projects-dir", str(tmp_path), "--mode", "turns",
+                                      "--push", store_server.url, "--push-path", "/api/signals", "--token", "tok"])
+    run.main()
+    assert calls == ["turns"] and store_server.received[0]["path"] == "/api/signals"
+
+
 def test_hook_spawns_detached_worker_without_waiting(hook_env):
-    hook.hook(EVENT)
+    hook.hook({**EVENT, "hook_event_name": "SessionEnd"})
     [(args, kwargs)] = hook_env.spawned
-    assert args == [sys.executable, "-m", "recorder.hook", "--worker", EVENT["transcript_path"]]
+    assert args == [sys.executable, "-m", "recorder.hook", "--worker", EVENT["transcript_path"], "SessionEnd"]
     assert kwargs["start_new_session"] is True and kwargs["cwd"] == hook.ROOT
     assert kwargs["stdout"].name == kwargs["stderr"].name == str(hook.LOG)
     assert kwargs["stdin"] == subprocess.DEVNULL
@@ -271,11 +300,12 @@ def test_hook_main_logs_errors_instead_of_failing(hook_env, monkeypatch):
     assert "JSONDecodeError" in hook.LOG.read_text()
 
 
-def test_worker_waits_while_another_worker_holds_the_session_lock(hook_env, tmp_path, monkeypatch):
+def test_worker_waits_while_another_worker_holds_the_session_lock(hook_env, session, monkeypatch):
     calls = []
-    monkeypatch.setattr(run, "record", lambda files, person, out: calls.append((files, person, out)) or [{"id": "s1:u1"}])
-    monkeypatch.setattr(run, "push", lambda rows, url, token: calls.append((rows, url, token)) or (1, 0))
-    transcript = tmp_path / "s1.jsonl"
+    monkeypatch.setattr(run, "record_summaries",
+                        lambda files, person, out, cache_path: calls.append((files, person, out)) or [{"id": "s1:summary"}])
+    monkeypatch.setattr(run, "push", lambda rows, url, token, path: calls.append((rows, url, token, path)) or (1, 0))
+    transcript = session
     (hook.STATE / "locks").mkdir(parents=True)
     with open(hook.STATE / "locks" / "s1.lock", "w") as held:
         fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -287,26 +317,41 @@ def test_worker_waits_while_another_worker_holds_the_session_lock(hook_env, tmp_
     assert not waiting.is_alive()
     assert calls == [
         ([transcript], "tristan", hook.STATE / "sessions" / "s1.json"),
-        ([{"id": "s1:u1"}], "http://store", "tok"),
+        ([{"id": "s1:summary"}], "http://store", "tok", "/signals"),
     ]
 
 
-def test_hook_end_to_end_records_and_pushes_in_the_background(session, store_server, tmp_path):
+def test_worker_forgets_the_session_when_the_push_fails_so_the_next_stop_resends(hook_env, session, monkeypatch):
+    summaries = hook.STATE / "summaries.json"
+
+    def summarise(files, person, out, cache_path):
+        run.locked_update(cache_path, lambda path: {"s1": {"sha256": "x", "summarised_at": 0, "row": {}}})
+        return [{"id": "s1:summary"}]
+
+    def failing_push(rows, url, token, path):
+        raise OSError("store down")
+
+    monkeypatch.setattr(run, "record_summaries", summarise)
+    monkeypatch.setattr(run, "push", failing_push)
+    with pytest.raises(OSError):
+        hook.work(session)
+    assert "s1" not in run.load_summaries(summaries)
+
+
+def test_hook_end_to_end_summarises_and_pushes_in_the_background(session, store_server, tmp_path):
     home = tmp_path / "home"
     transcript = home / ".claude" / "projects" / "-Users-x-packoverflow-final" / "s1.jsonl"
     transcript.parent.mkdir(parents=True)
     shutil.copy(session, transcript)
-    cache = home / ".cache" / "packoverflow-recorder" / "cache.json"
-    cache.parent.mkdir(parents=True)
-    labels = {i["key"]: {"topic": "db", "human_role": "decided", "why": "because we already run it", "actor": "human"}
-              for i in session_items(transcript)}
-    cache.write_text(json.dumps({"labels": labels, "tasks": {"s1": "pick a database"}}))
     config = tmp_path / "recorder.json"
     config.write_text(json.dumps({"person": "tristan", "push_url": store_server.url, "token": "tok"}))
-    # A failing fake claude first on PATH, so a cache miss can never turn into a real model call.
+    # A fake claude first on PATH, so the test never reaches a real model. It answers only when run as a recorder child.
+    summary = {"title": "pick a database", "topic": "database", "role": "decided",
+               "summary": 'Chose Postgres over Redis "because we already run it"'}
     fake_claude = tmp_path / "bin" / "claude"
     fake_claude.parent.mkdir()
-    fake_claude.write_text('#!/bin/sh\ntouch "$0.called"\nexit 1\n')
+    fake_claude.write_text(f'#!/bin/sh\ncat > /dev/null\n[ "$RECORDER_CHILD" = 1 ] || exit 1\n'
+                           f"echo '{json.dumps({'structured_output': summary})}'\n")
     fake_claude.chmod(0o755)
     env = {**os.environ, "HOME": str(home), "WHOKNOWS_RECORDER_CONFIG": str(config),
            "PATH": f"{fake_claude.parent}:{os.environ['PATH']}"}
@@ -323,9 +368,10 @@ def test_hook_end_to_end_records_and_pushes_in_the_background(session, store_ser
     log = home / ".cache" / "packoverflow-recorder" / "hook.log"
     assert store_server.received, log.read_text() if log.exists() else "no hook log"
     [request] = store_server.received
-    assert request["auth"] == "Bearer tok"
-    assert [(r["id"], r["why"]) for r in request["rows"]] == [("s1:u1", "because we already run it"), ("s1:u5", None)]
-    assert not fake_claude.with_name("claude.called").exists()
+    assert (request["path"], request["auth"]) == ("/signals", "Bearer tok")
+    assert [(r["id"], r["why"], r["task"]) for r in request["rows"]] == [
+        ("s1:summary", 'Chose Postgres over Redis "because we already run it"', "pick a database"),
+    ]
 
 
 def test_install_writes_private_config_and_merges_the_hook_once(tmp_path, monkeypatch, capsys):
@@ -350,20 +396,23 @@ def test_install_writes_private_config_and_merges_the_hook_once(tmp_path, monkey
     install.main()
     install.main()
     assert stat.S_IMODE(config.stat().st_mode) == 0o600
-    assert json.loads(config.read_text()) == {"person": "tristan", "push_url": "http://store", "token": "tok", "match": "packoverflow"}
+    assert json.loads(config.read_text()) == {"person": "tristan", "push_url": "http://store", "push_path": "/signals",
+                                              "token": "tok", "match": "packoverflow"}
     merged = json.loads(settings.read_text())
     commands = [h["command"] for group in merged["hooks"]["Stop"] for h in group["hooks"]]
     assert merged["model"] == "opus" and len(commands) == 2 and commands[0] == "echo done"
     assert commands[1].startswith(f"cd {install.ROOT} && ") and commands[1].endswith("python -m recorder.hook || true")
+    assert [h["command"] for group in merged["hooks"]["SessionEnd"] for h in group["hooks"]] == [commands[1]]
     subprocess.run(["sh", "-c", commands[1]], input="{}", text=True, check=True)
     [backup] = tmp_path.glob("settings.json.bak-*")
     assert json.loads(backup.read_text()) == original
-    assert "already has this Stop hook" in capsys.readouterr().out
+    assert "already has the Stop and SessionEnd hooks" in capsys.readouterr().out
 
 
 def test_install_replaces_a_hook_from_before_the_exit_guard(tmp_path):
     settings = tmp_path / "settings.json"
     entry = {"type": "command", "command": "cd /r && uv run python -m recorder.hook || true", "timeout": 10}
     settings.write_text(json.dumps({"hooks": {"Stop": [{"hooks": [{**entry, "command": "cd /r && uv run python -m recorder.hook"}]}]}}))
-    assert install.merge_stop_hook(settings, entry).startswith("updated")
-    assert json.loads(settings.read_text())["hooks"]["Stop"] == [{"hooks": [entry]}]
+    assert install.merge_hooks(settings, entry).startswith("updated the Stop hook and added the SessionEnd hook")
+    hooks = json.loads(settings.read_text())["hooks"]
+    assert hooks == {"Stop": [{"hooks": [entry]}], "SessionEnd": [{"hooks": [entry]}]}

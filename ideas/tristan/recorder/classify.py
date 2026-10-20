@@ -94,10 +94,10 @@ def build_prompt(items: list[dict], source: str = "Claude Code session", assista
     return INSTRUCTIONS.format(topics=", ".join(TOPICS), turns=rendered, source=source, assistant=assistant)
 
 
-def parse_output(stdout: str) -> dict:
+def parse_output(stdout: str, key: str = "items") -> dict:
     payload = json.loads(stdout)
     structured = payload.get("structured_output")
-    if isinstance(structured, dict) and "items" in structured:
+    if isinstance(structured, dict) and key in structured:
         return structured
     text = payload.get("result", "")
     return json.loads(text[text.index("{"): text.rindex("}") + 1])

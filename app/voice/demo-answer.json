@@ -1,59 +1,4 @@
 {
- "who_knows": {
-  "query": "nightly payroll export retries to the bank over SFTP",
-  "at": "2026-10-20T09:00:00+00:00",
-  "status": "single_point",
-  "owner": "marc",
-  "similar_tasks": 7,
-  "people": [
-   {
-    "person": "marc",
-    "evidence": [
-     {
-      "source_id": "marc-0",
-      "at": "2026-10-08T17:09:00+00:00",
-      "similarity": 0.86,
-      "takeover": 0.25,
-      "contribution": 0.321,
-      "whys": [
-       {
-        "role": "corrected",
-        "why": "No, retry the upload 3 times, not 5, because the bank closes the SFTP window at 18:00 and a late export is rejected anyway."
-       },
-       {
-        "role": "decided",
-        "why": "Start the export at 17:00, so a failed upload still has an hour before the window closes."
-       }
-      ]
-     }
-    ],
-    "proficiency": 0.274
-   },
-   {
-    "person": "sofie",
-    "evidence": [],
-    "proficiency": 0.0
-   }
-  ]
- },
- "risks": [
-  {
-   "topic": "payroll-export-retries",
-   "status": "single_point",
-   "owner": "marc",
-   "ai_count": 10,
-   "human_count": 2,
-   "last_human_reasoning_at": "2026-10-08T17:09:00+00:00",
-   "days_since": 11,
-   "people": [
-    {
-     "person": "marc",
-     "proficiency": 0.312,
-     "last_why": "No, retry the upload 3 times, not 5, because the bank closes the SFTP window at 18:00 and a late export is rejected anyway."
-    }
-   ]
-  }
- ],
  "rows": [
   {
    "id": "demo-sofie-0:0",
@@ -62,18 +7,6 @@
    "source": "claude_session",
    "source_id": "sofie-0",
    "at": "2026-09-29T08:12:00Z",
-   "human_role": "accepted_as_is",
-   "actor": "human",
-   "why": null,
-   "task": "Nightly payroll export to the bank over SFTP, retries on a failed upload"
-  },
-  {
-   "id": "demo-sofie-0:1",
-   "person": "sofie",
-   "topic": "payroll-export-retries",
-   "source": "claude_session",
-   "source_id": "sofie-0",
-   "at": "2026-09-29T08:12:10Z",
    "human_role": "accepted_as_is",
    "actor": "human",
    "why": null,
@@ -104,18 +37,6 @@
    "task": "Nightly payroll export to the bank over SFTP, retries on a failed upload"
   },
   {
-   "id": "demo-sofie-2:1",
-   "person": "sofie",
-   "topic": "payroll-export-retries",
-   "source": "claude_session",
-   "source_id": "sofie-2",
-   "at": "2026-10-06T14:05:10Z",
-   "human_role": "accepted_as_is",
-   "actor": "human",
-   "why": null,
-   "task": "Nightly payroll export to the bank over SFTP, retries on a failed upload"
-  },
-  {
    "id": "demo-sofie-3:0",
    "person": "sofie",
    "topic": "payroll-export-retries",
@@ -134,18 +55,6 @@
    "source": "claude_session",
    "source_id": "sofie-4",
    "at": "2026-10-17T16:45:00Z",
-   "human_role": "accepted_as_is",
-   "actor": "human",
-   "why": null,
-   "task": "Nightly payroll export to the bank over SFTP, retries on a failed upload"
-  },
-  {
-   "id": "demo-sofie-4:1",
-   "person": "sofie",
-   "topic": "payroll-export-retries",
-   "source": "claude_session",
-   "source_id": "sofie-4",
-   "at": "2026-10-17T16:45:10Z",
    "human_role": "accepted_as_is",
    "actor": "human",
    "why": null,
@@ -196,6 +105,761 @@
    "human_role": "decided",
    "actor": "human",
    "why": "Start the export at 17:00, so a failed upload still has an hour before the window closes."
+  },
+  {
+   "id": "demo-jonas-0:0",
+   "person": "jonas",
+   "topic": "pc200-indexation",
+   "source": "claude_session",
+   "source_id": "jonas-0",
+   "at": "2026-10-05T09:00:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Apply the PC 200 salary indexation in mysdworx for a client portfolio"
+  },
+  {
+   "id": "demo-jonas-1:0",
+   "person": "jonas",
+   "topic": "pc200-indexation",
+   "source": "claude_session",
+   "source_id": "jonas-1",
+   "at": "2026-10-12T11:00:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Apply the PC 200 salary indexation in mysdworx for a client portfolio"
+  },
+  {
+   "id": "demo-jonas-2:0",
+   "person": "jonas",
+   "topic": "pc200-indexation",
+   "source": "claude_session",
+   "source_id": "jonas-2",
+   "at": "2026-10-16T15:00:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Apply the PC 200 salary indexation in mysdworx for a client portfolio"
+  },
+  {
+   "id": "demo-lotte-0:0",
+   "person": "lotte",
+   "topic": "pc200-indexation",
+   "source": "claude_session",
+   "source_id": "lotte-0",
+   "at": "2026-10-15T10:10:00Z",
+   "human_role": "corrected",
+   "actor": "human",
+   "why": "Keep the PC 124 employees on the old base, because only joint committee 200 indexes on 1 November.",
+   "task": "Apply the PC 200 salary indexation in mysdworx for a client portfolio"
+  },
+  {
+   "id": "demo-lotte-0:1",
+   "person": "lotte",
+   "topic": "pc200-indexation",
+   "source": "claude_session",
+   "source_id": "lotte-0",
+   "at": "2026-10-15T10:14:00Z",
+   "human_role": "explained_why",
+   "actor": "human",
+   "why": "Check the result against the scale, not just the percentage, because some salaries sit above the barema and keep their premium."
+  },
+  {
+   "id": "demo-jonas-sick-0:0",
+   "person": "jonas",
+   "topic": "sick-leave",
+   "source": "claude_session",
+   "source_id": "jonas-sick-0",
+   "at": "2026-10-01T09:30:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Guaranteed salary for an employee on sick leave"
+  },
+  {
+   "id": "demo-jonas-sick-1:0",
+   "person": "jonas",
+   "topic": "sick-leave",
+   "source": "claude_session",
+   "source_id": "jonas-sick-1",
+   "at": "2026-10-09T13:00:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Guaranteed salary for an employee on sick leave"
+  },
+  {
+   "id": "demo-ines-0:0",
+   "person": "ines",
+   "topic": "sick-leave",
+   "source": "claude_session",
+   "source_id": "ines-0",
+   "at": "2026-10-13T14:20:00Z",
+   "human_role": "corrected",
+   "actor": "human",
+   "why": "Count the guaranteed salary from the first day of absence, not from the day the sick note arrives.",
+   "task": "Guaranteed salary for an employee on sick leave"
+  },
+  {
+   "id": "demo-ines-0:1",
+   "person": "ines",
+   "topic": "sick-leave",
+   "source": "claude_session",
+   "source_id": "ines-0",
+   "at": "2026-10-13T14:26:00Z",
+   "human_role": "decided",
+   "actor": "human",
+   "why": "When a new absence starts within 14 days of returning, treat it as the same period, so the employer does not pay a second guaranteed salary."
+  },
+  {
+   "id": "demo-sofie-onb-0:0",
+   "person": "sofie",
+   "topic": "employee-onboarding",
+   "source": "claude_session",
+   "source_id": "sofie-onb-0",
+   "at": "2026-10-03T08:00:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Onboard a new hire: contract, Dimona and first payslip in mysdworx"
+  },
+  {
+   "id": "demo-sofie-onb-1:0",
+   "person": "sofie",
+   "topic": "employee-onboarding",
+   "source": "claude_session",
+   "source_id": "sofie-onb-1",
+   "at": "2026-10-10T08:30:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Onboard a new hire: contract, Dimona and first payslip in mysdworx"
+  },
+  {
+   "id": "demo-sofie-onb-2:0",
+   "person": "sofie",
+   "topic": "employee-onboarding",
+   "source": "claude_session",
+   "source_id": "sofie-onb-2",
+   "at": "2026-10-18T09:00:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Onboard a new hire: contract, Dimona and first payslip in mysdworx"
+  },
+  {
+   "id": "demo-karim-0:0",
+   "person": "karim",
+   "topic": "employee-onboarding",
+   "source": "claude_session",
+   "source_id": "karim-0",
+   "at": "2026-10-07T10:00:00Z",
+   "human_role": "decided",
+   "actor": "human",
+   "why": "File the Dimona before the first working day, because a late Dimona is a fine for the client, not for us.",
+   "task": "Onboard a new hire: contract, Dimona and first payslip in mysdworx"
+  },
+  {
+   "id": "demo-elena-0:0",
+   "person": "elena",
+   "topic": "employee-onboarding",
+   "source": "claude_session",
+   "source_id": "elena-0",
+   "at": "2026-10-16T11:00:00Z",
+   "human_role": "explained_why",
+   "actor": "human",
+   "why": "Ask the new hire which tools and procedures they already know, so the onboarding skips what they can already do.",
+   "task": "Onboard a new hire: contract, Dimona and first payslip in mysdworx"
+  },
+  {
+   "id": "demo-jonas-dmfa-0:0",
+   "person": "jonas",
+   "topic": "dmfa-filing",
+   "source": "claude_session",
+   "source_id": "jonas-dmfa-0",
+   "at": "2026-09-30T10:00:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Quarterly DmfA social security filing and corrections"
+  },
+  {
+   "id": "demo-jonas-dmfa-1:0",
+   "person": "jonas",
+   "topic": "dmfa-filing",
+   "source": "claude_session",
+   "source_id": "jonas-dmfa-1",
+   "at": "2026-10-11T10:00:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Quarterly DmfA social security filing and corrections"
+  },
+  {
+   "id": "demo-ann-0:0",
+   "person": "ann",
+   "topic": "dmfa-filing",
+   "source": "claude_session",
+   "source_id": "ann-0",
+   "at": "2026-04-02T09:00:00Z",
+   "human_role": "explained_why",
+   "actor": "human",
+   "why": "Send corrections in the same quarter when you can, because a correction after the deadline needs a separate regularisation.",
+   "task": "Quarterly DmfA social security filing and corrections"
+  },
+  {
+   "id": "demo-sofie-cc-0:0",
+   "person": "sofie",
+   "topic": "contract-change",
+   "source": "claude_session",
+   "source_id": "sofie-cc-0",
+   "at": "2026-10-04T13:00:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Change a contract from part-time to full-time mid-month"
+  },
+  {
+   "id": "demo-sofie-cc-1:0",
+   "person": "sofie",
+   "topic": "contract-change",
+   "source": "claude_session",
+   "source_id": "sofie-cc-1",
+   "at": "2026-10-13T13:00:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Change a contract from part-time to full-time mid-month"
+  },
+  {
+   "id": "demo-tom-0:0",
+   "person": "tom",
+   "topic": "contract-change",
+   "source": "claude_session",
+   "source_id": "tom-0",
+   "at": "2026-10-11T15:00:00Z",
+   "human_role": "corrected",
+   "actor": "human",
+   "why": "Change the work schedule before the payroll cut-off on the 20th, otherwise the new hours only show up on next month's payslip.",
+   "task": "Change a contract from part-time to full-time mid-month"
+  },
+  {
+   "id": "demo-jonas-pt-0:0",
+   "person": "jonas",
+   "topic": "pay-transparency",
+   "source": "claude_session",
+   "source_id": "jonas-pt-0",
+   "at": "2026-10-06T09:00:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Update the recruitment intake for the EU Pay Transparency Directive"
+  },
+  {
+   "id": "demo-jonas-pt-1:0",
+   "person": "jonas",
+   "topic": "pay-transparency",
+   "source": "claude_session",
+   "source_id": "jonas-pt-1",
+   "at": "2026-10-14T09:00:00Z",
+   "human_role": "accepted_as_is",
+   "actor": "human",
+   "why": null,
+   "task": "Update the recruitment intake for the EU Pay Transparency Directive"
+  },
+  {
+   "id": "demo-sara-0:0",
+   "person": "sara",
+   "topic": "pay-transparency",
+   "source": "claude_session",
+   "source_id": "sara-0",
+   "at": "2026-10-09T16:00:00Z",
+   "human_role": "decided",
+   "actor": "human",
+   "why": "Remove the salary history question from the intake form, because since June we can no longer ask candidates what they earned before.",
+   "task": "Update the recruitment intake for the EU Pay Transparency Directive"
+  }
+ ],
+ "topics": [
+  {
+   "id": "payroll-export-retries",
+   "question": "nightly payroll export retries to the bank over SFTP",
+   "keywords": [
+    "payroll export",
+    "export",
+    "sftp",
+    "retry",
+    "retries",
+    "bank",
+    "upload"
+   ],
+   "label": "Nightly payroll export",
+   "who_knows": {
+    "query": "nightly payroll export retries to the bank over SFTP",
+    "at": "2026-10-20T09:00:00+00:00",
+    "status": "single_point",
+    "owner": "marc",
+    "similar_tasks": 7,
+    "people": [
+     {
+      "person": "marc",
+      "evidence": [
+       {
+        "source_id": "marc-0",
+        "at": "2026-10-08T17:09:00+00:00",
+        "similarity": 0.86,
+        "takeover": 0.25,
+        "contribution": 0.321,
+        "whys": [
+         {
+          "role": "corrected",
+          "why": "No, retry the upload 3 times, not 5, because the bank closes the SFTP window at 18:00 and a late export is rejected anyway."
+         },
+         {
+          "role": "decided",
+          "why": "Start the export at 17:00, so a failed upload still has an hour before the window closes."
+         }
+        ]
+       }
+      ],
+      "proficiency": 0.274
+     },
+     {
+      "person": "sofie",
+      "evidence": [],
+      "proficiency": 0.0
+     }
+    ]
+   },
+   "risk": {
+    "topic": "payroll-export-retries",
+    "status": "single_point",
+    "owner": "marc",
+    "ai_count": 7,
+    "human_count": 2,
+    "last_human_reasoning_at": "2026-10-08T17:09:00+00:00",
+    "days_since": 11,
+    "people": [
+     {
+      "person": "marc",
+      "proficiency": 0.312,
+      "last_why": "No, retry the upload 3 times, not 5, because the bank closes the SFTP window at 18:00 and a late export is rejected anyway."
+     }
+    ]
+   }
+  },
+  {
+   "id": "pc200-indexation",
+   "question": "PC 200 salary indexation in mysdworx",
+   "keywords": [
+    "indexation",
+    "index",
+    "pc 200",
+    "pc200",
+    "joint committee",
+    "barema",
+    "scale",
+    "salary increase"
+   ],
+   "label": "PC 200 indexation",
+   "who_knows": {
+    "query": "PC 200 salary indexation in mysdworx",
+    "at": "2026-10-20T09:00:00+00:00",
+    "status": "single_point",
+    "owner": "lotte",
+    "similar_tasks": 4,
+    "people": [
+     {
+      "person": "lotte",
+      "evidence": [
+       {
+        "source_id": "lotte-0",
+        "at": "2026-10-15T10:14:00+00:00",
+        "similarity": 0.7,
+        "takeover": 0.5,
+        "contribution": 0.562,
+        "whys": [
+         {
+          "role": "corrected",
+          "why": "Keep the PC 124 employees on the old base, because only joint committee 200 indexes on 1 November."
+         },
+         {
+          "role": "explained_why",
+          "why": "Check the result against the scale, not just the percentage, because some salaries sit above the barema and keep their premium."
+         }
+        ]
+       }
+      ],
+      "proficiency": 0.43
+     },
+     {
+      "person": "jonas",
+      "evidence": [],
+      "proficiency": 0.0
+     }
+    ]
+   },
+   "risk": {
+    "topic": "pc200-indexation",
+    "status": "single_point",
+    "owner": "lotte",
+    "ai_count": 3,
+    "human_count": 2,
+    "last_human_reasoning_at": "2026-10-15T10:14:00+00:00",
+    "days_since": 4,
+    "people": [
+     {
+      "person": "lotte",
+      "proficiency": 0.553,
+      "last_why": "Keep the PC 124 employees on the old base, because only joint committee 200 indexes on 1 November."
+     }
+    ]
+   }
+  },
+  {
+   "id": "sick-leave",
+   "question": "guaranteed salary for sick leave",
+   "keywords": [
+    "sick",
+    "illness",
+    "absence",
+    "absent",
+    "guaranteed salary",
+    "leave",
+    "sick note"
+   ],
+   "label": "Sick leave and guaranteed salary",
+   "who_knows": {
+    "query": "guaranteed salary for sick leave",
+    "at": "2026-10-20T09:00:00+00:00",
+    "status": "single_point",
+    "owner": "ines",
+    "similar_tasks": 3,
+    "people": [
+     {
+      "person": "ines",
+      "evidence": [
+       {
+        "source_id": "ines-0",
+        "at": "2026-10-13T14:26:00+00:00",
+        "similarity": 0.85,
+        "takeover": 1.0,
+        "contribution": 1.345,
+        "whys": [
+         {
+          "role": "corrected",
+          "why": "Count the guaranteed salary from the first day of absence, not from the day the sick note arrives."
+         },
+         {
+          "role": "decided",
+          "why": "When a new absence starts within 14 days of returning, treat it as the same period, so the employer does not pay a second guaranteed salary."
+         }
+        ]
+       }
+      ],
+      "proficiency": 0.739
+     },
+     {
+      "person": "jonas",
+      "evidence": [],
+      "proficiency": 0.0
+     }
+    ]
+   },
+   "risk": {
+    "topic": "sick-leave",
+    "status": "single_point",
+    "owner": "ines",
+    "ai_count": 2,
+    "human_count": 2,
+    "last_human_reasoning_at": "2026-10-13T14:26:00+00:00",
+    "days_since": 6,
+    "people": [
+     {
+      "person": "ines",
+      "proficiency": 0.793,
+      "last_why": "Count the guaranteed salary from the first day of absence, not from the day the sick note arrives."
+     }
+    ]
+   }
+  },
+  {
+   "id": "employee-onboarding",
+   "question": "onboard a new hire contract Dimona first payslip",
+   "keywords": [
+    "onboard",
+    "onboarding",
+    "new hire",
+    "new employee",
+    "dimona",
+    "starter",
+    "first day"
+   ],
+   "label": "Onboarding a new hire",
+   "who_knows": {
+    "query": "onboard a new hire contract Dimona first payslip",
+    "at": "2026-10-20T09:00:00+00:00",
+    "status": "single_point",
+    "owner": "elena",
+    "similar_tasks": 5,
+    "people": [
+     {
+      "person": "elena",
+      "evidence": [
+       {
+        "source_id": "elena-0",
+        "at": "2026-10-16T11:00:00+00:00",
+        "similarity": 0.92,
+        "takeover": 0.5,
+        "contribution": 0.439,
+        "whys": [
+         {
+          "role": "explained_why",
+          "why": "Ask the new hire which tools and procedures they already know, so the onboarding skips what they can already do."
+         }
+        ]
+       }
+      ],
+      "proficiency": 0.355
+     },
+     {
+      "person": "karim",
+      "evidence": [
+       {
+        "source_id": "karim-0",
+        "at": "2026-10-07T10:00:00+00:00",
+        "similarity": 0.92,
+        "takeover": 0.25,
+        "contribution": 0.198,
+        "whys": [
+         {
+          "role": "decided",
+          "why": "File the Dimona before the first working day, because a late Dimona is a fine for the client, not for us."
+         }
+        ]
+       }
+      ],
+      "proficiency": 0.18
+     },
+     {
+      "person": "sofie",
+      "evidence": [],
+      "proficiency": 0.0
+     }
+    ]
+   },
+   "risk": {
+    "topic": "employee-onboarding",
+    "status": "single_point",
+    "owner": "elena",
+    "ai_count": 3,
+    "human_count": 2,
+    "last_human_reasoning_at": "2026-10-16T11:00:00+00:00",
+    "days_since": 3,
+    "people": [
+     {
+      "person": "elena",
+      "proficiency": 0.38,
+      "last_why": "Ask the new hire which tools and procedures they already know, so the onboarding skips what they can already do."
+     },
+     {
+      "person": "karim",
+      "proficiency": 0.195,
+      "last_why": "File the Dimona before the first working day, because a late Dimona is a fine for the client, not for us."
+     }
+    ]
+   }
+  },
+  {
+   "id": "dmfa-filing",
+   "question": "quarterly DmfA social security filing corrections",
+   "keywords": [
+    "dmfa",
+    "social security",
+    "quarterly filing",
+    "filing",
+    "declaration",
+    "regularisation",
+    "social secretariat"
+   ],
+   "label": "DmfA filing",
+   "who_knows": {
+    "query": "quarterly DmfA social security filing corrections",
+    "at": "2026-10-20T09:00:00+00:00",
+    "status": "fading",
+    "owner": null,
+    "similar_tasks": 3,
+    "people": [
+     {
+      "person": "ann",
+      "evidence": [
+       {
+        "source_id": "ann-0",
+        "at": "2026-04-02T09:00:00+00:00",
+        "similarity": 1.0,
+        "takeover": 0.33,
+        "contribution": 0.036,
+        "whys": [
+         {
+          "role": "explained_why",
+          "why": "Send corrections in the same quarter when you can, because a correction after the deadline needs a separate regularisation."
+         }
+        ]
+       }
+      ],
+      "proficiency": 0.035
+     },
+     {
+      "person": "jonas",
+      "evidence": [],
+      "proficiency": 0.0
+     }
+    ]
+   },
+   "risk": {
+    "topic": "dmfa-filing",
+    "status": "fading",
+    "owner": null,
+    "ai_count": 2,
+    "human_count": 1,
+    "last_human_reasoning_at": "2026-04-02T09:00:00+00:00",
+    "days_since": 201,
+    "people": [
+     {
+      "person": "ann",
+      "proficiency": 0.035,
+      "last_why": "Send corrections in the same quarter when you can, because a correction after the deadline needs a separate regularisation."
+     }
+    ]
+   }
+  },
+  {
+   "id": "contract-change",
+   "question": "change contract part-time to full-time",
+   "keywords": [
+    "contract",
+    "part-time",
+    "part time",
+    "full-time",
+    "full time",
+    "work schedule",
+    "hours",
+    "cut-off"
+   ],
+   "label": "Contract changes",
+   "who_knows": {
+    "query": "change contract part-time to full-time",
+    "at": "2026-10-20T09:00:00+00:00",
+    "status": "single_point",
+    "owner": "tom",
+    "similar_tasks": 3,
+    "people": [
+     {
+      "person": "tom",
+      "evidence": [
+       {
+        "source_id": "tom-0",
+        "at": "2026-10-11T15:00:00+00:00",
+        "similarity": 0.85,
+        "takeover": 0.5,
+        "contribution": 0.271,
+        "whys": [
+         {
+          "role": "corrected",
+          "why": "Change the work schedule before the payroll cut-off on the 20th, otherwise the new hours only show up on next month's payslip."
+         }
+        ]
+       }
+      ],
+      "proficiency": 0.237
+     },
+     {
+      "person": "sofie",
+      "evidence": [],
+      "proficiency": 0.0
+     }
+    ]
+   },
+   "risk": {
+    "topic": "contract-change",
+    "status": "single_point",
+    "owner": "tom",
+    "ai_count": 2,
+    "human_count": 1,
+    "last_human_reasoning_at": "2026-10-11T15:00:00+00:00",
+    "days_since": 8,
+    "people": [
+     {
+      "person": "tom",
+      "proficiency": 0.272,
+      "last_why": "Change the work schedule before the payroll cut-off on the 20th, otherwise the new hours only show up on next month's payslip."
+     }
+    ]
+   }
+  },
+  {
+   "id": "pay-transparency",
+   "question": "pay transparency directive recruitment salary history",
+   "keywords": [
+    "pay transparency",
+    "transparency",
+    "salary history",
+    "recruitment",
+    "pay gap",
+    "directive",
+    "candidate"
+   ],
+   "label": "Pay transparency",
+   "who_knows": {
+    "query": "pay transparency directive recruitment salary history",
+    "at": "2026-10-20T09:00:00+00:00",
+    "status": "fading",
+    "owner": null,
+    "similar_tasks": 3,
+    "people": [
+     {
+      "person": "sara",
+      "evidence": [
+       {
+        "source_id": "sara-0",
+        "at": "2026-10-09T16:00:00+00:00",
+        "similarity": 0.45,
+        "takeover": 0.5,
+        "contribution": 0.199,
+        "whys": [
+         {
+          "role": "decided",
+          "why": "Remove the salary history question from the intake form, because since June we can no longer ask candidates what they earned before."
+         }
+        ]
+       }
+      ],
+      "proficiency": 0.181
+     },
+     {
+      "person": "jonas",
+      "evidence": [],
+      "proficiency": 0.0
+     }
+    ]
+   },
+   "risk": {
+    "topic": "pay-transparency",
+    "status": "single_point",
+    "owner": "sara",
+    "ai_count": 2,
+    "human_count": 1,
+    "last_human_reasoning_at": "2026-10-09T16:00:00+00:00",
+    "days_since": 10,
+    "people": [
+     {
+      "person": "sara",
+      "proficiency": 0.358,
+      "last_why": "Remove the salary history question from the intake form, because since June we can no longer ask candidates what they earned before."
+     }
+    ]
+   }
   }
  ]
 }

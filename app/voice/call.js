@@ -1,4 +1,4 @@
-// Call tab: a live voice call with the PackOverflow agent (ElevenLabs web SDK), or the recorded call as a fallback.
+// Call tab: a live voice call with the knowledge base agent (ElevenLabs web SDK), or the recorded call as a fallback.
 // While the call runs, the two names appear when the agent's who_knows tool answers.
 (function () {
   const $ = (id) => document.getElementById(id);
@@ -80,7 +80,7 @@
         onConnect: () => { set("Connected. Ask what you need to know."); callBtn.textContent = "Hang up"; callBtn.disabled = false; callBtn.classList.add("live"); },
         onDisconnect: () => { set("Call ended."); callBtn.textContent = "Call"; callBtn.disabled = false; callBtn.classList.remove("live"); convo = null; },
         onError: (msg) => set("Call problem: " + msg),
-        onModeChange: ({ mode }) => { if (convo) set(mode === "speaking" ? "PackOverflow is speaking..." : "Listening..."); },
+        onModeChange: ({ mode }) => { if (convo) set(mode === "speaking" ? "Speaking..." : "Listening..."); },
         onMessage: ({ source, message }) => caption(source === "user" ? "you" : "agent", message),
         onAgentToolResponse: (p) => showNames(parseResult(p)),
       });

@@ -11,6 +11,22 @@ A session row counts `similarity × role × actor × time decay × takeover`:
 
 Per person the sum is squashed to 0–1. Status for the question: `dark` (no human reasoning), `fading` (nobody above 0.2), `single_point` (one person), `healthy`.
 
+## Knowledge graph
+
+`knowledge_graph.KnowledgeGraph` is the one store in the pipeline: Tristan's ingestion → this graph → Wout's MCP connector. Nodes are people, tasks (one Claude session) and evidence (one signal row); proficiency is the computed person → task edge.
+
+```python
+from knowledge_graph import KnowledgeGraph
+
+graph = KnowledgeGraph(Path("data/rows.jsonl"), seed_paths=[Path("signals.json")], mirror=gcs_mirror)
+graph.add_signals(rows)            # {"added", "updated", "rejected"}; dedupes on id, later row wins
+graph.who_knows(question, at=None) # status, owner, people ranked with evidence and whys
+graph.person_view(person, at=None) # headline, knows (with proficiency, only_you), only_prompts
+graph.risks(at=None)               # topics riskiest first: dark, single_point, fading, healthy
+```
+
+Rows are stored as JSONL, one line per write, and the whole file is uploaded to `mirror` (anything with `upload(path)`) after each write. Topic status uses the same decay as `who_knows` instead of a fixed window: `dark` means no human reasoning ever, `fading` means it decayed below 0.2.
+
 ## Run
 
 From `ideas/alberic/`, reads Wout's rows at `ideas/wout/data/signals.json` by default:

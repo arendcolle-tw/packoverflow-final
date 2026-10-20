@@ -31,3 +31,20 @@ def test_unreadable_file_is_skipped(tmp_path):
     good = write(tmp_path, "good.json", [row(id="g:1")])
     rows, skipped = load_signals([broken, not_a_list, good])
     assert [r["id"] for r in rows] == ["g:1"] and skipped == 2
+
+
+def test_unhashable_values_are_skipped_not_crashing(tmp_path):
+    rows, skipped = load_signals([write(tmp_path, "a.json", [
+        {**row(), "human_role": ["decided"]}, {**row(), "source": {}}, {**row(), "actor": None}, row(id="ok:1"),
+    ])])
+    assert [r["id"] for r in rows] == ["ok:1"] and skipped == 3
+
+
+def test_corrupt_side_files_fall_back_to_empty(tmp_path):
+    from knowledge_clock.store import load_whys
+
+    broken = tmp_path / "broken.json"
+    broken.write_text("{oops")
+    listy = write(tmp_path, "list.json", ["a"])
+    assert load_aliases(broken) == {} and load_aliases(listy) == {}
+    assert load_whys(broken) == {} and load_whys(listy) == {}

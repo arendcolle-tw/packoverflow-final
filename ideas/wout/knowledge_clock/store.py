@@ -12,9 +12,9 @@ ACTORS = {"human", "agent", "unknown"}
 def validate(row: dict) -> bool:
     if not isinstance(row, dict) or not FIELDS <= row.keys():
         return False
-    if row["human_role"] not in ROLES or row["source"] not in SOURCES or row["actor"] not in ACTORS:
-        return False
     if not all(isinstance(row[f], str) and row[f] for f in FIELDS - {"why"}):
+        return False
+    if row["human_role"] not in ROLES or row["source"] not in SOURCES or row["actor"] not in ACTORS:
         return False
     if row["why"] is not None and not isinstance(row["why"], str):
         return False
@@ -46,12 +46,20 @@ def load_signals(paths: list[Path]) -> tuple[list[dict], int]:
     return list(by_id.values()), skipped
 
 
+def _load_mapping(path: Path) -> dict[str, str]:
+    try:
+        data = json.loads(path.read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
 def load_aliases(path: Path) -> dict[str, str]:
-    return json.loads(path.read_text()) if path.exists() else {}
+    return _load_mapping(path)
 
 
 def load_whys(path: Path) -> dict[str, str]:
-    return json.loads(path.read_text()) if path.exists() else {}
+    return _load_mapping(path)
 
 
 def save_why(path: Path, row_id: str, why: str) -> None:

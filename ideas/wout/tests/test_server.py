@@ -68,3 +68,12 @@ def test_why_validation(qclient):
     assert qclient.post("/api/why", json={"id": "s2:q1", "why": "   "}).status_code == 422
     assert qclient.post("/api/why", json={"id": "s2:q1", "why": "x" * 201}).status_code == 422
     assert qclient.post("/api/why", json={"id": "nope", "why": "because"}).status_code == 404
+
+
+def test_why_only_for_open_questions(qclient):
+    assert qclient.post("/api/why", json={"id": "s2:q2", "why": "overwrite"}).status_code == 404
+    assert qclient.post("/api/why", json={"id": "s2:q3", "why": "for an AI row"}).status_code == 404
+    assert qclient.post("/api/why", json={"id": "s2:q1", "why": "first"}).status_code == 204
+    assert qclient.post("/api/why", json={"id": "s2:q1", "why": "second"}).status_code == 404
+    whys = [s["why"] for s in qclient.get("/api/topics/slack-bot").json()["signals"]]
+    assert "already said" in whys and "first" in whys and "overwrite" not in whys

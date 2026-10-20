@@ -60,20 +60,27 @@ def get_topic(topic: str) -> dict:
     return detail
 
 
+def _is_open_question(signal: dict) -> bool:
+    return (
+        signal["human_role"] in {"decided", "corrected"} and signal["source"] == "claude_session"
+        and signal["actor"] == "human" and signal["why"] is None
+    )
+
+
 @app.get("/api/questions")
 def get_questions(person: str) -> list[dict]:
     return [
         {"id": s["id"], "topic": s["topic"], "at": s["at"], "human_role": s["human_role"]}
         for s in _config()["signals"]
-        if s["person"] == person and s["human_role"] in {"decided", "corrected"}
-        and s["source"] == "claude_session" and s["actor"] == "human" and s["why"] is None
+        if s["person"] == person and _is_open_question(s)
     ]
 
 
 @app.post("/api/why", status_code=204)
 def post_why(answer: WhyAnswer) -> Response:
-    if not any(s["id"] == answer.id for s in _config()["signals"]):
-        raise HTTPException(status_code=404, detail="Unknown signal")
+    # Only open questions, so nobody can overwrite a quote or put words on an AI-handled row.
+    if not any(s["id"] == answer.id and _is_open_question(s) for s in _config()["signals"]):
+        raise HTTPException(status_code=404, detail="No open question with this id")
     save_why(_whys_path(), answer.id, answer.why.strip())
     return Response(status_code=204)
 

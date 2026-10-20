@@ -6,7 +6,7 @@ Live app: https://packoverflow-wwvoo2dieq-uc.a.run.app (exists after the first m
 
 Merging a change in `app/` to `main` runs `.github/workflows/deploy.yml`. It deploys `app/` from source to Cloud Run service `packoverflow` in `us-central1`. The URL is in the run's summary on the Actions tab.
 
-Threads never deploy themselves and have no Google Cloud access.
+Threads have no Google Cloud login of their own. They act on Cloud Run by dispatching GitHub workflows (GitHub MCP `actions_run_trigger`), which sign in as the deploy account below. See Ops from a thread.
 
 ## Where it runs
 
@@ -39,3 +39,16 @@ API keys live in GitHub repository secrets (Settings > Secrets and variables > A
 To add or rotate a key: update the repository secret, then rerun "Deploy to Cloud Run" for that service. Never commit keys.
 
 In cloud threads, ElevenLabs works through a network secret on the `default` environment for `api.elevenlabs.io`.
+
+## Ops from a thread
+
+`.github/workflows/ops.yml` ("Cloud Run ops") gives threads a fixed set of Cloud Run operations with no keys. Dispatch it with `actions_run_trigger` (workflow `ops.yml`, ref `main`) and read the result in the run summary or job log. Service account key creation is blocked by the lab's IAM deny policy, so this is the route from the cloud.
+
+| `op` | Inputs | What it does |
+|---|---|---|
+| `describe` | `service` | Prints URL, ready revision, traffic, min and max instances, and env var names (never values). |
+| `set-env` | `service`, `name`, `from_service` or `value` | Sets one env var. `from_service` copies the value from that service's env, masked in logs (e.g. copy `ELEVENLABS_API_KEY` from `packoverflow` to `knowledge-graph`). `value` is for non-secret values only and is refused for names containing KEY, TOKEN, SECRET, PASS or CRED. |
+| `admin-call` | `call=gaps-scan`, `claude` (0 to 50) | Calls knowledge-graph `POST /gaps/scan?claude=N` with `KG_ADMIN_TOKEN` read from the knowledge-graph service env at run time and masked. |
+| `admin-call` | `call=add-member`, `person`, `pubkey` | Mints a member token with `POST /members`. The token is printed only encrypted (RSA-OAEP-SHA256) to `pubkey`, the base64 of an RSA public key PEM: `openssl genpkey -algorithm RSA -out k.pem; openssl pkey -in k.pem -pubout \| base64 -w0`. Decrypt with `base64 -d \| openssl pkeyutl -decrypt -inkey k.pem -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256`. |
+
+To redeploy a service, dispatch "Deploy to Cloud Run" (`deploy.yml`) the same way.

@@ -143,7 +143,19 @@ function aboutBlock() {
 }
 
 // The main page: only the call, plus the demo video when there is one. The longer pages stay at /flow and /full, unlinked.
-function callPage() {
+// QR code of this site for the audience. Static SVGs in app/icons (made with the qrcode Python package);
+// the nobikos service shows its own link, every other host the packoverflow one.
+const QR = {
+  nobikos: { svg: fs.readFileSync(path.join(__dirname, "icons", "qr-nobikos.svg"), "utf8"), url: "nobikos-323892475788.us-central1.run.app" },
+  packoverflow: { svg: fs.readFileSync(path.join(__dirname, "icons", "qr-packoverflow.svg"), "utf8"), url: "packoverflow-wwvoo2dieq-uc.a.run.app" },
+};
+
+function qrBlock(host) {
+  const q = /^nobikos/.test(host || "") ? QR.nobikos : QR.packoverflow;
+  return `<div class="qr"><div class="qrimg">${q.svg}</div><p>Scan to try it<br><span>${esc(q.url)}</span></p></div>`;
+}
+
+function callPage(host) {
   const video = demoVideo();
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
@@ -166,6 +178,11 @@ function callPage() {
   nav button { background: none; border: 0; border-radius: 999px; color: var(--muted); font: inherit; font-weight: 600; padding: 8px 20px; cursor: pointer; }
   nav button[aria-selected="true"] { color: var(--navy-950); background: var(--ai); }
   .view[hidden] { display: none; }
+  .qr { display: flex; align-items: center; gap: 28px; margin-top: 28px; flex-wrap: wrap; justify-content: center; }
+  .qrimg { width: min(360px, 80vw); background: #fff; border-radius: 18px; padding: 10px; }
+  .qrimg svg { display: block; width: 100%; height: auto; }
+  .qr p { font: 800 1.8rem var(--display); margin: 0; }
+  .qr p span { font: 400 1rem var(--mono); color: var(--muted); word-break: break-all; }
   .about { margin-top: 36px; }
   .about h2 { font-size: 1.3rem; margin: 28px 0 10px; }
   .desc { font-size: 1.05rem; line-height: 1.6; }
@@ -192,6 +209,7 @@ ${voice.STYLE}
   </nav>
   <div class="view" id="home">
 ${voice.SECTION}
+${qrBlock(host)}
 ${video}
 ${aboutBlock()}
   </div>
@@ -616,7 +634,7 @@ const server = http.createServer((req, res) => {
     try { return serveSlide(urlPath, res); } catch { res.writeHead(400); return res.end(); }
   }
   res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-  res.end(urlPath === "/full" ? page() : urlPath === "/flow" ? simplePage() : callPage());
+  res.end(urlPath === "/full" ? page() : urlPath === "/flow" ? simplePage() : callPage(req.headers.host));
 });
 
 const port = process.env.PORT || 8080;

@@ -58,6 +58,118 @@ const REVIEW_SEED = [
     note: "Claude drafted it and you sent it unchanged. That is fine, it just is not evidence you know this, so it stays private." },
 ];
 
+// The main page: one end-to-end flow. Data in, ask, answer, call. The older tabbed page stays at /full.
+function simplePage() {
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PackOverflow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/theme.css">
+<style>
+  main { max-width: 900px; margin: 0 auto; padding: 40px 20px 64px; }
+  h1 { font-size: 2.6rem; font-weight: 800; margin: 0 0 6px; }
+  .tag { color: var(--muted); margin: 0 0 28px; }
+  .step { padding: 24px; margin-bottom: 18px; }
+  .step h2 { font-size: 1.35rem; margin: 4px 0 12px; }
+  .meta, .card p { color: var(--muted); font-size: 0.9rem; }
+  .stats { display: flex; gap: 28px; flex-wrap: wrap; margin-bottom: 14px; }
+  .stats b { display: block; font: 800 2rem var(--display); color: var(--text); }
+  .stats span { color: var(--muted); font-size: 0.9rem; }
+  .row { border-top: 1px solid var(--glass-line); padding: 10px 0; }
+  .row q { display: block; margin-top: 2px; }
+  .askbar { display: flex; gap: 8px; }
+  .askbar input { flex: 1; min-width: 0; background: rgba(0,13,58,0.6); border: 1px solid var(--glass-line); border-radius: 12px; color: var(--text); font: 1.05rem var(--sans); padding: 10px 14px; }
+  .askbar .btn, .call .btn { border: 0; cursor: pointer; font: inherit; font-weight: 600; }
+  .person { font: 800 2rem var(--display); margin: 14px 0 6px; }
+  blockquote { margin: 8px 0; padding-left: 14px; border-left: 3px solid var(--amber); font-size: 1.05rem; }
+  blockquote small { display: block; color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; }
+  .sample { display: inline-block; font-size: 0.8rem; font-weight: 600; color: var(--navy-950); background: var(--amber); border-radius: 999px; padding: 2px 10px; margin-bottom: 8px; }
+  .card { padding: 20px; } .name { font: 800 1.8rem var(--display); margin: 6px 0; }
+  .label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+${voice.STYLE}
+  #call .call { padding: 0; text-align: left; } #call .call h2 { margin: 4px 0 16px; max-width: none; }
+  #call .callbtns { justify-content: flex-start; }
+  #call .who .ai, #call .call .kicker { display: none; }
+  #call .glass { background: none; border: 0; backdrop-filter: none; }
+  #callnames { margin-top: 14px; }
+  .more { color: var(--muted); font-size: 0.9rem; }
+</style></head>
+<body><main>
+  <h1>PackOverflow</h1>
+  <p class="tag">Ask who knows. Get the person and the reason in their own words, straight from the work they already do.</p>
+
+  <section class="glass step">
+    <div class="kicker">1 · The moment of doubt</div>
+    <h2>The agent did the job. Something looks off. Who here still knows how this works?</h2>
+    <p class="meta">The doc owner or the busiest person is often not the one who knows.</p>
+  </section>
+
+  <section class="glass step">
+    <div class="kicker">2 · Nobody documents anything</div>
+    <h2>It reads the AI sessions people already have</h2>
+    <div id="feed" class="meta">Loading...</div>
+  </section>
+
+  <section class="glass step">
+    <div class="kicker">3 · Ask</div>
+    <h2>Who knows?</h2>
+    <form id="askform" class="askbar">
+      <input id="q" value="${esc(ASK_DEFAULT)}" maxlength="300" aria-label="Your question" autocomplete="off">
+      <button class="btn" type="submit">Ask</button>
+    </form>
+    <div id="answer" aria-live="polite"></div>
+  </section>
+
+  <div class="glass step">
+    <div class="kicker">4 · In a rush? Call it</div>
+${voice.SECTION}
+  </div>
+
+  <section class="glass step">
+    <div class="kicker">5 · Why SD Worx</div>
+    <ul>
+      <li>500 consultants run agentic payroll: find the person who knows a payroll topic in seconds.</li>
+      <li>Portfolio handovers: see who really worked through a client's issues, not who is listed as owner.</li>
+      <li>No knowledge base to maintain: it learns from work people already do.</li>
+    </ul>
+  </section>
+
+  <p class="more"><a href="/full">Older page with all tabs</a></p>
+</main>
+<script>
+  document.getElementById("call").hidden = false;
+  const h = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const ago = (iso) => { const d = Math.round((Date.now() - new Date(iso)) / 86400000); return d <= 0 ? "today" : d === 1 ? "yesterday" : d + " days ago"; };
+  const sample = (live, what) => live === false ? '<div class="sample">' + what + ': the live knowledge graph is unreachable right now</div>' : "";
+
+  fetch("/api/feed").then((r) => r.json()).then((f) => {
+    document.getElementById("feed").innerHTML = sample(f.live, "No data") +
+      '<div class="stats"><div><b>' + f.rows + '</b><span>rows</span></div><div><b>' + f.sessions + '</b><span>sessions</span></div><div><b>' + f.topics + '</b><span>topics</span></div><div><b>' + f.people + '</b><span>people</span></div></div>' +
+      f.latest.map((r) => '<div class="row">' + h(r.topic) + ' · ' + h(r.source) + ' · ' + h(r.role) + ' · ' + h(ago(r.at)) + '<q>' + h(r.why) + '</q></div>').join("");
+  }).catch(() => { document.getElementById("feed").textContent = "Could not load."; });
+
+  async function ask(q) {
+    const box = document.getElementById("answer");
+    box.innerHTML = '<p class="meta">Asking the knowledge graph...</p>';
+    let a = null;
+    try { a = await (await fetch("/api/ask?q=" + encodeURIComponent(q))).json(); } catch {}
+    if (!a) { box.innerHTML = '<p class="meta">Could not reach the server.</p>'; return; }
+    if (!a.person) { box.innerHTML = sample(a.live, "Sample answer") + '<p class="person">Nobody yet</p><p class="meta">No one has explained or decided anything about this in their sessions.</p>'; return; }
+    box.innerHTML = sample(a.live, "Sample answer") +
+      '<div class="person">' + h(a.person) + '</div>' +
+      a.whys.map((w) => '<blockquote><small>' + h(w.role) + '</small>"' + h(w.why) + '"</blockquote>').join("") +
+      '<p class="meta">From a ' + h(a.source.kind) + ' on ' + h(a.source.topic) + ', ' + h(ago(a.source.at)) + '.</p>' +
+      '<p>Want the why behind it? Ask ' + h(a.person) + ' for 20 minutes.</p>';
+  }
+  document.getElementById("askform").addEventListener("submit", (e) => { e.preventDefault(); const q = document.getElementById("q").value.trim(); if (q) ask(q); });
+  ask(document.getElementById("q").value);
+</script>
+${voice.SCRIPTS}
+</body></html>`;
+}
+
 function page() {
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
@@ -301,6 +413,12 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { "Content-Type": "text/plain" });
     return res.end("ok");
   }
+  if (urlPath === "/api/feed") {
+    return graph.feed().then((body) => {
+      res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+      res.end(JSON.stringify(body));
+    });
+  }
   if (urlPath === "/api/ask" || urlPath === "/api/map") {
     const q = (new URL(req.url, "http://x").searchParams.get("q") || "").trim().slice(0, 300);
     const work = urlPath === "/api/map" ? graph.map() : graph.ask(q || ASK_DEFAULT);
@@ -318,7 +436,7 @@ const server = http.createServer((req, res) => {
     try { return serveSlide(urlPath, res); } catch { res.writeHead(400); return res.end(); }
   }
   res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-  res.end(page());
+  res.end(urlPath === "/full" ? page() : simplePage());
 });
 
 const port = process.env.PORT || 8080;

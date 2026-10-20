@@ -112,8 +112,24 @@ async function safe(fn, sample, label) {
   }
 }
 
+// What came in: how many rows the recorders pushed, and the latest ones that carry a reason. Topics, not people.
+async function feed() {
+  const all = await rows();
+  const latest = all.filter((r) => r.why).sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, 6)
+    .map((r) => ({ topic: topicLabel(r.topic), source: r.source.replace(/_/g, " "), at: r.at, role: r.human_role.replace(/_/g, " "), why: r.why }));
+  return {
+    live: true,
+    rows: all.length,
+    sessions: new Set(all.map((r) => r.source_id)).size,
+    topics: new Set(all.map((r) => r.topic)).size,
+    people: new Set(all.map((r) => r.person)).size,
+    latest,
+  };
+}
+
 module.exports = {
   GRAPH_URL,
+  feed: () => safe(feed, { live: false, rows: 0, sessions: 0, topics: 0, people: 0, latest: [] }, "feed"),
   STATUS,
   shape,
   rows,

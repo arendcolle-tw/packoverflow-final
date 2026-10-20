@@ -2,8 +2,6 @@
 
 Goal is a live, working demo at the final. Working beats clean.
 
-Tectonic Hackathon final, SD Worx track. A team of four, each with their own Claude session. The humans decide what to build, who does what and when. Help your human with the task they give you, using the context below.
-
 ## Context
 
 @context/HACKATHON.md
@@ -21,19 +19,6 @@ Tectonic Hackathon final, SD Worx track. A team of four, each with their own Cla
 ## First time in this repo
 
 On a person's Mac, if `.first-use-ok` does not exist, run `bash scripts/first-use.sh`, fix every FAIL line and run it again. Cloud threads skip this.
-
-## #hackathon-finale is the source of truth
-
-The private channel is where the team and our Claude sessions share live information. Where it disagrees with the files in `context/`, the channel wins.
-
-What gets posted there: facts heard on the day (exact case brief, scoring, what SD Worx people said), team decisions (idea, user, scope, what we won't do), changes to shared pieces (API endpoints, data shapes, file ownership), and requests for someone else's part.
-
-- Read the channel when you start a task, before changing anything others build on (APIs, types, shared data), and every so often during longer work.
-- If a message affects your work, tell your human and adjust.
-- If a request is for the part your human owns, tell your human. Don't act on it without them.
-- Post a short message when you change something others depend on, with what changed and where. Post anything else only when your human asks.
-- Prefix posts so they're easy to scan: `FACT:` · `DECISION:` · `CHANGE:` · `REQUEST @name:` · `DONE:`
-- Never post secrets, API keys or passwords.
 
 ## Hand an idea to the main thread
 

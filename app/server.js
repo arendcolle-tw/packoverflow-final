@@ -44,38 +44,33 @@ function page() {
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PackOverflow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/theme.css">
 <style>
-  :root { --bg:#0f172a; --panel:#1e293b; --text:#f8fafc; --muted:#94a3b8; --accent:#38bdf8; --line:#334155; }
-  * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); }
-  header { padding: 24px 16px 0; max-width: 1100px; margin: 0 auto; }
-  h1 { font-size: 2rem; margin: 0; }
-  .tag { color: var(--muted); margin: 4px 0 16px; }
-  nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
-  nav button { background: none; border: 0; color: var(--muted); font: inherit; font-weight: 600;
-               padding: 10px 16px; cursor: pointer; border-bottom: 3px solid transparent; }
-  nav button[aria-selected="true"] { color: var(--text); border-color: var(--accent); }
-  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+  header { padding: 56px 20px 0; max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: clamp(2.6rem, 7vw, 5rem); font-weight: 800; margin: 12px 0 16px; }
+  .tag { color: var(--muted); font-size: 1.15rem; max-width: 46ch; margin: 0 0 32px; }
+  nav { display: inline-flex; gap: 4px; padding: 4px; }
+  nav button { background: none; border: 0; border-radius: 999px; color: var(--muted); font: inherit; font-weight: 600; padding: 8px 20px; cursor: pointer; }
+  nav button[aria-selected="true"] { color: var(--navy-950); background: var(--ai); }
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 20px 64px; }
   section[hidden] { display: none; }
-  .card { background: var(--panel); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-  .card h2 { margin: 0 0 8px; font-size: 1.2rem; }
-  .card p { color: var(--muted); margin: 0 0 12px; }
-  .btn { display: inline-block; background: var(--accent); color: #0f172a; font-weight: 700;
-         padding: 10px 18px; border-radius: 8px; text-decoration: none; margin-right: 8px; }
-  .btn.ghost { background: none; color: var(--accent); border: 1px solid var(--accent); }
-  ol { margin: 0; padding-left: 20px; } li { margin: 8px 0; }
-  code.prompt { display: inline-block; background: var(--bg); border: 1px solid var(--line);
-                border-radius: 6px; padding: 4px 8px; color: var(--text); cursor: pointer; }
-  .frame { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 12px; background: #000; }
-  .empty { text-align: center; padding: 80px 16px; border: 2px dashed var(--line); border-radius: 12px; }
+  .card { padding: 28px; margin-bottom: 18px; }
+  .card h2 { font-size: 1.5rem; margin-bottom: 8px; }
+  .card p { color: var(--muted); margin: 0 0 18px; }
+  ol { margin: 0; padding-left: 20px; } li { margin: 10px 0; }
+  code.prompt { display: inline-block; background: rgba(0, 13, 58, 0.6); border: 1px solid var(--glass-line); border-radius: 10px; padding: 6px 12px; font: 0.95rem var(--mono); cursor: pointer; }
+  .frame { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 18px; background: #000; }
+  .empty { text-align: center; padding: 80px 16px; border: 2px dashed var(--glass-line); border-radius: 18px; }
   .empty h2 { margin: 0 0 8px; } .empty p, .hint { color: var(--muted); }
-  a { color: var(--accent); }
 </style></head>
 <body>
 <header>
-  <h1>PackOverflow</h1>
-  <p class="tag">Who actually knows this, not who only prompted it. Tectonic Hackathon final, SD Worx track.</p>
-  <nav role="tablist">
+  <div class="kicker">Tectonic Hackathon final · SD Worx track</div>
+  <h1>Pack<span class="grad-human">Overflow</span></h1>
+  <p class="tag">Who actually knows this, not who only prompted it.</p>
+  <nav class="glass" role="tablist">
     <button role="tab" data-tab="demo" aria-selected="true">Demo</button>
     <button role="tab" data-tab="video" aria-selected="false">Video</button>
     <button role="tab" data-tab="slides" aria-selected="false">Slides</button>
@@ -83,13 +78,13 @@ function page() {
 </header>
 <main>
   <section id="demo">
-    <div class="card">
+    <div class="card glass">
       <h2>Try it in Claude</h2>
       <p>Get your personal connector URL and add it to Claude (claude.ai, desktop or Claude Code).</p>
       <a class="btn" href="${CONNECTOR}/join" target="_blank">Get my connector</a>
       <a class="btn ghost" href="${CONNECTOR}/" target="_blank">See the live knowledge map</a>
     </div>
-    <div class="card">
+    <div class="card glass">
       <h2>Then ask Claude</h2>
       <ol>
         <li><code class="prompt">Map my knowledge with Packoverflow</code></li>
@@ -137,6 +132,10 @@ const server = http.createServer((req, res) => {
   if (urlPath === "/healthz") {
     res.writeHead(200, { "Content-Type": "text/plain" });
     return res.end("ok");
+  }
+  if (urlPath === "/theme.css") {
+    res.writeHead(200, { "Content-Type": TYPES[".css"] });
+    return res.end(fs.readFileSync(path.join(__dirname, "theme.css")));
   }
   if (urlPath === "/slides" || urlPath.startsWith("/slides/")) {
     try { return serveSlide(urlPath, res); } catch { res.writeHead(400); return res.end(); }

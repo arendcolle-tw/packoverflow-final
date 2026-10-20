@@ -1,0 +1,53 @@
+/* PackOverflow theme. Shared by the site (/) and the slides (/slides). Rules for using it: context/DESIGN.md */
+:root {
+  --navy-950: #000d3a;
+  --navy-800: #001c52;
+  --blue-600: #006dd8;
+  --blue-400: #0087f3;
+  --sky-300: #9ed2ff;
+  --sky-100: #d9f1ff;
+  --amber: #e8a877;
+  --coral: #da3300;
+  --magenta: #b8688f;
+  --teal: #23dbc1;
+
+  --text: #f4f8ff;
+  --muted: #9fb0cc;
+  --glass: rgba(255, 255, 255, 0.045);
+  --glass-line: rgba(255, 255, 255, 0.11);
+
+  --human: linear-gradient(135deg, var(--amber), var(--magenta));
+  --ai: linear-gradient(135deg, #8fbbe0, #3b7fc4);
+
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font: 16px/1.55 var(--sans);
+  background:
+    radial-gradient(60rem 40rem at 85% -10%, rgba(0, 109, 216, 0.28), transparent 60%),
+    radial-gradient(45rem 35rem at -10% 110%, rgba(184, 104, 143, 0.14), transparent 60%),
+    linear-gradient(160deg, var(--navy-950), var(--navy-800) 70%);
+  background-attachment: fixed;
+}
+
+h1, h2, h3 { font-family: var(--display); line-height: 1.08; letter-spacing: -0.015em; margin: 0; text-wrap: balance; }
+a { color: var(--sky-300); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--sky-300); outline-offset: 3px; }
+
+.kicker { font: 600 0.8rem/1.2 var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--amber); }
+.grad-human { background: var(--human); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.grad-ai { background: var(--ai); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+.glass { background: var(--glass); border: 1px solid var(--glass-line); border-radius: 18px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+
+.btn { display: inline-block; padding: 12px 22px; border-radius: 999px; font-weight: 600; text-decoration: none; color: var(--navy-950); background: var(--human); }
+.btn.ghost { background: none; color: var(--text); border: 1px solid var(--glass-line); }
+.btn.ghost:hover { border-color: var(--sky-300); }

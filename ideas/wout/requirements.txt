@@ -1,4 +1,4 @@
-fastapi
-uvicorn
-mcp>=1.30,<2
-google-cloud-storage
+fastapi==0.151.0
+uvicorn==0.54.0
+mcp==1.30.0
+google-cloud-storage==3.17.1

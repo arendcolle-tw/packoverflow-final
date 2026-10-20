@@ -61,6 +61,8 @@ def convert(rows: list) -> tuple[list[dict], list[str]]:
 
 
 def post(signals: list[dict], url: str, token: str, chunk: int = 1000) -> list[dict]:
+    if not url.startswith(("https://", "http://")):
+        raise ValueError("--post needs an http(s) URL")
     results = []
     for start in range(0, len(signals), chunk):
         request = urllib.request.Request(

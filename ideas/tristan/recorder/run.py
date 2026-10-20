@@ -143,6 +143,8 @@ def record_summaries(files: list[Path], person: str, out: Path, cache_path: Path
 
 
 def push(rows: list[dict], url: str, token: str, path: str = "/signals", chunk: int = 1000) -> tuple[int, int]:
+    if not url.startswith(("https://", "http://")):
+        raise ValueError("push URL must be http(s)")
     stored = skipped = 0
     path = "/" + path.lstrip("/")
     for start in range(0, len(rows), chunk):

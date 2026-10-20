@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import tempfile
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -40,7 +41,7 @@ def _whys_path() -> Path:
 
 
 def _data_dir() -> Path:
-    return Path(os.environ.get("KC_DATA_DIR") or ("/tmp/kc" if ON_CLOUD_RUN else BASE / "data/live"))
+    return Path(os.environ.get("KC_DATA_DIR") or (str(Path(tempfile.gettempdir()) / "kc") if ON_CLOUD_RUN else BASE / "data/live"))
 
 
 def _make_mirror() -> tuple[object | None, str]:

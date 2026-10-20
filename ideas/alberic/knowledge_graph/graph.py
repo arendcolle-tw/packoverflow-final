@@ -94,6 +94,7 @@ class KnowledgeGraph:
             # Work without a session behind it, and gaps with Claude's draft. Drafts never enter `signals`.
             "CREATE TABLE IF NOT EXISTS artifacts (id TEXT PRIMARY KEY, row TEXT NOT NULL);"
             "CREATE TABLE IF NOT EXISTS gaps (id TEXT PRIMARY KEY, row TEXT NOT NULL);"
+            "CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);"
         )
         self._rows: dict[str, dict] = {
             id_: json.loads(row) for id_, row in self._db.execute("SELECT id, row FROM signals ORDER BY rowid")
@@ -180,6 +181,16 @@ class KnowledgeGraph:
                 )
             self._commit()
         return len(artifacts)
+
+    def setting(self, key: str) -> str | None:
+        found = self._db.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
+        return found[0] if found else None
+
+    def set_setting(self, key: str, value: str) -> None:
+        with _LOCK:
+            self._db.execute("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                             (key, value))
+            self._commit()
 
     def gaps(self) -> list[dict]:
         return [json.loads(r) for (r,) in self._db.execute("SELECT row FROM gaps ORDER BY rowid")]

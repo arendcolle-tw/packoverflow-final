@@ -9,6 +9,7 @@ import hmac
 import json
 import os
 import sys
+import threading
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
@@ -76,6 +77,7 @@ def _load_artifacts(graph: KnowledgeGraph) -> None:
 
 GRAPH, STORAGE = make_graph()
 _load_artifacts(GRAPH)
+threading.Thread(target=voice.ensure_webhook, args=(GRAPH,), daemon=True).start()
 app = FastAPI(title="knowledge-graph")
 
 
@@ -201,7 +203,7 @@ def post_answer(gap_id: str, body: Answer, person: str = Depends(member)) -> dic
 
 def _callable(owners: set[str]) -> set[str]:
     """Owners we can phone: calls configured and the owner opted in with a number in KG_PHONE_NUMBERS."""
-    if not all(os.environ.get(k) for k in ("ELEVENLABS_PHONE_NUMBER_ID", "ELEVENLABS_AGENT_ID", "ELEVENLABS_API_KEY")):
+    if not all(os.environ.get(k) for k in ("ELEVENLABS_PHONE_NUMBER_ID", "ELEVENLABS_API_KEY")):
         return set()
     return {o for o in owners if o and voice.phone_number(o)}
 
@@ -241,7 +243,7 @@ def post_call(gap_id: str) -> dict:
 @app.post("/webhooks/elevenlabs")
 async def post_webhook(request: Request) -> dict:
     body = await request.body()
-    if not voice.verify(request.headers.get("elevenlabs-signature"), body, os.environ.get("ELEVENLABS_WEBHOOK_SECRET", "")):
+    if not voice.verify(request.headers.get("elevenlabs-signature"), body, voice.webhook_secret(GRAPH)):
         raise HTTPException(401, "bad or missing signature")
     try:
         event = json.loads(body)

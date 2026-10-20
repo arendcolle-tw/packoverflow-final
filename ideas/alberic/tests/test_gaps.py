@@ -118,6 +118,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("KG_ADMIN_TOKEN", ADMIN)
     monkeypatch.setenv("KG_PHONE_NUMBERS", '{"wout": "+32470000001", "arend": "+32470000002"}')
     monkeypatch.delenv("K_SERVICE", raising=False)
+    monkeypatch.delenv("ELEVENLABS_API_KEY", raising=False)
     import knowledge_graph.server as server
 
     server = importlib.reload(server)

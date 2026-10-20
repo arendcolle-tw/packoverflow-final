@@ -99,19 +99,17 @@ Commits: `python -m knowledge_graph.import_git ../.. --since 2026-10-19` posts t
 | Variable | What | Without it |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | Claude drafts and transcript extraction | template drafts; the longest thing the person said |
-| `ELEVENLABS_API_KEY` | outbound calls, agent setup | no phone calls |
-| `ELEVENLABS_AGENT_ID` | the agent from `setup_agent` | no voice; text form only |
+| `ELEVENLABS_API_KEY` | outbound calls; lets the service register its own post-call webhook | no phone calls, no voice answers stored |
+| `ELEVENLABS_AGENT_ID` | override the agent (default: `voice.AGENT_ID`, already created) | |
 | `ELEVENLABS_PHONE_NUMBER_ID` | the Twilio number imported in ElevenLabs | the button opens the browser version |
-| `ELEVENLABS_WEBHOOK_SECRET` | HMAC secret of the post-call webhook | every webhook is refused |
+| `ELEVENLABS_WEBHOOK_SECRET` | override the webhook secret | the service's own secret (below) |
 | `KG_PHONE_NUMBERS` | JSON `{"person": "+32..."}`, opted-in members only | nobody is phoned |
+| `KG_PUBLIC_URL` | the service's own URL, for the webhook | the Cloud Run URL |
 
-Create the agent once (prints `ELEVENLABS_AGENT_ID` and, with the webhook, `ELEVENLABS_WEBHOOK_SECRET`):
+The agent already exists (`python -m knowledge_graph.setup_agent` made it; run it again only for a new one). On startup with `ELEVENLABS_API_KEY` set, the service creates the HMAC post-call webhook, stores its secret in its own database (never in env, logs or responses) and attaches it to the agent. So one command turns voice on:
 
 ```bash
-ELEVENLABS_API_KEY=<key> uv run --python 3.13 --with httpx python -m knowledge_graph.setup_agent \
-  --webhook-url https://knowledge-graph-323892475788.us-central1.run.app/webhooks/elevenlabs
-gcloud run services update knowledge-graph --region us-central1 --update-env-vars \
-  ANTHROPIC_API_KEY=<key>,ELEVENLABS_API_KEY=<key>,ELEVENLABS_AGENT_ID=<agent id>,ELEVENLABS_WEBHOOK_SECRET=<secret>
+gcloud run services update knowledge-graph --region us-central1 --update-env-vars ELEVENLABS_API_KEY=<key>,ANTHROPIC_API_KEY=<key>
 # Phone calls, optional (the ^@^ delimiter lets the JSON keep its commas):
 gcloud run services update knowledge-graph --region us-central1 --update-env-vars \
   '^@^ELEVENLABS_PHONE_NUMBER_ID=<phone number id>@KG_PHONE_NUMBERS={"arend":"+32..."}'

@@ -132,9 +132,47 @@ def test_call_starts_and_never_returns_the_number(client, monkeypatch):
     assert result["answered"] == gap["id"]
 
 
-def test_talk_page_has_the_widget_when_the_agent_exists(client, monkeypatch):
+def test_talk_page_has_the_widget_for_the_agent(client, monkeypatch):
     gap = wout_gap(client)
-    assert "not configured" in client.get(f"/gaps/{gap['id']}/talk").text
+    assert voice.AGENT_ID in client.get(f"/gaps/{gap['id']}/talk").text
     monkeypatch.setenv("ELEVENLABS_AGENT_ID", "agent_1")
     page = client.get(f"/gaps/{gap['id']}/talk").text
     assert "<elevenlabs-convai" in page and "agent_1" in page and gap["id"] in page
+
+
+def test_service_registers_its_own_webhook_and_keeps_the_secret(server, monkeypatch):
+    monkeypatch.delenv("ELEVENLABS_WEBHOOK_SECRET")
+    monkeypatch.setenv("ELEVENLABS_API_KEY", "k")
+    calls = []
+
+    class Response:
+        def __init__(self, body):
+            self.body = body
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return self.body
+
+    def fake(method):
+        def call(url, **kwargs):
+            calls.append((method, url, kwargs.get("json")))
+            return Response({"webhook_id": "wh1", "webhook_secret": "wsec_from_api"})
+        return call
+
+    monkeypatch.setattr(voice.httpx, "post", fake("post"))
+    monkeypatch.setattr(voice.httpx, "patch", fake("patch"))
+    voice.ensure_webhook(server.GRAPH)
+    voice.ensure_webhook(server.GRAPH)  # already has a secret: no second webhook
+    assert [c[0] for c in calls] == ["post", "patch"]
+    assert calls[0][2]["settings"]["webhook_url"].endswith("/webhooks/elevenlabs")
+    assert calls[1][1].endswith(voice.AGENT_ID)
+    assert calls[1][2]["platform_settings"]["workspace_overrides"]["webhooks"]["post_call_webhook_id"] == "wh1"
+
+    client = TestClient(server.app)
+    gap = wout_gap(client)
+    body = event(gap, ["We did it because the jury reads the repo."])
+    assert client.post("/webhooks/elevenlabs", **signed(body, secret="wsec_from_api")).status_code == 200
+    pages = [client.get(p).text for p in ("/gaps", "/gaps/board", "/rows", "/health", f"/gaps/{gap['id']}/talk")]
+    assert not any("wsec_from_api" in p for p in pages)

@@ -1,54 +1,52 @@
 {
- "names_at": 10.93,
+ "names_at": 99999,
+ "note": "Simulated call with the live agent, voiced with ElevenLabs text to speech.",
+ "result": null,
  "captions": [
   {
    "at": 0.6,
    "who": "agent",
-   "text": "PackOverflow here. What do you need to know?"
+   "text": "Hi, this is Nobikos, your team's knowledge base. Ask me anything about what I can do."
   },
   {
-   "at": 3.3,
+   "at": 5.25,
    "who": "you",
-   "text": "Hi, I have a meeting with the bank in ten minutes about the nightly payroll export. Who actually knows how the retries work?"
+   "text": "Hi. What can you actually do for my team?"
   },
   {
-   "at": 10.93,
+   "at": 8.52,
    "who": "agent",
-   "text": "Marc knows this. He corrected it to retry the upload three times, not five, because the bank closes the SFTP window at six in the evening and a late export gets rejected anyway. He last thought about it twelve days ago. This is going dark though, only Marc understands it right now. Want me to ping him?"
+   "text": "I help your team find the right person and their reasoning in seconds instead of a day of asking around. Here's how: I pick up the decisions people make in their AI sessions, like Claude or Copilot, and keep only what matters: the choice they made and why, in their own words. Then when someone asks a question in Slack, I tell them who knows it and their reason, so you get answers fast and your team learns from each other without writing documentation."
   },
   {
-   "at": 31.92,
+   "at": 39.4,
    "who": "you",
-   "text": "And what did he correct?"
+   "text": "And how do you learn all that without anyone writing documentation?"
   },
   {
-   "at": 34.26,
+   "at": 43.88,
    "who": "agent",
-   "text": "Marc corrected that you should retry the upload three times, not five, because the bank closes the SFTP window at six in the evening and a late export gets rejected anyway. He also decided to start the export at five in the afternoon so a failed upload still has an hour before the window closes."
+   "text": "I work from the work people already do. When someone uses Claude or Copilot, I capture their AI sessions in the background, just the decisions and reasoning, never the raw chat. Then when a colleague corrects something, decides on an approach, or explains why in a thread, that counts as knowledge. If nobody's written an answer down, I show the closest related facts and tag the person most likely to know, so their reply becomes the answer for next time. Nobody has to sit down and document anything."
   },
   {
-   "at": 53.03,
+   "at": 74.16,
    "who": "you",
-   "text": "Yes, ping him. Thanks!"
+   "text": "What happens when nobody knows the answer?"
   },
   {
-   "at": 55.56,
+   "at": 77.29,
    "who": "agent",
-   "text": "I'd send that ping to Marc now. Good luck with your meeting!"
+   "text": "I show the closest related facts and tag the colleague most likely to know based on what's nearby in the knowledge base. Their reply in the thread becomes a fact under their name, so the next person who asks gets the answer straight away. It's how gaps turn into learning moments for your whole team."
+  },
+  {
+   "at": 94.06,
+   "who": "you",
+   "text": "Nice, thanks."
+  },
+  {
+   "at": 96.03,
+   "who": "agent",
+   "text": "You're welcome! Feel free to reach out anytime you want to know more about how Nobikos can help your team. Take care!"
   }
- ],
- "note": "Simulated call with the live agent and its real tool answers, voiced with ElevenLabs text to speech.",
- "result": {
-  "topic": "Payroll export retries",
-  "data": "Demo data: a seeded example topic, not a real colleague.",
-  "who_knows": {
-   "name": "Marc",
-   "their_own_words": [
-    "corrected: \"No, retry the upload 3 times, not 5, because the bank closes the SFTP window at 18:00 and a late export is rejected anyway.\"",
-    "decided: \"Start the export at 17:00, so a failed upload still has an hour before the window closes.\""
-   ],
-   "last_reasoned": "12 days ago",
-   "others_who_also_know": 0
-  }
- }
+ ]
 }

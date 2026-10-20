@@ -98,7 +98,8 @@ Commits: `python -m knowledge_graph.import_git ../.. --since 2026-10-19` posts t
 
 | Variable | What | Without it |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | Claude drafts and transcript extraction | template drafts; the longest thing the person said |
+| `ANTHROPIC_API_KEY` | Claude drafts and transcript extraction | Gemini on Vertex AI (Cloud Run only, the service's own identity, needs `roles/aiplatform.user`), then templates |
+| `KG_GEMINI_MODEL` | Vertex model id | `gemini-2.5-flash` |
 | `ELEVENLABS_API_KEY` | outbound calls; lets the service register its own post-call webhook | no phone calls, no voice answers stored |
 | `ELEVENLABS_AGENT_ID` | override the agent (default: `voice.AGENT_ID`, already created) | |
 | `ELEVENLABS_PHONE_NUMBER_ID` | the Twilio number imported in ElevenLabs | the button opens the browser version |

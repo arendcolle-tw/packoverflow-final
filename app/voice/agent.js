@@ -26,9 +26,9 @@ question, and say honestly whether each is live, built, or roadmap.
 - Reaches out when it is not in there. If nobody recorded it, the bot messages the person most likely to know, and their
   reply becomes the next answer for everyone. Live in Slack.
 - Spots gaps and closes them. It finds work nobody ever explained, drafts what the reason might be, and actively asks
-  the owner, who confirms or fixes it in one line. A board shows each gap closing. Built and tested, not live yet.
-- Explain by voice. People who prefer talking can answer by phone: Nobikos calls them for a sixty-second chat and keeps
-  their answer in their own words. Built and tested, not live yet.
+  the owner, who confirms or fixes it in one line. A board shows each gap closing. Live on our test data.
+- Explain by voice. People who prefer talking answer in a sixty-second voice chat instead of typing, and Nobikos keeps
+  their answer in their own words. Live in the browser; Nobikos phoning them is built, not switched on yet.
 - Call Nobikos. Ask by voice, like this call, instead of interrupting a senior colleague. Live today; this demo is not
   connected to SD Worx's own data yet. Calling it for a briefing before a meeting, on what was decided and who to ask,
   is on the roadmap.

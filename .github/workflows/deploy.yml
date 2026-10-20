@@ -36,23 +36,30 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: google-github-actions/auth@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.13
         with:
           workload_identity_provider: ${{ env.WIF_PROVIDER }}
           service_account: ${{ env.DEPLOY_SA }}
-      - uses: google-github-actions/setup-gcloud@v2
+      - uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f # v2.2.1
       - name: Deploy from source
+        # Inputs reach the script only as env vars, never pasted into it, so they cannot inject shell.
         env:
+          SOURCE: ${{ inputs.source || 'app' }}
+          SERVICE: ${{ inputs.service || 'packoverflow' }}
           MIN_INSTANCES: ${{ inputs.min_instances }}
           MAX_INSTANCES: ${{ inputs.max_instances }}
         run: |
+          [[ "$SERVICE" =~ ^[a-z][a-z0-9-]{0,48}$ ]] || { echo "bad service name"; exit 1; }
+          [[ "$SOURCE" =~ ^[A-Za-z0-9_./-]+$ && "$SOURCE" != *..* ]] || { echo "bad source folder"; exit 1; }
           scale=()
           [ -n "$MIN_INSTANCES" ] && scale+=(--min-instances "$MIN_INSTANCES")
           [ -n "$MAX_INSTANCES" ] && scale+=(--max-instances "$MAX_INSTANCES")
-          gcloud run deploy "${{ inputs.service || 'packoverflow' }}" \
-            --source "${{ inputs.source || 'app' }}" \
+          gcloud run deploy "$SERVICE" \
+            --source "$SOURCE" \
             --project "$PROJECT_ID" --region "$REGION" \
             --allow-unauthenticated --quiet "${scale[@]}"
       - name: Print URL
-        run: gcloud run services describe "${{ inputs.service || 'packoverflow' }}" --project "$PROJECT_ID" --region "$REGION" --format='value(status.url)' | tee -a "$GITHUB_STEP_SUMMARY"
+        env:
+          SERVICE: ${{ inputs.service || 'packoverflow' }}
+        run: gcloud run services describe "$SERVICE" --project "$PROJECT_ID" --region "$REGION" --format='value(status.url)' | tee -a "$GITHUB_STEP_SUMMARY"

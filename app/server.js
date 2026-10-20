@@ -284,7 +284,18 @@ function serveSlide(urlPath, res) {
   });
 }
 
+// Sent on every response. The mic is for the Call tab; frames only from this site (the slides tab).
+const SECURITY_HEADERS = {
+  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "SAMEORIGIN",
+  "Content-Security-Policy": "frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "microphone=(self), camera=(), geolocation=()",
+};
+
 const server = http.createServer((req, res) => {
+  for (const [k, v] of Object.entries(SECURITY_HEADERS)) res.setHeader(k, v);
   const urlPath = req.url.split("?")[0];
   if (urlPath === "/healthz") {
     res.writeHead(200, { "Content-Type": "text/plain" });

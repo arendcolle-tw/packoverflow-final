@@ -55,7 +55,7 @@ def _open_card(gap: dict, phone: set[str]) -> str:
     risk = gap.get("risk", "")
     tag = f"<span class='tag risk'>{escape(risk.replace('_', ' '))}</span>" if risk in ("dark", "single_point") else f"<span class=tag>{escape(risk)}</span>"
     kind = "no why given" if gap["kind"] == "missing_why" else "no session behind it"
-    link = f" · <a href='{escape(gap['link'])}'>commit</a>" if gap.get("link") else ""
+    link = f" · <a href='{escape(gap['link'])}'>commit</a>" if str(gap.get("link", "")).startswith(("https://", "http://")) else ""
     source = "Claude's guess" if gap.get("draft_source") == "claude" else "template, no Claude key"
     action = (f"<button class=btn data-call='{escape(gap['id'])}'>Call {_who(gap)}</button>" if gap.get("owner") in phone
               else f"<a class=btn href='/gaps/{escape(gap['id'])}/talk'>Call {_who(gap)}</a>") if gap.get("owner") else ""

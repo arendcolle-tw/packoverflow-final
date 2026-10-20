@@ -1,6 +1,6 @@
 {
   "display_information": {
-    "name": "Knowly",
+    "name": "Nobikos",
     "description": "Ask the team's central fact-based knowledge base."
   },
   "features": {
@@ -9,7 +9,7 @@
       "messages_tab_read_only_enabled": false
     },
     "bot_user": {
-      "display_name": "knowly",
+      "display_name": "Nobikos",
       "always_online": true
     },
     "slash_commands": [

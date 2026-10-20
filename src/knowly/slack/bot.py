@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 ESCAPE = str.maketrans({"&": "&amp;", "<": "&lt;", ">": "&gt;"})
 SLACK_MARKUP = re.compile(r"<@[A-Z0-9]+(?:\|[^<>]*)?>|<([^<>|]*)(?:\|([^<>]*))?>")
 SLACK_ID = re.compile(r"[UW][A-Z0-9]{6,}")
-HELP = "Ask me a question about the team's work, for example `@knowly what time does the nightly payroll export start?`."
+HELP = "Ask me a question about the team's work, for example `@Nobikos what time does the nightly payroll export start?`."
 LOOKING = "Looking it up..."
 log = logging.getLogger(__name__)
 _people_cache: dict = {"at": 0.0, "ids": {}}
